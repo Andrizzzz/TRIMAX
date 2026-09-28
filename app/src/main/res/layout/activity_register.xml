@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    tools:context=".RegisterActivity">
+
+    <!-- Top Left Accent Shape -->
+    <ImageView
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:contentDescription="Top Left Accent"
+        android:scaleType="fitStart"
+        android:src="@drawable/bg_top_left_accent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Bottom Right Accent Shape -->
+    <ImageView
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:contentDescription="Bottom Right Accent"
+        android:scaleType="fitEnd"
+        android:src="@drawable/bg_bottom_right_accent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="28dp"
+            android:paddingTop="50dp"
+            android:paddingBottom="36dp">
+
+            <!-- Logo Section -->
+            <ImageView
+                android:id="@+id/ivLogo"
+                android:layout_width="72dp"
+                android:layout_height="60dp"
+                android:contentDescription="TRI-MAX Logo"
+                android:src="@drawable/ic_trimax_logo" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TRI-"
+                    android:textColor="#0F172A"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MAX"
+                    android:textColor="#2563EB"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:letterSpacing="0.25"
+                android:text="BOOK   •   TRACK   •   DELIVER"
+                android:textColor="#64748B"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <!-- Greetings -->
+            <TextView
+                android:id="@+id/tvRegisterTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="Create Account"
+                android:textColor="#0F172A"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvRegisterSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Sign up to get started with TRI-MAX."
+                android:textColor="#64748B"
+                android:textSize="14sp" />
+
+            <!-- Full Name / Username Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="Full Name"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="#2563EB"
+                app:hintTextColor="#2563EB"
+                app:startIconDrawable="@drawable/ic_user"
+                app:startIconTint="#64748B">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etFullName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:paddingVertical="14dp"
+                    android:textColor="#0F172A"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Email Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Email Address"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="#2563EB"
+                app:hintTextColor="#2563EB"
+                app:startIconDrawable="@drawable/ic_email"
+                app:startIconTint="#64748B">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:paddingVertical="14dp"
+                    android:textColor="#0F172A"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Password Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="New Password"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="#2563EB"
+                app:hintTextColor="#2563EB"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="#64748B"
+                app:startIconDrawable="@drawable/ic_lock"
+                app:startIconTint="#64748B">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:paddingVertical="14dp"
+                    android:textColor="#0F172A"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Confirm Password Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Confirm Password"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="#2563EB"
+                app:hintTextColor="#2563EB"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="#64748B"
+                app:startIconDrawable="@drawable/ic_lock"
+                app:startIconTint="#64748B">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:paddingVertical="14dp"
+                    android:textColor="#0F172A"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Create Account Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCreateAccount"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="#2563EB"
+                android:text="Create Account"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:icon="@drawable/ic_arrow_right"
+                app:iconGravity="end"
+                app:iconPadding="10dp"
+                app:iconTint="@android:color/white" />
+
+            <!-- Separator -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#E2E8F0" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    android:text="Or sign up with"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#E2E8F0" />
+            </LinearLayout>
+
+            <!-- Social Registration Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGoogleRegister"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="Google"
+                    android:textAllCaps="false"
+                    android:textColor="#0F172A"
+                    android:textSize="14sp"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="#CBD5E1" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFacebookRegister"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#1877F2"
+                    android:text="Facebook"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+            <!-- Bottom Account Link -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Already have an account? "
+                    android:textColor="#64748B"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvLoginLink"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp"
+                    android:text="Login"
+                    android:textColor="#2563EB"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

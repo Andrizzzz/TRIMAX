@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    tools:context=".ClientsActivity">
+
+    <!-- Top Left Accent Shape -->
+    <ImageView
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:contentDescription="Top Left Accent"
+        android:scaleType="fitStart"
+        android:src="@drawable/bg_top_left_accent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- TOP BAR -->
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Clients Directory"
+            android:textColor="#0F172A"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Search Input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchContainer"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:hint="Search clients by name or phone..."
+        app:boxCornerRadiusBottomEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxStrokeColor="#2563EB"
+        app:hintTextColor="#2563EB"
+        app:layout_constraintTop_toBottomOf="@+id/topBar"
+        app:startIconDrawable="@drawable/ic_user"
+        app:startIconTint="#64748B">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:paddingVertical="12dp"
+            android:textColor="#0F172A"
+            android:textSize="14sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- CONTENT LIST -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+        app:layout_constraintTop_toBottomOf="@+id/searchContainer">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <!-- Client Card 1 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardClient1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/ivAvatar1"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="14dp"
+                        android:background="@drawable/bg_icon_badge"
+                        android:contentDescription="Avatar"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_user"
+                        app:tint="#2563EB" />
+
+                    <TextView
+                        android:id="@+id/tvName1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@+id/ivAvatar1"
+                        android:text="Juan Dela Cruz"
+                        android:textColor="#0F172A"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvName1"
+                        android:layout_marginTop="2dp"
+                        android:layout_toEndOf="@+id/ivAvatar1"
+                        android:text="📞 0917 123 4567"
+                        android:textColor="#64748B"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/bg_status_confirmed"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="3 Bookings"
+                        android:textColor="#059669"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Client Card 2 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardClient2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/ivAvatar2"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="14dp"
+                        android:background="@drawable/bg_icon_badge"
+                        android:contentDescription="Avatar"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_user"
+                        app:tint="#2563EB" />
+
+                    <TextView
+                        android:id="@+id/tvName2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@+id/ivAvatar2"
+                        android:text="Maria Santos"
+                        android:textColor="#0F172A"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvName2"
+                        android:layout_marginTop="2dp"
+                        android:layout_toEndOf="@+id/ivAvatar2"
+                        android:text="📞 0918 987 6543"
+                        android:textColor="#64748B"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/bg_status_confirmed"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="5 Bookings"
+                        android:textColor="#059669"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- BOTTOM NAVIGATION -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:elevation="8dp"
+        app:itemIconTint="#64748B"
+        app:itemRippleColor="#3B82F6"
+        app:itemTextColor="#64748B"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

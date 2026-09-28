@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    tools:context=".BookingConfirmedActivity">
+
+    <!-- Top Left Accent Shape -->
+    <ImageView
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:contentDescription="Top Left Accent"
+        android:scaleType="fitStart"
+        android:src="@drawable/bg_top_left_accent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Bottom Right Accent Shape -->
+    <ImageView
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:contentDescription="Bottom Right Accent"
+        android:scaleType="fitEnd"
+        android:src="@drawable/bg_bottom_right_accent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:contentDescription="Confirmed Icon"
+            android:src="@drawable/ic_check_circle" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Booking Confirmed!"
+            android:textColor="#0F172A"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvBookingId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_status_confirmed"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:text="Booking #BK-2026-00123"
+            android:textColor="#059669"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Your booking request has been successfully submitted and logged into the system."
+            android:textColor="#64748B"
+            android:textSize="15sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewBooking"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="36dp"
+            android:backgroundTint="#2563EB"
+            android:text="View Booking"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackToDashboard"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="Back to Dashboard"
+            android:textAllCaps="false"
+            android:textColor="#0F172A"
+            android:textSize="16sp"
+            app:cornerRadius="16dp"
+            app:strokeColor="#CBD5E1" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
