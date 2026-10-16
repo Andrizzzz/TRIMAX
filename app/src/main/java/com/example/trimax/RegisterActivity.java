@@ -1,7 +1,10 @@
 package com.example.trimax;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -30,12 +33,24 @@ public class RegisterActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private CallbackManager mCallbackManager;
     private ActivityResultLauncher<Intent> googleSignInLauncher;
+    private DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_register);
+
+        dbHelper = new DatabaseHelper(this);
+
+        android.view.View root = findViewById(android.R.id.content);
+        if (root != null) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
 
         MaterialButton btnCreateAccount = findViewById(R.id.btnCreateAccount);
         MaterialButton btnGoogle = findViewById(R.id.btnGoogleRegister);
@@ -51,7 +66,6 @@ public class RegisterActivity extends AppCompatActivity {
         // 1. Configure Google Sign-In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                // .requestIdToken("YOUR_WEB_CLIENT_ID") // Put your web client id here for production backend authentication
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
@@ -73,11 +87,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         // 2. Configure Facebook Login
         mCallbackManager = CallbackManager.Factory.create();
-        
+
         btnFacebook.setOnClickListener(v -> {
             LoginManager.getInstance().logInWithReadPermissions(
-                    RegisterActivity.this, 
-                    mCallbackManager, 
+                    RegisterActivity.this,
+                    mCallbackManager,
                     Collections.singletonList("email")
             );
         });
@@ -86,7 +100,6 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 Toast.makeText(RegisterActivity.this, "Facebook Authentication Successful!", Toast.LENGTH_SHORT).show();
-                // Proceed to entry screen dashboard application layer
                 navigateToDashboard();
             }
 
@@ -101,10 +114,63 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
+        com.google.android.material.textfield.TextInputEditText etFullName = findViewById(R.id.etFullName);
+        com.google.android.material.textfield.TextInputEditText etEmail = findViewById(R.id.etEmail);
+        com.google.android.material.textfield.TextInputEditText etPassword = findViewById(R.id.etPassword);
+        com.google.android.material.textfield.TextInputEditText etConfirmPassword = findViewById(R.id.etConfirmPassword);
+
         btnCreateAccount.setOnClickListener(v -> {
-            // Placeholder standard validation flow check logic
-            Toast.makeText(this, "Standard account registration triggered", Toast.LENGTH_SHORT).show();
-            navigateToDashboard();
+            String fullName = etFullName != null && etFullName.getText() != null ? etFullName.getText().toString().trim() : "";
+            String email = etEmail != null && etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+            String password = etPassword != null && etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+            String confirmPassword = etConfirmPassword != null && etConfirmPassword.getText() != null ? etConfirmPassword.getText().toString().trim() : "";
+
+            if (fullName.isEmpty()) {
+                if (etFullName != null) {
+                    etFullName.setError("Full name is required");
+                    etFullName.requestFocus();
+                }
+            } else if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                if (etEmail != null) {
+                    etEmail.setError("Valid email address is required");
+                    etEmail.requestFocus();
+                }
+            } else if (password.isEmpty() || password.length() < 6) {
+                if (etPassword != null) {
+                    etPassword.setError("Password must be at least 6 characters");
+                    etPassword.requestFocus();
+                }
+            } else if (!password.equals(confirmPassword)) {
+                if (etConfirmPassword != null) {
+                    etConfirmPassword.setError("Passwords do not match");
+                    etConfirmPassword.requestFocus();
+                }
+            } else {
+                btnCreateAccount.setEnabled(false);
+
+                // Register User into SQLite Database with official AGENT role
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues cv = new ContentValues();
+                cv.put("username", email);
+                cv.put("password", password);
+                cv.put("role", "AGENT");
+                cv.put("full_name", fullName);
+                cv.put("email", email);
+                cv.put("phone", "09123456789");
+                db.insertWithOnConflict(DatabaseHelper.TABLE_USERS, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+
+                SessionManager session = new SessionManager(this);
+                User registeredUser = dbHelper.authenticateUser(email, password);
+                if (registeredUser == null) {
+                    registeredUser = dbHelper.getUserByEmailOrUsername(email);
+                }
+                if (registeredUser != null) {
+                    session.createLoginSession(registeredUser);
+                }
+
+                Toast.makeText(this, "Account registered successfully!", Toast.LENGTH_SHORT).show();
+                navigateToDashboard();
+            }
         });
     }
 
@@ -129,7 +195,6 @@ public class RegisterActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Pass Facebook login activity action responses directly to Facebook SDK callback manager
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);
     }

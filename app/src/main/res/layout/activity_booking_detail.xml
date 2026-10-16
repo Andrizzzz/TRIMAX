@@ -126,7 +126,7 @@
                         android:layout_marginVertical="14dp"
                         android:background="#F1F5F9" />
 
-                    <!-- SCHEDULE -->
+                    <!-- SCHEDULE & SERVICE -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -136,6 +136,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvService"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
@@ -145,18 +146,11 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvScheduleTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Date: July 19, 2026"
-                        android:textColor="#64748B"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Time: 10:00 AM"
+                        android:text="Schedule: July 19, 2026 • 10:00 AM"
                         android:textColor="#64748B"
                         android:textSize="14sp" />
 
@@ -170,12 +164,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="LOCATION"
+                        android:text="DESTINATION LOCATION"
                         android:textColor="#64748B"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvLocationAddress"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
@@ -195,6 +190,32 @@
                         android:textSize="12sp"
                         app:cornerRadius="10dp"
                         app:strokeColor="#2563EB" />
+
+                    <!-- SPECIAL INSTRUCTIONS -->
+                    <View
+                        android:id="@+id/dividerNotes"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="14dp"
+                        android:background="#F1F5F9" />
+
+                    <TextView
+                        android:id="@+id/lblNotes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SPECIAL INSTRUCTIONS"
+                        android:textColor="#64748B"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSpecialInstructions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="None"
+                        android:textColor="#0F172A"
+                        android:textSize="14sp" />
 
                     <View
                         android:layout_width="match_parent"
@@ -229,13 +250,26 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Actions -->
+            <!-- Action Buttons -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfirmBooking"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="#059669"
+                android:text="Confirm Booking"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCancelBooking"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="12dp"
                 android:text="Cancel Booking"
                 android:textAllCaps="false"
                 android:textColor="#EF4444"

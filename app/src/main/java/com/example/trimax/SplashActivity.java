@@ -16,9 +16,20 @@ public class SplashActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash);
 
-        // Delay 2 seconds then navigate to LoginActivity
+        SessionManager session = new SessionManager(this);
+
+        // Delay 2 seconds then navigate based on official authenticated session status
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+            Intent intent;
+            if (session.isLoggedIn()) {
+                if ("DRIVER".equalsIgnoreCase(session.getRole())) {
+                    intent = new Intent(SplashActivity.this, DriverDashboardActivity.class);
+                } else {
+                    intent = new Intent(SplashActivity.this, DashboardActivity.class);
+                }
+            } else {
+                intent = new Intent(SplashActivity.this, LoginActivity.class);
+            }
             startActivity(intent);
             finish();
         }, 2000);

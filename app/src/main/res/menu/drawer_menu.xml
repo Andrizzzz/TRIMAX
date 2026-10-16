@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/drawer_home"
+            android:icon="@drawable/ic_home"
+            android:title="Dashboard" />
+        <item
+            android:id="@+id/drawer_bookings"
+            android:icon="@drawable/ic_bookings"
+            android:title="My Bookings" />
+        <item
+            android:id="@+id/drawer_clients"
+            android:icon="@drawable/ic_clients"
+            android:title="Clients" />
+        <item
+            android:id="@+id/drawer_notifications"
+            android:icon="@drawable/baseline_notifications_none_24"
+            android:title="Notifications" />
+        <item
+            android:id="@+id/drawer_reports"
+            android:icon="@drawable/ic_categories"
+            android:title="Reports" />
+        <item
+            android:id="@+id/drawer_profile"
+            android:icon="@drawable/ic_user"
+            android:title="Profile" />
+        <item
+            android:id="@+id/drawer_settings"
+            android:icon="@drawable/ic_account"
+            android:title="Settings" />
+    </group>
+
+    <item android:title="Account Actions">
+        <menu>
+            <item
+                android:id="@+id/drawer_logout"
+                android:icon="@drawable/ic_arrow_back"
+                android:title="Logout" />
+        </menu>
+    </item>
+
+</menu>

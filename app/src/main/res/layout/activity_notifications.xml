@@ -35,6 +35,20 @@
             android:textColor="#0F172A"
             android:textSize="22sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvMarkAllRead"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="4dp"
+            android:text="Mark All as Read"
+            android:textColor="#2563EB"
+            android:textSize="13sp"
+            android:textStyle="bold" />
     </RelativeLayout>
 
     <!-- CONTENT LIST -->
@@ -64,9 +78,13 @@
 
             <!-- Item 1 -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardNotif1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -105,9 +123,13 @@
 
             <!-- Item 2 -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardNotif2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 

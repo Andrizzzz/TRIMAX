@@ -17,6 +17,15 @@ public class BookingConfirmedActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_booking_confirmed);
 
+        android.view.View main = findViewById(android.R.id.content);
+        if (main != null) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+                androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+        }
+
         String bookingId = getIntent().getStringExtra("BOOKING_ID");
         TextView tvBookingId = findViewById(R.id.tvBookingId);
         MaterialButton btnViewBooking = findViewById(R.id.btnViewBooking);

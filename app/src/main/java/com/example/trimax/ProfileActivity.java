@@ -2,16 +2,23 @@ package com.example.trimax;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 public class ProfileActivity extends AppCompatActivity {
+
+    private SessionManager session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,21 +26,55 @@ public class ProfileActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_profile);
 
+        session = new SessionManager(this);
+
+        View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
+        if (root != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), 0);
+                return insets;
+            });
+        }
+
         CardView cardEditProfile = findViewById(R.id.cardEditProfile);
         CardView cardChangePassword = findViewById(R.id.cardChangePassword);
         CardView cardReports = findViewById(R.id.cardReports);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
 
-        bottomNavigation.setSelectedItemId(R.id.nav_profile);
+        if (bottomNavigation != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+            bottomNavigation.setSelectedItemId(R.id.nav_profile);
+            setupBottomNavigation(bottomNavigation);
+        }
 
-        cardEditProfile.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, EditProfileActivity.class)));
-        cardChangePassword.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class)));
-        cardReports.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ReportsActivity.class)));
+        if (cardEditProfile != null) cardEditProfile.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, EditProfileActivity.class)));
+        if (cardChangePassword != null) cardChangePassword.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class)));
+        if (cardReports != null) cardReports.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ReportsActivity.class)));
 
-        btnLogout.setOnClickListener(v -> showLogoutDialog());
+        if (btnLogout != null) btnLogout.setOnClickListener(v -> showLogoutDialog());
+    }
 
-        setupBottomNavigation(bottomNavigation);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateProfileHeader();
+    }
+
+    private void updateProfileHeader() {
+        TextView tvAgentName = findViewById(R.id.tvAgentName);
+        TextView tvAgentEmail = findViewById(R.id.tvAgentEmail);
+
+        String name = session.getFullName();
+        String email = session.getEmail();
+
+        if (tvAgentName != null) tvAgentName.setText(name);
+        if (tvAgentEmail != null) tvAgentEmail.setText(email);
     }
 
     private void showLogoutDialog() {
@@ -41,6 +82,8 @@ public class ProfileActivity extends AppCompatActivity {
                 .setTitle("Logout")
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Logout", (dialog, which) -> {
+                    session.logoutUser();
+
                     Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
