@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 public class SettingsActivity extends AppCompatActivity {
 
     private SessionManager session;
+    private TextView tvCurrentThemeSubtitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +38,9 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
+        CardView cardThemeSettings = findViewById(R.id.cardThemeSettings);
+        tvCurrentThemeSubtitle = findViewById(R.id.tvCurrentThemeSubtitle);
+
         CardView cardNotificationSettings = findViewById(R.id.cardNotificationSettings);
         CardView cardAccountSettings = findViewById(R.id.cardAccountSettings);
         CardView cardPrivacy = findViewById(R.id.cardPrivacy);
@@ -47,6 +52,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
+        }
+
+        updateThemeSubtitle();
+
+        if (cardThemeSettings != null) {
+            cardThemeSettings.setOnClickListener(v -> showThemePickerDialog());
         }
 
         if (cardNotificationSettings != null) {
@@ -149,5 +160,40 @@ public class SettingsActivity extends AppCompatActivity {
                         .show();
             });
         }
+    }
+
+    private void updateThemeSubtitle() {
+        if (tvCurrentThemeSubtitle == null) return;
+        String current = ThemeHelper.getSelectedTheme(this);
+        if (ThemeHelper.THEME_LIGHT.equalsIgnoreCase(current)) {
+            tvCurrentThemeSubtitle.setText("Light Mode");
+        } else if (ThemeHelper.THEME_DARK.equalsIgnoreCase(current)) {
+            tvCurrentThemeSubtitle.setText("Dark Mode");
+        } else {
+            tvCurrentThemeSubtitle.setText("System Default");
+        }
+    }
+
+    private void showThemePickerDialog() {
+        String[] options = {"System Default 📱", "Light Mode ☀️", "Dark Mode 🌙"};
+        String current = ThemeHelper.getSelectedTheme(this);
+        int selectedIndex = 0;
+        if (ThemeHelper.THEME_LIGHT.equalsIgnoreCase(current)) selectedIndex = 1;
+        else if (ThemeHelper.THEME_DARK.equalsIgnoreCase(current)) selectedIndex = 2;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Select App Theme")
+                .setSingleChoiceItems(options, selectedIndex, (dialog, which) -> {
+                    dialog.dismiss();
+                    String newMode = ThemeHelper.THEME_SYSTEM;
+                    if (which == 1) newMode = ThemeHelper.THEME_LIGHT;
+                    else if (which == 2) newMode = ThemeHelper.THEME_DARK;
+
+                    ThemeHelper.setTheme(SettingsActivity.this, newMode);
+                    updateThemeSubtitle();
+                    Toast.makeText(this, "Theme updated to " + options[which], Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

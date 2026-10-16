@@ -2,4 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Design System Colors -->
+    <color name="primary_blue">#2563EB</color>
+    <color name="primary_blue_dark">#1D4ED8</color>
+    <color name="accent_blue">#3B82F6</color>
+
+    <color name="bg_main">#F8FAFC</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+
+    <color name="status_pending">#D97706</color>
+    <color name="status_confirmed">#059669</color>
+    <color name="status_cancelled">#EF4444</color>
+    <color name="status_completed">#2563EB</color>
 </resources>
