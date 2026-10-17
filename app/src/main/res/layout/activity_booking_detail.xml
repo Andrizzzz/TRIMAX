@@ -118,7 +118,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="📞 0917 123 4567"
-                        android:textColor="#2563EB"
+                        android:textColor="@color/primary_blue"
                         android:textSize="14sp" />
 
                     <View
@@ -187,7 +187,7 @@
                         android:layout_marginTop="10dp"
                         android:text="📍 View Location on Map"
                         android:textAllCaps="false"
-                        android:textColor="#2563EB"
+                        android:textColor="@color/primary_blue"
                         android:textSize="12sp"
                         app:cornerRadius="10dp"
                         app:strokeColor="#2563EB" />
@@ -243,7 +243,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:text="₱ 1,024.00"
-                            android:textColor="#2563EB"
+                            android:textColor="@color/primary_blue"
                             android:textSize="20sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
