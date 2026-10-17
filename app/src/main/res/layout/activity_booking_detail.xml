@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".BookingDetailActivity">
 
     <!-- Top Left Accent Shape -->
@@ -36,7 +36,8 @@
             android:contentDescription="Back Button"
             android:focusable="true"
             android:padding="8dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
 
         <TextView
             android:id="@+id/tvHeaderTitle"
@@ -44,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Booking #BK-2026-00123"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -97,7 +98,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="CUSTOMER"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -107,7 +108,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Juan Dela Cruz"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="17sp"
                         android:textStyle="bold" />
 
@@ -124,14 +125,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="14dp"
-                        android:background="#F1F5F9" />
+                        android:background="#3364748B" />
 
                     <!-- SCHEDULE & SERVICE -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="SCHEDULE &amp; SERVICE"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -141,7 +142,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Service: Standard Cargo Express"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -151,21 +152,21 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Schedule: July 19, 2026 • 10:00 AM"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="14dp"
-                        android:background="#F1F5F9" />
+                        android:background="#3364748B" />
 
                     <!-- LOCATION -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="DESTINATION LOCATION"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -175,7 +176,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="San Jose del Monte, Bulacan, Philippines"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -197,14 +198,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="14dp"
-                        android:background="#F1F5F9" />
+                        android:background="#3364748B" />
 
                     <TextView
                         android:id="@+id/lblNotes"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="SPECIAL INSTRUCTIONS"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -214,14 +215,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="None"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="14dp"
-                        android:background="#F1F5F9" />
+                        android:background="#3364748B" />
 
                     <!-- TOTAL -->
                     <RelativeLayout
@@ -232,7 +233,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="TOTAL AMOUNT"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
