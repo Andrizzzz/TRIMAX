@@ -148,16 +148,10 @@ public class DriverProofActivity extends AppCompatActivity {
 
                 String otpStatus;
                 if (!otp.isEmpty()) {
-                    if (otp.length() < 4) {
-                        if (etOtpCode != null) {
-                            etOtpCode.setError("OTP code must be at least 4 digits");
-                            etOtpCode.requestFocus();
-                        }
-                        return;
-                    }
-                    otpStatus = "VERIFIED_OTP_" + otp;
+                    // Local development mode: SMS backend unavailable; logging entered code for reference without remote verification claim
+                    otpStatus = "DEV_MODE_LOCAL_ENTERED_" + otp;
                 } else {
-                    otpStatus = "UNVERIFIED_NO_OTP";
+                    otpStatus = "DEV_MODE_UNVERIFIED_NO_SMS_BACKEND";
                 }
 
                 btnConfirmDelivery.setEnabled(false);

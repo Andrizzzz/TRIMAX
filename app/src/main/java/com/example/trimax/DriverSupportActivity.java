@@ -71,9 +71,9 @@ public class DriverSupportActivity extends AppCompatActivity {
                                     lng
                             );
                             if (saved) {
-                                Toast.makeText(this, "🚨 SOS Alert Sent! Dispatch team notified.", Toast.LENGTH_LONG).show();
+                                Toast.makeText(this, "🚨 SOS Alert saved locally in audit log. Dispatch server sync pending.", Toast.LENGTH_LONG).show();
                             } else {
-                                Toast.makeText(this, "SOS Alert sent to Dispatch team.", Toast.LENGTH_LONG).show();
+                                Toast.makeText(this, "Failed to save SOS alert locally.", Toast.LENGTH_LONG).show();
                             }
                         })
                         .setNegativeButton("Cancel", null)
@@ -103,9 +103,9 @@ public class DriverSupportActivity extends AppCompatActivity {
                             locationHelper.getLongitude()
                     );
                     if (saved) {
-                        Toast.makeText(this, "Vehicle issue report logged to TRI-MAX Dispatch!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Vehicle issue report saved locally. Dispatch sync pending.", Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(this, "Report submitted successfully.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Failed to save vehicle report locally.", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)

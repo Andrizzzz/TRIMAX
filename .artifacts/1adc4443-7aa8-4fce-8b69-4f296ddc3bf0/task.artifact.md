@@ -1,0 +1,8 @@
+- `[x]` Implement secure PBKDF2WithHmacSHA256 password hashing and legacy plaintext fallback migration in `DatabaseHelper.java`.
+- `[x]` Prevent account overwrites and duplicate registrations in `RegisterActivity.java`.
+- `[x]` Increment database version to 5, add incremental upgrade logic, and ensure `attendance_records` table exists.
+- `[x]` Wrap delivery proof saving and status updates in atomic database transactions.
+- `[x]` Correct OTP verification to an honest local development state without fake success claims.
+- `[x]` Update SOS and vehicle breakdown reporting to reflect local audit logging and pending server sync.
+- `[x]` Standardize UI/UX design system across dashboards, themes, and cards.
+- `[x]` Verify build success and passing unit tests.

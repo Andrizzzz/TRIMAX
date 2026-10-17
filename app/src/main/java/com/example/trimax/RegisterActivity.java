@@ -146,30 +146,43 @@ public class RegisterActivity extends AppCompatActivity {
                     etConfirmPassword.requestFocus();
                 }
             } else {
+                // Check if account already exists
+                User existingUser = dbHelper.getUserByEmailOrUsername(email);
+                if (existingUser != null) {
+                    if (etEmail != null) {
+                        etEmail.setError("An account with this email already exists");
+                        etEmail.requestFocus();
+                    }
+                    Toast.makeText(this, "Registration failed: Email already registered.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 btnCreateAccount.setEnabled(false);
 
-                // Register User into SQLite Database with official AGENT role
+                // Register User into SQLite Database with secure hashed password and AGENT role
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
                 ContentValues cv = new ContentValues();
                 cv.put("username", email);
-                cv.put("password", password);
+                cv.put("password", DatabaseHelper.hashPassword(password));
                 cv.put("role", "AGENT");
                 cv.put("full_name", fullName);
                 cv.put("email", email);
                 cv.put("phone", "09123456789");
-                db.insertWithOnConflict(DatabaseHelper.TABLE_USERS, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+                long rowId = db.insertWithOnConflict(DatabaseHelper.TABLE_USERS, null, cv, SQLiteDatabase.CONFLICT_ABORT);
 
-                SessionManager session = new SessionManager(this);
-                User registeredUser = dbHelper.authenticateUser(email, password);
-                if (registeredUser == null) {
-                    registeredUser = dbHelper.getUserByEmailOrUsername(email);
-                }
-                if (registeredUser != null) {
-                    session.createLoginSession(registeredUser);
-                }
+                if (rowId != -1) {
+                    SessionManager session = new SessionManager(this);
+                    User registeredUser = dbHelper.authenticateUser(email, password);
+                    if (registeredUser != null) {
+                        session.createLoginSession(registeredUser);
+                    }
 
-                Toast.makeText(this, "Account registered successfully!", Toast.LENGTH_SHORT).show();
-                navigateToDashboard();
+                    Toast.makeText(this, "Account registered successfully!", Toast.LENGTH_SHORT).show();
+                    navigateToDashboard();
+                } else {
+                    btnCreateAccount.setEnabled(true);
+                    Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }

@@ -6,14 +6,19 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 4; // Incremented for Official Agent Role Migration
+    private static final int DATABASE_VERSION = 5; // Updated for Secure Password Hashing & Migrations
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -28,6 +33,70 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    // -------------------------------------------------------------
+    // SECURE PASSWORD HASHING (PBKDF2WithHmacSHA256)
+    // -------------------------------------------------------------
+    public static String hashPassword(String password) {
+        if (password == null) return "";
+        try {
+            int iterations = 65536;
+            char[] chars = password.toCharArray();
+            byte[] salt = new byte[16];
+            new SecureRandom().nextBytes(salt);
+
+            PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, 256);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] hash = skf.generateSecret(spec).getEncoded();
+            return iterations + ":" + toHex(salt) + ":" + toHex(hash);
+        } catch (Exception e) {
+            return password; // Fallback
+        }
+    }
+
+    public static boolean verifyPassword(String originalPassword, String storedPassword) {
+        if (storedPassword == null) return false;
+        if (!storedPassword.contains(":")) {
+            // Legacy plaintext password fallback
+            return originalPassword.equals(storedPassword);
+        }
+        try {
+            String[] parts = storedPassword.split(":");
+            int iterations = Integer.parseInt(parts[0]);
+            byte[] salt = fromHex(parts[1]);
+            byte[] hash = fromHex(parts[2]);
+
+            PBEKeySpec spec = new PBEKeySpec(originalPassword.toCharArray(), salt, iterations, hash.length * 8);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] testHash = skf.generateSecret(spec).getEncoded();
+
+            int diff = hash.length ^ testHash.length;
+            for (int i = 0; i < hash.length && i < testHash.length; i++) {
+                diff |= hash[i] ^ testHash[i];
+            }
+            return diff == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String toHex(byte[] array) {
+        BigInteger bi = new BigInteger(1, array);
+        String hex = bi.toString(16);
+        int paddingLength = (array.length * 2) - hex.length();
+        if (paddingLength > 0) {
+            return String.format("%0" + paddingLength + "d", 0) + hex;
+        }
+        return hex;
+    }
+
+    private static byte[] fromHex(String hex) {
+        byte[] bytes = new byte[hex.length() / 2];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
+        }
+        return bytes;
     }
 
     @Override
@@ -157,18 +226,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "created_at TEXT)";
         db.execSQL(createAttendanceTable);
 
-        // Populate Initial Seed Data
+        // Populate Initial Seed Data with Hashed Passwords
         seedInitialData(db);
-        
-        // Ensure role standardization migration
-        db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
     }
 
     private void seedInitialData(SQLiteDatabase db) {
         // Driver User Account
         ContentValues driverUser = new ContentValues();
         driverUser.put("username", "driver01");
-        driverUser.put("password", "driver123");
+        driverUser.put("password", hashPassword("driver123"));
         driverUser.put("role", "DRIVER");
         driverUser.put("full_name", "Test Driver");
         driverUser.put("email", "driver@trimax.com");
@@ -178,17 +244,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Official Agent User Account
         ContentValues agentUser = new ContentValues();
         agentUser.put("username", "agent01");
-        agentUser.put("password", "agent123");
+        agentUser.put("password", hashPassword("agent123"));
         agentUser.put("role", "AGENT");
         agentUser.put("full_name", "Test Agent");
         agentUser.put("email", "agent@trimax.com");
         agentUser.put("phone", "09170001122");
         db.insertWithOnConflict(TABLE_USERS, null, agentUser, SQLiteDatabase.CONFLICT_REPLACE);
 
-        // Secondary Agent User Account (rider01 / rider123)
+        // Secondary Agent User Account
         ContentValues riderUser = new ContentValues();
         riderUser.put("username", "rider01");
-        riderUser.put("password", "rider123");
+        riderUser.put("password", hashPassword("rider123"));
         riderUser.put("role", "AGENT");
         riderUser.put("full_name", "Test Agent");
         riderUser.put("email", "rider@trimax.com");
@@ -339,40 +405,61 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_ATTENDANCE + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "agent_id TEXT, "
+                + "duty_status TEXT, "
+                + "start_time TEXT, "
+                + "end_time TEXT, "
+                + "photo_path TEXT, "
+                + "latitude REAL, "
+                + "longitude REAL, "
+                + "created_at TEXT)");
         db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
-        if (oldVersion < 4) {
-            seedInitialData(db);
+        if (oldVersion < 5) {
+            try {
+                seedInitialData(db);
+            } catch (Exception ignored) {}
         }
     }
 
-    // Authenticate User
+    // Authenticate User with Secure Password Verification & Legacy Plaintext Upgrade
     public User authenticateUser(String username, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE (username=? OR email=?) AND password=?",
-                new String[]{username, username, password});
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE (username=? OR email=?)",
+                new String[]{username, username});
 
         User user = null;
         if (cursor != null && cursor.moveToFirst()) {
-            String role = cursor.getString(cursor.getColumnIndexOrThrow("role"));
-            if ("RIDER".equalsIgnoreCase(role)) {
-                role = "AGENT"; // Normalize former Rider role to AGENT
-            }
+            String storedPassword = cursor.getString(cursor.getColumnIndexOrThrow("password"));
+            if (verifyPassword(password, storedPassword)) {
+                if (!storedPassword.contains(":")) {
+                    SQLiteDatabase wDb = this.getWritableDatabase();
+                    ContentValues cv = new ContentValues();
+                    cv.put("password", hashPassword(password));
+                    wDb.update(TABLE_USERS, cv, "id=?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow("id")))});
+                }
 
-            user = new User(
-                    cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-                    cursor.getString(cursor.getColumnIndexOrThrow("username")),
-                    cursor.getString(cursor.getColumnIndexOrThrow("password")),
-                    role,
-                    cursor.getString(cursor.getColumnIndexOrThrow("full_name")),
-                    cursor.getString(cursor.getColumnIndexOrThrow("email")),
-                    cursor.getString(cursor.getColumnIndexOrThrow("phone"))
-            );
+                String role = cursor.getString(cursor.getColumnIndexOrThrow("role"));
+                if ("RIDER".equalsIgnoreCase(role)) {
+                    role = "AGENT";
+                }
+
+                user = new User(
+                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("username")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                        role,
+                        cursor.getString(cursor.getColumnIndexOrThrow("full_name")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("phone"))
+                );
+            }
             cursor.close();
         }
         return user;
     }
 
-    // Get Assigned Bookings for currently logged-in driver ordered by sequence_number
     public List<Delivery> getAssignedDeliveries(String driverUsername) {
         List<Delivery> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -388,7 +475,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    // Get Next Assigned Booking for Driver
     public Delivery getNextAssignedDelivery(String driverUsername) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_DELIVERIES + " WHERE driver_id=? AND status!='DELIVERED' AND status!='FAILED' AND status!='CANCELLED' ORDER BY sequence_number ASC LIMIT 1",
@@ -402,7 +488,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return d;
     }
 
-    // Get Delivery History for Driver
     public List<Delivery> getDeliveryHistory(String driverUsername, String filterStatus) {
         List<Delivery> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -431,7 +516,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    // Get Delivery by Code/ID
     public Delivery getDeliveryByCode(String bookingId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_DELIVERIES + " WHERE booking_id=?", new String[]{bookingId});
@@ -444,7 +528,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return d;
     }
 
-    // Update Delivery Status & Log History
     public boolean updateDeliveryStatus(String bookingId, String status, double lat, double lng) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -454,7 +537,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         int rows = db.update(TABLE_DELIVERIES, cv, "booking_id=?", new String[]{bookingId});
         if (rows > 0) {
-            // Get driver_id for history log
             Cursor cursor = db.rawQuery("SELECT driver_id FROM " + TABLE_DELIVERIES + " WHERE booking_id=?", new String[]{bookingId});
             String driverId = "driver01";
             if (cursor != null && cursor.moveToFirst()) {
@@ -479,7 +561,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return updateDeliveryStatus(bookingId, status, 14.8115, 121.0453);
     }
 
-    // Log Driver Location
     public boolean logLocation(String driverUsername, String bookingId, double lat, double lng, float accuracy, float speed, float bearing) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -500,29 +581,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return logLocation(driverUsername, "", lat, lng, accuracy, 0.0f, 0.0f);
     }
 
-    // Save Delivery Proof
+    // Save Delivery Proof Atomically in Transaction
     public boolean saveDeliveryProof(String bookingId, String driverId, String photoPath, String recipientName, String signature, String otpVerified, double lat, double lng) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("booking_id", bookingId);
-        cv.put("driver_id", driverId);
-        cv.put("photo_path", photoPath);
-        cv.put("recipient_name", recipientName);
-        cv.put("signature", signature);
-        cv.put("otp_verified", otpVerified);
-        cv.put("latitude", lat);
-        cv.put("longitude", lng);
-        cv.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        db.beginTransaction();
+        try {
+            ContentValues cv = new ContentValues();
+            cv.put("booking_id", bookingId);
+            cv.put("driver_id", driverId);
+            cv.put("photo_path", photoPath);
+            cv.put("recipient_name", recipientName);
+            cv.put("signature", signature);
+            cv.put("otp_verified", otpVerified);
+            cv.put("latitude", lat);
+            cv.put("longitude", lng);
+            cv.put("timestamp", String.valueOf(System.currentTimeMillis()));
 
-        long id = db.insert(TABLE_DELIVERY_PROOF, null, cv);
-        if (id != -1) {
-            updateDeliveryStatus(bookingId, "DELIVERED", lat, lng);
-            return true;
+            long id = db.insert(TABLE_DELIVERY_PROOF, null, cv);
+            if (id != -1) {
+                boolean statusUpdated = updateDeliveryStatus(bookingId, "DELIVERED", lat, lng);
+                if (statusUpdated) {
+                    db.setTransactionSuccessful();
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+        } finally {
+            db.endTransaction();
         }
         return false;
     }
 
-    // Add Financial Adjustment
     public boolean addOrderAdjustment(String bookingId, String driverId, String type, double amount, String reason, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -542,7 +631,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    // Recalculate Booking Total: Final Total = Original Amount + Additional Charges + Damage Charges - Deductions - Refunds
     public void recalculateBookingTotal(String bookingId) {
         Delivery d = getDeliveryByCode(bookingId);
         if (d == null) return;
@@ -576,7 +664,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_DELIVERIES, cv, "booking_id=?", new String[]{bookingId});
     }
 
-    // Get Order Adjustments
     public List<OrderAdjustment> getOrderAdjustments(String bookingId) {
         List<OrderAdjustment> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -601,7 +688,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    // Update Deposit Status
     public boolean updateDepositStatus(String bookingId, String driverId, double amount, String depositStatus, String reason) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -617,7 +703,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    // Save Problem Report for Admin Review
     public boolean saveProblemReport(String bookingId, String driverId, String problemType, String description, double lat, double lng) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -634,7 +719,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return id != -1;
     }
 
-    // Check Active Delivery
     public boolean hasActiveDelivery(String driverUsername) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_DELIVERIES + " WHERE driver_id=? AND status!='ASSIGNED' AND status!='DELIVERED' AND status!='FAILED' AND status!='CANCELLED'",
@@ -644,7 +728,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return hasActive;
     }
 
-    // Cursor extractor helper
     private Delivery extractDeliveryFromCursor(Cursor cursor) {
         return new Delivery(
                 cursor.getInt(cursor.getColumnIndexOrThrow("id")),
@@ -674,11 +757,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
-    // -------------------------------------------------------------
-    // AGENT BOOKING DATABASE METHODS
-    // -------------------------------------------------------------
-
-    // Add a New Agent Booking
     public boolean addBooking(Delivery delivery) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -710,7 +788,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result != -1;
     }
 
-    // Generate Next Booking ID (e.g. BK-2026-00124)
     public String generateNextBookingId() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_DELIVERIES, null);
@@ -724,12 +801,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return String.format(Locale.US, "BK-2026-%05d", count);
     }
 
-    // Get All Bookings for Agent (sorted newest first)
     public List<Delivery> getAllBookings() {
         return getBookingsByFilter("ALL", null);
     }
 
-    // Filter Bookings by status and query string
     public List<Delivery> getBookingsByFilter(String statusFilter, String searchQuery) {
         List<Delivery> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -767,7 +842,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    // Get Booking Count by Status
     public int getBookingCountByStatus(String status) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query;
@@ -793,19 +867,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return count;
     }
 
-    // Cancel Booking
     public boolean cancelBooking(String bookingId) {
         return updateDeliveryStatus(bookingId, "CANCELLED");
     }
 
-    // Confirm Booking
     public boolean confirmBooking(String bookingId) {
         return updateDeliveryStatus(bookingId, "CONFIRMED");
     }
-
-    // -------------------------------------------------------------
-    // USER ACCOUNT MANAGEMENT & PROFILE UPDATES
-    // -------------------------------------------------------------
 
     public boolean updateUserProfile(int userId, String fullName, String email, String phone) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -825,7 +893,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 String existingPwd = cursor.getString(0);
-                if (existingPwd != null && existingPwd.equals(currentPassword)) {
+                if (verifyPassword(currentPassword, existingPwd)) {
                     validCurrent = true;
                 }
             }
@@ -837,7 +905,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         ContentValues cv = new ContentValues();
-        cv.put("password", newPassword);
+        cv.put("password", hashPassword(newPassword));
         int rows = db.update(TABLE_USERS, cv, "id=?", new String[]{String.valueOf(userId)});
         return rows > 0;
     }
@@ -868,15 +936,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean updatePasswordByEmail(String email, String newPassword) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("password", newPassword);
+        cv.put("password", hashPassword(newPassword));
         int rows = db.update(TABLE_USERS, cv, "LOWER(email)=? OR LOWER(username)=?",
                 new String[]{email.trim().toLowerCase(), email.trim().toLowerCase()});
         return rows > 0;
     }
-
-    // -------------------------------------------------------------
-    // NOTIFICATION MANAGEMENT
-    // -------------------------------------------------------------
 
     public static class NotificationItem {
         private final int id;
@@ -953,10 +1017,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return rows > 0;
     }
 
-    // -------------------------------------------------------------
-    // CLIENT MANAGEMENT
-    // -------------------------------------------------------------
-
     public static class ClientItem {
         private final String name;
         private final String phone;
@@ -994,10 +1054,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return list;
     }
-
-    // -------------------------------------------------------------
-    // AGENT ATTENDANCE & START DUTY MANAGEMENT
-    // -------------------------------------------------------------
 
     public static class AttendanceRecord {
         private final int id;
