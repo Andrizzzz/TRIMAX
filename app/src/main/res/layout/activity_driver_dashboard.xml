@@ -13,16 +13,6 @@
         android:layout_height="match_parent"
         android:background="@color/bg_main">
 
-        <!-- Top Left Accent Shape -->
-        <ImageView
-            android:layout_width="220dp"
-            android:layout_height="220dp"
-            android:contentDescription="Top Left Accent"
-            android:scaleType="fitStart"
-            android:src="@drawable/bg_top_left_accent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <!-- TOP BAR HEADER -->
         <RelativeLayout
             android:id="@+id/topBar"
@@ -128,14 +118,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:cardBackgroundColor="#2563EB"
+                    app:cardBackgroundColor="@color/navy_900"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="6dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="20dp">
+                        android:padding="20dp"
+                        android:background="@drawable/bg_dashboard_hero">
 
                         <TextView
                             android:id="@+id/tvDriverGreeting"
@@ -162,7 +153,7 @@
                             android:layout_height="wrap_content"
                             android:layout_below="@+id/tvDriverId"
                             android:layout_marginTop="14dp"
-                            android:background="#1D4ED8"
+                            android:background="@color/navy_800"
                             android:padding="12dp">
 
                             <TextView
@@ -201,7 +192,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="18dp"
-                    app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                    app:cardCornerRadius="20dp"
                     app:cardElevation="3dp">
 
                     <LinearLayout
@@ -231,7 +223,7 @@
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="4dp"
                                 android:text="● LIVE"
-                                android:textColor="#059669"
+                                android:textColor="@color/status_confirmed"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </RelativeLayout>
@@ -322,6 +314,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="5dp">
 
@@ -334,7 +327,7 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="#1E3A8A"
+                            android:background="@color/navy_900"
                             android:paddingHorizontal="16dp"
                             android:paddingVertical="10dp">
 
@@ -347,7 +340,7 @@
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="4dp"
                                 android:text="● DRIVER LIVE ROUTE"
-                                android:textColor="#059669"
+                                android:textColor="@color/status_confirmed"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
@@ -454,7 +447,7 @@
                         android:paddingHorizontal="8dp"
                         android:paddingVertical="2dp"
                         android:text="Seq #1"
-                        android:textColor="#059669"
+                        android:textColor="@color/status_confirmed"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
@@ -465,7 +458,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
-                    app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                    app:cardCornerRadius="20dp"
                     app:cardElevation="4dp">
 
                     <LinearLayout
@@ -659,8 +653,9 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="3dp">
 
                         <RelativeLayout
                             android:layout_width="match_parent"
@@ -701,8 +696,9 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="3dp">
 
                         <RelativeLayout
                             android:layout_width="match_parent"
@@ -738,8 +734,9 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="3dp">
 
                         <RelativeLayout
                             android:layout_width="match_parent"
@@ -767,8 +764,9 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="3dp">
 
                         <RelativeLayout
                             android:layout_width="match_parent"
@@ -798,10 +796,10 @@
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:headerLayout="@layout/nav_header"
-        app:itemIconTint="#2563EB"
-        app:itemTextColor="#0F172A"
+        app:itemIconTint="@color/primary_blue"
+        app:itemTextColor="@color/text_primary"
         app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
