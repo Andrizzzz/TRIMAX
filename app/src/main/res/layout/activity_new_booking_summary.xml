@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".NewBookingSummaryActivity">
 
     <!-- Top Left Accent Shape -->
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Booking Summary"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -68,7 +68,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Review and Confirm 📋"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -77,7 +77,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Please review all information before submitting."
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
             <!-- Summary Details Card -->
@@ -99,7 +99,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="CUSTOMER"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -109,7 +109,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Juan Dela Cruz"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -118,7 +118,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0917 123 4567"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <View
@@ -132,7 +132,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="BOOKING DETAILS"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -142,7 +142,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Service: Standard Cargo Express"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -152,7 +152,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Quantity: 2"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -161,7 +161,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Date and Time: July 19, 2026 • 10:00 AM"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <View
@@ -175,7 +175,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="LOCATION"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -185,7 +185,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="San Jose del Monte, Bulacan"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                     <View
@@ -203,7 +203,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="TOTAL ESTIMATE"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -213,7 +213,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:text="₱ 1,024.00"
-                            android:textColor="#2563EB"
+                            android:textColor="@color/primary_blue"
                             android:textSize="20sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
@@ -238,7 +238,7 @@
                     android:layout_weight="1"
                     android:text="Edit"
                     android:textAllCaps="false"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     app:cornerRadius="16dp"
                     app:strokeColor="#CBD5E1" />
@@ -249,7 +249,7 @@
                     android:layout_height="56dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:backgroundTint="#2563EB"
+                    android:backgroundTint="@color/primary_blue"
                     android:text="Confirm Booking"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
