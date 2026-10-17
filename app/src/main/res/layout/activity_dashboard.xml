@@ -438,7 +438,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Rider: Test Driver • To: Juan Dela Cruz"
+                                    android:text="Driver: Test Driver • To: Juan Dela Cruz"
                                     android:textColor="#0F172A"
                                     android:textSize="12sp" />
                             </LinearLayout>

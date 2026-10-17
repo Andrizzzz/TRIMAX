@@ -190,7 +190,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         riderUser.put("username", "rider01");
         riderUser.put("password", "rider123");
         riderUser.put("role", "AGENT");
-        riderUser.put("full_name", "Test Agent (Former Rider)");
+        riderUser.put("full_name", "Test Agent");
         riderUser.put("email", "rider@trimax.com");
         riderUser.put("phone", "09987654321");
         db.insertWithOnConflict(TABLE_USERS, null, riderUser, SQLiteDatabase.CONFLICT_REPLACE);

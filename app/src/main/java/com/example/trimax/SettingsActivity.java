@@ -98,7 +98,7 @@ public class SettingsActivity extends AppCompatActivity {
             cardTerms.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
                         .setTitle("Terms & Conditions")
-                        .setMessage("Terms of Service for TRI-MAX Agents & Riders:\n\n"
+                        .setMessage("Terms of Service for TRI-MAX Agents & Drivers:\n\n"
                                 + "1. Responsible Delivery: Fulfill assigned customer bookings promptly and professionally.\n"
                                 + "2. Active GPS Tracking: Maintain active GPS tracking during delivery hours for dispatch precision.\n"
                                 + "3. Confidentiality: Customer contact details must strictly remain confidential.\n"
@@ -114,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
                         .setTitle("Refund & Cancellation Policy")
                         .setMessage("Booking Cancellation & Refund Rules:\n\n"
                                 + "• Cancellation before Dispatch: 100% full refund credited within 24 hours.\n"
-                                + "• Cancellation after Rider En Route: Partial fee may apply to cover rider transit costs.\n"
+                                + "• Cancellation after Driver En Route: Partial fee may apply to cover driver transit costs.\n"
                                 + "• Failed Delivery due to Customer Unavailability: Free re-attempt within 12 hours or return refund.")
                         .setPositiveButton("Got It", null)
                         .show();
@@ -155,7 +155,7 @@ public class SettingsActivity extends AppCompatActivity {
             cardAbout.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
                         .setTitle("About TRI-MAX App")
-                        .setMessage("TRI-MAX Mobile Agent System v2.4.0\n\nBOOK • TRACK • DELIVER\nOfficial logistics management application for authorized agents and riders.")
+                        .setMessage("TRI-MAX Mobile Agent System v2.4.0\n\nBOOK • TRACK • DELIVER\nOfficial logistics management application for authorized agents and drivers.")
                         .setPositiveButton("OK", null)
                         .show();
             });
