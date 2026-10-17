@@ -64,18 +64,29 @@ public class DriverProofActivity extends AppCompatActivity {
             if (etRecipientName != null) {
                 etRecipientName.setText(currentDelivery.getCustomerName());
             }
+            if ("DELIVERED".equalsIgnoreCase(currentDelivery.getStatus()) || "COMPLETED".equalsIgnoreCase(currentDelivery.getStatus())) {
+                Toast.makeText(this, "Delivery #" + deliveryCode + " is already completed.", Toast.LENGTH_LONG).show();
+                if (btnConfirmDelivery != null) {
+                    btnConfirmDelivery.setEnabled(false);
+                    btnConfirmDelivery.setText("DELIVERY COMPLETED");
+                }
+            }
         }
 
-        // Camera Launcher Setup
+        // Camera Launcher Setup with RESULT_OK validation
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-                    photoCaptured = true;
-                    if (tvPhotoLabel != null) {
-                        tvPhotoLabel.setText("✓ Delivery Photo Evidence Captured!");
-                        tvPhotoLabel.setTextColor(0xFF059669); // Green
+                    if (result.getResultCode() == RESULT_OK) {
+                        photoCaptured = true;
+                        if (tvPhotoLabel != null) {
+                            tvPhotoLabel.setText("✓ Delivery Photo Evidence Captured!");
+                            tvPhotoLabel.setTextColor(0xFF059669); // Green
+                        }
+                        Toast.makeText(this, "Camera Photo Evidence Captured!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Photo capture cancelled or failed.", Toast.LENGTH_SHORT).show();
                     }
-                    Toast.makeText(this, "Camera Photo Evidence Captured and Saved!", Toast.LENGTH_SHORT).show();
                 }
         );
 
@@ -85,13 +96,7 @@ public class DriverProofActivity extends AppCompatActivity {
                 try {
                     cameraLauncher.launch(takePictureIntent);
                 } catch (Exception e) {
-                    // Fallback if camera app unavailable
-                    photoCaptured = true;
-                    if (tvPhotoLabel != null) {
-                        tvPhotoLabel.setText("✓ Delivery Photo Evidence Recorded!");
-                        tvPhotoLabel.setTextColor(0xFF059669);
-                    }
-                    Toast.makeText(this, "Photo evidence recorded!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Unable to launch camera app on this device.", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -107,9 +112,28 @@ public class DriverProofActivity extends AppCompatActivity {
                 String otp = etOtpCode != null && etOtpCode.getText() != null ? etOtpCode.getText().toString().trim() : "";
 
                 if (TextUtils.isEmpty(recipient)) {
-                    if (etRecipientName != null) etRecipientName.setError("Recipient name required");
+                    if (etRecipientName != null) {
+                        etRecipientName.setError("Recipient name required");
+                        etRecipientName.requestFocus();
+                    }
                     return;
                 }
+
+                String otpStatus;
+                if (!otp.isEmpty()) {
+                    if (otp.length() < 4) {
+                        if (etOtpCode != null) {
+                            etOtpCode.setError("OTP code must be at least 4 digits");
+                            etOtpCode.requestFocus();
+                        }
+                        return;
+                    }
+                    otpStatus = "VERIFIED_OTP_" + otp;
+                } else {
+                    otpStatus = "UNVERIFIED_NO_OTP";
+                }
+
+                btnConfirmDelivery.setEnabled(false);
 
                 // Save proof locally in SQLite
                 String photoPath = "proof_photo_" + deliveryCode + "_" + System.currentTimeMillis() + ".jpg";
@@ -119,7 +143,7 @@ public class DriverProofActivity extends AppCompatActivity {
                         photoPath,
                         recipient,
                         "TOKEN_SIGNED",
-                        otp.isEmpty() ? "VERIFIED" : otp,
+                        otpStatus,
                         locationHelper.getLatitude(),
                         locationHelper.getLongitude()
                 );
@@ -141,6 +165,7 @@ public class DriverProofActivity extends AppCompatActivity {
                     }
                     finish();
                 } else {
+                    btnConfirmDelivery.setEnabled(true);
                     Toast.makeText(this, "Failed to save delivery proof in database", Toast.LENGTH_SHORT).show();
                 }
             });

@@ -7,7 +7,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+
 import androidx.core.content.ContextCompat;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class LocationHelper {
 
@@ -28,6 +33,7 @@ public class LocationHelper {
     private long lastTimestamp = System.currentTimeMillis();
 
     private boolean isTrackingActive = false;
+    private boolean hasValidLocationFix = false;
 
     public LocationHelper(Context context) {
         this.context = context.getApplicationContext();
@@ -62,6 +68,7 @@ public class LocationHelper {
                     currentSpeed = location.getSpeed();
                     currentBearing = location.getBearing();
                     lastTimestamp = location.getTime();
+                    hasValidLocationFix = true;
 
                     if (updateListener != null) {
                         updateListener.onLocationUpdated(currentLatitude, currentLongitude, currentAccuracy, currentSpeed, currentBearing);
@@ -99,6 +106,7 @@ public class LocationHelper {
                 currentSpeed = best.getSpeed();
                 currentBearing = best.getBearing();
                 lastTimestamp = best.getTime();
+                hasValidLocationFix = true;
             }
         } catch (SecurityException ignored) {
             isTrackingActive = false;
@@ -138,8 +146,18 @@ public class LocationHelper {
         return lastTimestamp;
     }
 
+    public String getFormattedLastTimestamp() {
+        if (!hasValidLocationFix) return "Awaiting GPS fix";
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
+        return "Updated at " + sdf.format(new Date(lastTimestamp));
+    }
+
     public boolean isTrackingActive() {
         return isTrackingActive;
+    }
+
+    public boolean hasValidLocationFix() {
+        return hasValidLocationFix;
     }
 
     public void updateSimulatedLocation(double lat, double lng, float accuracy) {
@@ -147,6 +165,7 @@ public class LocationHelper {
         this.currentLongitude = lng;
         this.currentAccuracy = accuracy;
         this.lastTimestamp = System.currentTimeMillis();
+        this.hasValidLocationFix = true;
         if (updateListener != null) {
             updateListener.onLocationUpdated(lat, lng, accuracy, currentSpeed, currentBearing);
         }
