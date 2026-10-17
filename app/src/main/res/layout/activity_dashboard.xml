@@ -181,7 +181,7 @@
                             android:layout_height="wrap_content"
                             android:layout_below="@+id/tvGreetingSubtitle"
                             android:layout_marginTop="16dp"
-                            android:background="#244A8D"
+                            android:background="@drawable/bg_dashboard_stats"
                             android:orientation="horizontal"
                             android:padding="12dp"
                             android:weightSum="3">
