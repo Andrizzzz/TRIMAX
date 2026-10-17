@@ -64,7 +64,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="DRIVER"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="20sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -307,7 +307,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="±10m"
-                                    android:textColor="#2563EB"
+                                    android:textColor="@color/primary_blue"
                                     android:textSize="14sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
@@ -394,7 +394,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="TRX-1024 • Active Delivery"
-                                    android:textColor="#2563EB"
+                                    android:textColor="@color/primary_blue"
                                     android:textSize="14sp"
                                     android:textStyle="bold" />
 
@@ -414,7 +414,7 @@
                                 android:layout_height="38dp"
                                 android:layout_alignParentEnd="true"
                                 android:layout_centerVertical="true"
-                                android:backgroundTint="#2563EB"
+                                android:backgroundTint="@color/primary_blue"
                                 android:insetTop="0dp"
                                 android:insetBottom="0dp"
                                 android:paddingHorizontal="12dp"
@@ -483,7 +483,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="TRX-1024"
-                                android:textColor="#2563EB"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="20sp"
                                 android:textStyle="bold" />
 
@@ -496,7 +496,7 @@
                                 android:paddingHorizontal="12dp"
                                 android:paddingVertical="4dp"
                                 android:text="ASSIGNED"
-                                android:textColor="#2563EB"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </RelativeLayout>
@@ -594,7 +594,7 @@
                                 android:layout_weight="1"
                                 android:text="VIEW DETAILS"
                                 android:textAllCaps="false"
-                                android:textColor="#2563EB"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
                                 app:cornerRadius="12dp"
@@ -606,7 +606,7 @@
                                 android:layout_height="48dp"
                                 android:layout_marginStart="6dp"
                                 android:layout_weight="1"
-                                android:backgroundTint="#2563EB"
+                                android:backgroundTint="@color/primary_blue"
                                 android:text="START DELIVERY"
                                 android:textAllCaps="false"
                                 android:textColor="@android:color/white"
@@ -673,7 +673,7 @@
                                 android:layout_height="28dp"
                                 android:layout_alignParentEnd="true"
                                 android:background="@drawable/bg_icon_badge"
-                                android:backgroundTint="#2563EB"
+                                android:backgroundTint="@color/primary_blue"
                                 android:gravity="center"
                                 android:text="3"
                                 android:textColor="@android:color/white"
