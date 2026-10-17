@@ -137,6 +137,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="260dp"
                 android:minHeight="200dp"
+                    app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp">
 
@@ -205,7 +206,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="3dp">
 
                 <LinearLayout
@@ -322,7 +324,7 @@
                     android:textColor="@color/primary_blue"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#2563EB" />
 
                 <!-- Change Customer Location Button -->
@@ -340,7 +342,7 @@
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#CBD5E1" />
             </LinearLayout>
 
