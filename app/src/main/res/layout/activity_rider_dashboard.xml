@@ -157,7 +157,7 @@
                             android:id="@+id/tvWelcomeAgent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Hi, Test Rider! 🏍"
+                            android:text="Hi, Test Agent! 👋"
                             android:textColor="@android:color/white"
                             android:textSize="22sp"
                             android:textStyle="bold" />
@@ -168,7 +168,7 @@
                             android:layout_height="wrap_content"
                             android:layout_below="@+id/tvWelcomeAgent"
                             android:layout_marginTop="4dp"
-                            android:text="Good Morning, Rider. Ready to book and manage deliveries today?"
+                            android:text="Good Morning, Agent. Ready to book and manage deliveries today?"
                             android:textColor="#E0E7FF"
                             android:textSize="13sp" />
 
@@ -409,7 +409,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Rider: Test Driver • To: Juan Dela Cruz"
+                                    android:text="Driver: Test Driver • To: Juan Dela Cruz"
                                     android:textColor="#0F172A"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -446,7 +446,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:text="Recent Rider Bookings"
+                        android:text="Recent Agent Bookings"
                         android:textColor="#0F172A"
                         android:textSize="18sp"
                         android:textStyle="bold" />

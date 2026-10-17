@@ -185,7 +185,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         agentUser.put("phone", "09170001122");
         db.insertWithOnConflict(TABLE_USERS, null, agentUser, SQLiteDatabase.CONFLICT_REPLACE);
 
-        // Legacy Rider User Account (mapped to official AGENT role)
+        // Secondary Agent User Account (rider01 / rider123)
         ContentValues riderUser = new ContentValues();
         riderUser.put("username", "rider01");
         riderUser.put("password", "rider123");
