@@ -1,13 +1,18 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -21,13 +26,21 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DashboardActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private MockMapView dashboardMapView;
     private SessionManager session;
+    private DatabaseHelper dbHelper;
+    private LocationHelper locationHelper;
+
+    private ActivityResultLauncher<Intent> attendanceCameraLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +49,8 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
 
         session = new SessionManager(this);
+        dbHelper = new DatabaseHelper(this);
+        locationHelper = new LocationHelper(this);
 
         // Role-based Navigation Access Protection Guard
         if (session.isLoggedIn() && "DRIVER".equalsIgnoreCase(session.getRole())) {
@@ -68,8 +83,54 @@ public class DashboardActivity extends AppCompatActivity {
         LinearLayout statPendingBookings = findViewById(R.id.statPendingBookings);
         LinearLayout statConfirmedBookings = findViewById(R.id.statConfirmedBookings);
 
-        CardView cardDashboardBooking1 = findViewById(R.id.cardDashboardBooking1);
-        CardView cardDashboardBooking2 = findViewById(R.id.cardDashboardBooking2);
+        MaterialButton btnAgentStartDuty = findViewById(R.id.btnAgentStartDuty);
+
+        // Camera Attendance Launcher
+        attendanceCameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Bitmap photoBitmap = null;
+                        if (result.getData() != null && result.getData().getExtras() != null) {
+                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
+                        }
+
+                        if (photoBitmap != null) {
+                            File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
+                                    DashboardActivity.this,
+                                    photoBitmap,
+                                    "AGENT_DUTY_ATTENDANCE",
+                                    locationHelper.getLatitude(),
+                                    locationHelper.getLongitude()
+                            );
+
+                            String path = savedFile != null ? savedFile.getAbsolutePath() : "";
+                            boolean saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+
+                            if (saved) {
+                                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
+                                String startTimeStr = sdf.format(new Date());
+
+                                session.setDutyOnline(true);
+                                session.setDutyStartTime(startTimeStr);
+
+                                updateAttendanceUI();
+                                Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(DashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(DashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(DashboardActivity.this, "Attendance photo capture cancelled.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        if (btnAgentStartDuty != null) {
+            btnAgentStartDuty.setOnClickListener(v -> toggleAgentDutyState());
+        }
 
         // FoodPanda Style Live Map Tracking Views
         dashboardMapView = findViewById(R.id.dashboardMapView);
@@ -110,7 +171,6 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (navigationView != null) {
-            // Update Drawer Header text
             View headerView = navigationView.getHeaderView(0);
             if (headerView != null) {
                 TextView tvNavName = headerView.findViewById(R.id.tvNavHeaderName);
@@ -202,6 +262,68 @@ public class DashboardActivity extends AppCompatActivity {
                 }
             }
         });
+
+        updateAttendanceUI();
+    }
+
+    private void toggleAgentDutyState() {
+        if (session.isDutyOnline()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("End Duty Shift")
+                    .setMessage("Are you sure you want to end your active duty shift?")
+                    .setPositiveButton("End Duty Shift", (dialog, which) -> {
+                        dbHelper.endDuty(session.getUsername());
+                        session.setDutyOnline(false);
+                        session.setDutyStartTime("");
+                        updateAttendanceUI();
+                        Toast.makeText(this, "Agent Duty shift ended.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } else {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            try {
+                attendanceCameraLauncher.launch(takePictureIntent);
+            } catch (Exception e) {
+                Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void updateAttendanceUI() {
+        TextView tvDutyBadge = findViewById(R.id.tvDutyBadge);
+        TextView tvDutyTimeInfo = findViewById(R.id.tvDutyTimeInfo);
+        MaterialButton btnAgentStartDuty = findViewById(R.id.btnAgentStartDuty);
+
+        if (session.isDutyOnline()) {
+            if (tvDutyBadge != null) {
+                tvDutyBadge.setText("● ON DUTY");
+                tvDutyBadge.setTextColor(0xFF059669); // Green
+                tvDutyBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
+            }
+            if (tvDutyTimeInfo != null) {
+                String startTime = session.getDutyStartTime();
+                if (startTime.isEmpty()) startTime = "Just now";
+                tvDutyTimeInfo.setText("On Duty shift active since " + startTime);
+            }
+            if (btnAgentStartDuty != null) {
+                btnAgentStartDuty.setText("END DUTY 🛑");
+                btnAgentStartDuty.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEF4444)); // Red
+            }
+        } else {
+            if (tvDutyBadge != null) {
+                tvDutyBadge.setText("● OFF DUTY");
+                tvDutyBadge.setTextColor(0xFFEF4444); // Red
+                tvDutyBadge.setBackgroundResource(R.drawable.bg_status_pending);
+            }
+            if (tvDutyTimeInfo != null) {
+                tvDutyTimeInfo.setText("Camera photo verification required to Start Duty");
+            }
+            if (btnAgentStartDuty != null) {
+                btnAgentStartDuty.setText("START DUTY 📷");
+                btnAgentStartDuty.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF2563EB)); // Blue
+            }
+        }
     }
 
     @Override
@@ -212,6 +334,7 @@ public class DashboardActivity extends AppCompatActivity {
             dashboardMapView.startLiveDeliveryAnimation();
         }
         updateHeaderUI();
+        updateAttendanceUI();
         updateDashboardStats();
         loadRecentBookings();
     }

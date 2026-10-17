@@ -24,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_STATUS_HISTORY = "delivery_status_history";
     public static final String TABLE_PROBLEM_REPORTS = "driver_problem_reports";
     public static final String TABLE_NOTIFICATIONS = "notifications";
+    public static final String TABLE_ATTENDANCE = "attendance_records";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -142,6 +143,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "is_read INTEGER DEFAULT 0, "
                 + "timestamp TEXT)";
         db.execSQL(createNotificationsTable);
+
+        // 9. Agent Duty Attendance Table
+        String createAttendanceTable = "CREATE TABLE " + TABLE_ATTENDANCE + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "agent_id TEXT, "
+                + "duty_status TEXT, "
+                + "start_time TEXT, "
+                + "end_time TEXT, "
+                + "photo_path TEXT, "
+                + "latitude REAL, "
+                + "longitude REAL, "
+                + "created_at TEXT)";
+        db.execSQL(createAttendanceTable);
 
         // Populate Initial Seed Data
         seedInitialData(db);
@@ -979,5 +993,89 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor.close();
         }
         return list;
+    }
+
+    // -------------------------------------------------------------
+    // AGENT ATTENDANCE & START DUTY MANAGEMENT
+    // -------------------------------------------------------------
+
+    public static class AttendanceRecord {
+        private final int id;
+        private final String agentId;
+        private final String dutyStatus;
+        private final String startTime;
+        private final String endTime;
+        private final String photoPath;
+        private final double latitude;
+        private final double longitude;
+
+        public AttendanceRecord(int id, String agentId, String dutyStatus, String startTime, String endTime, String photoPath, double latitude, double longitude) {
+            this.id = id;
+            this.agentId = agentId;
+            this.dutyStatus = dutyStatus;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.photoPath = photoPath;
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public int getId() { return id; }
+        public String getAgentId() { return agentId; }
+        public String getDutyStatus() { return dutyStatus; }
+        public String getStartTime() { return startTime; }
+        public String getEndTime() { return endTime; }
+        public String getPhotoPath() { return photoPath; }
+        public double getLatitude() { return latitude; }
+        public double getLongitude() { return longitude; }
+    }
+
+    public boolean saveAttendance(String agentId, String photoPath, double lat, double lng) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("agent_id", agentId);
+        cv.put("duty_status", "ON_DUTY");
+        String nowStr = String.valueOf(System.currentTimeMillis());
+        cv.put("start_time", nowStr);
+        cv.put("end_time", "");
+        cv.put("photo_path", photoPath != null ? photoPath : "");
+        cv.put("latitude", lat);
+        cv.put("longitude", lng);
+        cv.put("created_at", nowStr);
+
+        long id = db.insert(TABLE_ATTENDANCE, null, cv);
+        return id != -1;
+    }
+
+    public boolean endDuty(String agentId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("duty_status", "OFF_DUTY");
+        cv.put("end_time", String.valueOf(System.currentTimeMillis()));
+
+        int rows = db.update(TABLE_ATTENDANCE, cv, "agent_id=? AND duty_status='ON_DUTY'", new String[]{agentId != null ? agentId : ""});
+        return rows > 0;
+    }
+
+    public AttendanceRecord getActiveAttendance(String agentId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_ATTENDANCE + " WHERE agent_id=? AND duty_status='ON_DUTY' ORDER BY id DESC LIMIT 1",
+                new String[]{agentId != null ? agentId : ""});
+
+        AttendanceRecord record = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            record = new AttendanceRecord(
+                    cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("agent_id")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("duty_status")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("start_time")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("end_time")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("photo_path")),
+                    cursor.getDouble(cursor.getColumnIndexOrThrow("latitude")),
+                    cursor.getDouble(cursor.getColumnIndexOrThrow("longitude"))
+            );
+            cursor.close();
+        }
+        return record;
     }
 }

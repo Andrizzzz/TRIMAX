@@ -96,6 +96,15 @@ public class SessionManager {
         editor.apply();
     }
 
+    public String getDutyStartTime() {
+        return pref.getString("dutyStartTime", "");
+    }
+
+    public void setDutyStartTime(String startTime) {
+        editor.putString("dutyStartTime", startTime != null ? startTime : "");
+        editor.apply();
+    }
+
     public void logoutUser() {
         editor.clear();
         editor.apply();

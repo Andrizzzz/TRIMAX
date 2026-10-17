@@ -1,6 +1,7 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -18,6 +19,8 @@ import androidx.cardview.widget.CardView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.io.File;
+
 public class DriverProofActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
@@ -27,6 +30,7 @@ public class DriverProofActivity extends AppCompatActivity {
     private String deliveryCode;
     private Delivery currentDelivery;
     private boolean photoCaptured = false;
+    private String capturedPhotoPath = "";
     private ActivityResultLauncher<Intent> cameraLauncher;
 
     @Override
@@ -73,17 +77,40 @@ public class DriverProofActivity extends AppCompatActivity {
             }
         }
 
-        // Camera Launcher Setup with RESULT_OK validation
+        // Camera Launcher Setup with RESULT_OK validation and Timestamp Overlay
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK) {
-                        photoCaptured = true;
-                        if (tvPhotoLabel != null) {
-                            tvPhotoLabel.setText("✓ Delivery Photo Evidence Captured!");
-                            tvPhotoLabel.setTextColor(0xFF059669); // Green
+                        Bitmap photoBitmap = null;
+                        if (result.getData() != null && result.getData().getExtras() != null) {
+                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
                         }
-                        Toast.makeText(this, "Camera Photo Evidence Captured!", Toast.LENGTH_SHORT).show();
+
+                        if (photoBitmap != null) {
+                            File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
+                                    DriverProofActivity.this,
+                                    photoBitmap,
+                                    "DELIVERY_PROOF_" + deliveryCode,
+                                    locationHelper.getLatitude(),
+                                    locationHelper.getLongitude()
+                            );
+
+                            if (savedFile != null && savedFile.exists() && savedFile.length() > 0) {
+                                photoCaptured = true;
+                                capturedPhotoPath = savedFile.getAbsolutePath();
+
+                                if (tvPhotoLabel != null) {
+                                    tvPhotoLabel.setText("✓ Delivery Photo Evidence Captured & Timestamped!");
+                                    tvPhotoLabel.setTextColor(0xFF059669); // Green
+                                }
+                                Toast.makeText(this, "Camera Photo Evidence Saved with Timestamp Overlay!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(this, "Failed to save photo file to storage.", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(this, "Failed to retrieve photo data from camera.", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         Toast.makeText(this, "Photo capture cancelled or failed.", Toast.LENGTH_SHORT).show();
                     }
@@ -103,8 +130,8 @@ public class DriverProofActivity extends AppCompatActivity {
 
         if (btnConfirmDelivery != null) {
             btnConfirmDelivery.setOnClickListener(v -> {
-                if (!photoCaptured) {
-                    Toast.makeText(this, "⚠️ Delivery Photo is REQUIRED before completing drop-off!", Toast.LENGTH_LONG).show();
+                if (!photoCaptured || TextUtils.isEmpty(capturedPhotoPath)) {
+                    Toast.makeText(this, "⚠️ Delivery Photo Evidence is REQUIRED before completing drop-off!", Toast.LENGTH_LONG).show();
                     return;
                 }
 
@@ -136,11 +163,10 @@ public class DriverProofActivity extends AppCompatActivity {
                 btnConfirmDelivery.setEnabled(false);
 
                 // Save proof locally in SQLite
-                String photoPath = "proof_photo_" + deliveryCode + "_" + System.currentTimeMillis() + ".jpg";
                 boolean saved = dbHelper.saveDeliveryProof(
                         deliveryCode,
                         session.getUsername(),
-                        photoPath,
+                        capturedPhotoPath,
                         recipient,
                         "TOKEN_SIGNED",
                         otpStatus,

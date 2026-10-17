@@ -288,6 +288,69 @@
                     </RelativeLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- AGENT DUTY ATTENDANCE CARD -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardAgentAttendance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="4dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="18dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvDutyBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_status_pending"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="4dp"
+                                android:text="● OFF DUTY"
+                                android:textColor="#EF4444"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvDutyTimeInfo"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Camera photo verification required to Start Duty"
+                                android:textColor="#64748B"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAgentStartDuty"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:backgroundTint="#2563EB"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="16dp"
+                            android:text="START DUTY 📷"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="12dp" />
+
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
+
                 <!-- FOODPANDA STYLE LIVE GPS MAP TRACKING CARD ON DASHBOARD -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardLiveTrackingMap"
