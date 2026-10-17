@@ -184,6 +184,12 @@ public class DriverDashboardActivity extends AppCompatActivity {
             btnToggleDuty.setOnClickListener(v -> toggleDriverDuty());
         }
 
+        // Dark Mode Toggle
+        ImageView btnThemeToggle = findViewById(R.id.btnThemeToggle);
+        if (btnThemeToggle != null) {
+            btnThemeToggle.setOnClickListener(v -> toggleDarkMode());
+        }
+
         // Top / Card Clicks
         if (btnDriverNotifications != null) {
             btnDriverNotifications.setOnClickListener(v -> startActivity(new Intent(this, DriverNotificationsActivity.class)));
@@ -316,6 +322,19 @@ public class DriverDashboardActivity extends AppCompatActivity {
             tvHeroStatusPill.setTextColor(0xFF059669);
             btnHeroStartDelivery.setText("CONTINUE DELIVERY");
         }
+    }
+
+    private void toggleDarkMode() {
+        String currentTheme = ThemeHelper.getSelectedTheme(this);
+        String newTheme;
+        if (ThemeHelper.THEME_DARK.equalsIgnoreCase(currentTheme)) {
+            newTheme = ThemeHelper.THEME_LIGHT;
+            Toast.makeText(this, "☀️ Light Mode Activated", Toast.LENGTH_SHORT).show();
+        } else {
+            newTheme = ThemeHelper.THEME_DARK;
+            Toast.makeText(this, "🌙 Dark Mode Activated", Toast.LENGTH_SHORT).show();
+        }
+        ThemeHelper.setTheme(this, newTheme);
     }
 
     private void toggleDriverDuty() {

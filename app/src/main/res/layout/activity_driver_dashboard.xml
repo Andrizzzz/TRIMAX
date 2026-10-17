@@ -11,7 +11,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F8FAFC">
+        android:background="@color/bg_main">
 
         <!-- Top Left Accent Shape -->
         <ImageView
@@ -69,19 +69,41 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/btnDriverNotifications"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+            <!-- Notification Bell & Theme Toggle Container -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:contentDescription="Notifications"
-                android:focusable="true"
-                android:padding="8dp"
-                android:src="@drawable/baseline_notifications_none_24"
-                app:tint="#0F172A" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Dark Mode Toggle Button -->
+                <ImageView
+                    android:id="@+id/btnThemeToggle"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="Toggle Dark Mode"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_lock"
+                    app:tint="@color/text_primary" />
+
+                <ImageView
+                    android:id="@+id/btnDriverNotifications"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="Notifications"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:src="@drawable/baseline_notifications_none_24"
+                    app:tint="@color/text_primary" />
+            </LinearLayout>
         </RelativeLayout>
 
         <!-- SCROLLABLE BODY -->

@@ -216,6 +216,12 @@ public class DashboardActivity extends AppCompatActivity {
             });
         }
 
+        // Dark Mode Dashboard Toggle
+        ImageView btnThemeToggle = findViewById(R.id.btnThemeToggle);
+        if (btnThemeToggle != null) {
+            btnThemeToggle.setOnClickListener(v -> toggleDarkMode());
+        }
+
         // 2. NOTIFICATION BELL
         if (btnNotifications != null) {
             btnNotifications.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class)));
@@ -264,6 +270,19 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         updateAttendanceUI();
+    }
+
+    private void toggleDarkMode() {
+        String currentTheme = ThemeHelper.getSelectedTheme(this);
+        String newTheme;
+        if (ThemeHelper.THEME_DARK.equalsIgnoreCase(currentTheme)) {
+            newTheme = ThemeHelper.THEME_LIGHT;
+            Toast.makeText(this, "☀️ Light Mode Activated", Toast.LENGTH_SHORT).show();
+        } else {
+            newTheme = ThemeHelper.THEME_DARK;
+            Toast.makeText(this, "🌙 Dark Mode Activated", Toast.LENGTH_SHORT).show();
+        }
+        ThemeHelper.setTheme(this, newTheme);
     }
 
     private void toggleAgentDutyState() {
