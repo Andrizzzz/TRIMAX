@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".DriverProofActivity">
 
     <!-- Top Left Accent Shape -->
@@ -36,7 +36,8 @@
             android:contentDescription="Back Button"
             android:focusable="true"
             android:padding="8dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
 
         <TextView
             android:id="@+id/tvHeaderTitle"
@@ -44,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Drop-Off &amp; Proof of Delivery"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -70,7 +71,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Confirm Package Drop-Off 📦"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -80,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Booking #TRX-1024 • Customer: Juan Dela Cruz"
-                android:textColor="#2563EB"
+                android:textColor="@color/primary_blue"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -90,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="TAKE DELIVERY PHOTO (REQUIRED)*"
-                android:textColor="#DC2626"
+                android:textColor="#E53935"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -102,6 +103,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -124,7 +126,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Tap to capture Proof of Delivery Photo"
-                        android:textColor="#2563EB"
+                        android:textColor="@color/primary_blue"
                         android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -141,8 +143,8 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB">
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRecipientName"
@@ -151,7 +153,7 @@
                     android:inputType="textPersonName"
                     android:paddingVertical="14dp"
                     android:text="Juan Dela Cruz"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -166,8 +168,8 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB">
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etOtpCode"
@@ -176,7 +178,7 @@
                     android:inputType="number"
                     android:paddingVertical="14dp"
                     android:text="8842"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -185,6 +187,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="90dp"
                 android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -197,7 +200,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="✍ Customer Digital Signature"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -206,7 +209,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:text="✓ Verified Electronic Token"
-                        android:textColor="#059669"
+                        android:textColor="#13A77A"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
@@ -218,7 +221,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:layout_marginTop="22dp"
-                android:backgroundTint="#059669"
+                android:backgroundTint="#13A77A"
                 android:text="COMPLETE DELIVERY"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
