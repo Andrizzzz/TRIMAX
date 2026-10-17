@@ -133,7 +133,7 @@
                         android:text="-"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
-                        app:cornerRadius="12dp" />
+                        app:cornerRadius="14dp" />
 
                     <TextView
                         android:id="@+id/tvQuantity"
@@ -158,7 +158,7 @@
                         android:text="+"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
-                        app:cornerRadius="12dp" />
+                        app:cornerRadius="14dp" />
                 </LinearLayout>
             </RelativeLayout>
 
@@ -181,7 +181,7 @@
                     android:textAllCaps="false"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#CBD5E1" />
 
                 <com.google.android.material.button.MaterialButton
@@ -195,7 +195,7 @@
                     android:textAllCaps="false"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#CBD5E1" />
             </LinearLayout>
 
