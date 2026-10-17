@@ -49,7 +49,7 @@
             android:textColor="@android:color/white"
             android:textSize="13sp"
             android:textStyle="bold"
-            app:cornerRadius="10dp" />
+            app:cornerRadius="14dp" />
     </RelativeLayout>
 
     <!-- SEARCH INPUT FIELD -->
@@ -216,7 +216,7 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:elevation="8dp"
         app:itemIconTint="#64748B"
         app:itemRippleColor="#3B82F6"
