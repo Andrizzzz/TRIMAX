@@ -82,8 +82,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -130,8 +131,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -177,8 +179,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -224,8 +227,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -260,8 +264,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -296,8 +301,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -332,8 +338,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -368,8 +375,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -404,8 +412,9 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
