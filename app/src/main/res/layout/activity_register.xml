@@ -279,7 +279,7 @@
                     android:textAllCaps="false"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#CBD5E1" />
 
                 <com.google.android.material.button.MaterialButton
@@ -293,7 +293,7 @@
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
-                    app:cornerRadius="12dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
 
             <!-- Bottom Account Link -->
