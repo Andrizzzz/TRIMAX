@@ -42,11 +42,6 @@ public class ReportsActivity extends AppCompatActivity {
         ImageView btnBack = findViewById(R.id.btnBack);
         MaterialButton btnDateFilter = findViewById(R.id.btnDateFilter);
 
-        CardView cardTotalBookings = findViewById(R.id.cardTotalBookings);
-        CardView cardConfirmedBookings = findViewById(R.id.cardConfirmedBookings);
-        CardView cardPendingBookings = findViewById(R.id.cardPendingBookings);
-        CardView cardCancelledBookings = findViewById(R.id.cardCancelledBookings);
-
         tvReportTotalCount = findViewById(R.id.tvReportTotalCount);
         tvReportConfirmedCount = findViewById(R.id.tvReportConfirmedCount);
         tvReportPendingCount = findViewById(R.id.tvReportPendingCount);
@@ -58,22 +53,6 @@ public class ReportsActivity extends AppCompatActivity {
 
         if (btnDateFilter != null) {
             btnDateFilter.setOnClickListener(v -> showDateRangePicker());
-        }
-
-        if (cardTotalBookings != null) {
-            cardTotalBookings.setOnClickListener(v -> openBookingsWithFilter("ALL"));
-        }
-
-        if (cardConfirmedBookings != null) {
-            cardConfirmedBookings.setOnClickListener(v -> openBookingsWithFilter("CONFIRMED"));
-        }
-
-        if (cardPendingBookings != null) {
-            cardPendingBookings.setOnClickListener(v -> openBookingsWithFilter("PENDING"));
-        }
-
-        if (cardCancelledBookings != null) {
-            cardCancelledBookings.setOnClickListener(v -> openBookingsWithFilter("CANCELLED"));
         }
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
