@@ -78,11 +78,14 @@
                     android:padding="24dp">
 
                     <ImageView
+                        android:id="@+id/ivDriverProfilePhoto"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
                         android:background="@drawable/bg_icon_badge"
-                        android:contentDescription="Driver Avatar"
-                        android:padding="16dp"
+                        android:contentDescription="Driver profile picture. Tap to change."
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:scaleType="centerCrop"
                         android:src="@drawable/ic_user"
                         app:tint="#2563EB" />
 
