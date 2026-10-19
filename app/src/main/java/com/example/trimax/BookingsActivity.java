@@ -52,6 +52,11 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
         dbHelper = new DatabaseHelper(this);
 
+        View btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> navigateBack());
+        }
+
         MaterialButton btnNewBooking = findViewById(R.id.btnNewBooking);
         etSearchBookings = findViewById(R.id.etSearchBookings);
         rvBookings = findViewById(R.id.rvBookings);
@@ -191,6 +196,15 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         intent.putExtra("STATUS", delivery.getStatus());
         intent.putExtra("TOTAL_AMOUNT", String.format(java.util.Locale.US, "₱ %,.2f", delivery.getCurrentTotal()));
         startActivity(intent);
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 
     private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
