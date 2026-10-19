@@ -17,7 +17,6 @@
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:fillViewport="true"
             android:overScrollMode="never"
             app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
             app:layout_constraintTop_toTopOf="parent">
