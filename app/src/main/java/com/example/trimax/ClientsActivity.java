@@ -80,7 +80,7 @@ public class ClientsActivity extends AppCompatActivity {
         clientsListContainer.removeAllViews();
         com.google.android.material.button.MaterialButton addCustomer = new com.google.android.material.button.MaterialButton(this);
         addCustomer.setText("+ Add New Customer");
-        addCustomer.setTextAllCaps(false);
+        addCustomer.setAllCaps(false);
         addCustomer.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.card_bg)));
         addCustomer.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
