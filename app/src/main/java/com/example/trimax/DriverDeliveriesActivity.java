@@ -60,6 +60,8 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         loadDeliveries();
     }
 
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+
     private void loadDeliveries() {
         if (containerDeliveries == null) return;
         containerDeliveries.removeAllViews();
@@ -71,7 +73,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             tvEmpty.setText("No active assigned bookings found.");
             tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
             tvEmpty.setTextSize(16);
-            tvEmpty.setPadding(20, 40, 20, 20);
+            tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
             containerDeliveries.addView(tvEmpty);
             return;
         }
@@ -82,7 +84,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             CardView card = new CardView(this);
             CardView.LayoutParams cardParams = new CardView.LayoutParams(
                     CardView.LayoutParams.MATCH_PARENT, CardView.LayoutParams.WRAP_CONTENT);
-            cardParams.setMargins(0, 0, 0, 28);
+            cardParams.setMargins(0, 0, 0, dp(16));
             card.setLayoutParams(cardParams);
             card.setRadius(20);
             card.setCardElevation(4);
@@ -91,7 +93,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
             LinearLayout layout = new LinearLayout(this);
             layout.setOrientation(LinearLayout.VERTICAL);
-            layout.setPadding(28, 28, 28, 28);
+            layout.setPadding(dp(18), dp(18), dp(18), dp(18));
 
             // Header Row: Sequence Badge & Category Tag
             LinearLayout headerRow = new LinearLayout(this);
@@ -118,7 +120,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             tvSeqBadge.setTextColor(0xFF059669);
             tvSeqBadge.setTextSize(11);
             tvSeqBadge.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvSeqBadge.setPadding(16, 6, 16, 6);
+            tvSeqBadge.setPadding(dp(12), dp(6), dp(12), dp(6));
 
             headerRow.addView(tvCategory);
             headerRow.addView(tvSeqBadge);
@@ -128,27 +130,36 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             tvCode.setText(String.format("Booking #%s", d.getBookingId()));
             tvCode.setTextColor(getResources().getColor(R.color.text_primary));
             tvCode.setTextSize(18);
-            tvCode.setPadding(0, 8, 0, 0);
+            tvCode.setMaxLines(2);
+            tvCode.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            tvCode.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+            tvCode.setPadding(0, dp(8), 0, 0);
             tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
 
             TextView tvCustomer = new TextView(this);
             tvCustomer.setText(String.format("Customer: %s • %s", d.getCustomerName(), d.getCustomerPhone()));
             tvCustomer.setTextColor(getResources().getColor(R.color.primary_blue));
             tvCustomer.setTextSize(14);
-            tvCustomer.setPadding(0, 4, 0, 0);
+            tvCustomer.setMaxLines(3);
+            tvCustomer.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+            tvCustomer.setPadding(0, dp(4), 0, 0);
 
             TextView tvPickup = new TextView(this);
             tvPickup.setText(String.format("Pickup: %s", d.getPickupLocation()));
             tvPickup.setTextColor(getResources().getColor(R.color.text_secondary));
             tvPickup.setTextSize(13);
-            tvPickup.setPadding(0, 4, 0, 0);
+            tvPickup.setMaxLines(3);
+            tvPickup.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+            tvPickup.setPadding(0, dp(6), 0, 0);
 
             TextView tvDest = new TextView(this);
             tvDest.setText(String.format("Destination: %s", d.getDestination()));
             tvDest.setTextColor(getResources().getColor(R.color.text_primary));
             tvDest.setTextSize(13);
+            tvDest.setMaxLines(3);
+            tvDest.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
             tvDest.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvDest.setPadding(0, 2, 0, 0);
+            tvDest.setPadding(0, dp(6), 0, 0);
 
             // Special instructions if present
             if (!TextUtils.isEmpty(d.getSpecialInstructions())) {
@@ -157,7 +168,9 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
                 tvInstructions.setTextColor(getResources().getColor(R.color.text_primary));
                 tvInstructions.setBackgroundResource(R.drawable.bg_pill_unselected);
                 tvInstructions.setTextSize(12);
-                tvInstructions.setPadding(12, 8, 12, 8);
+                tvInstructions.setMaxLines(4);
+                tvInstructions.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+                tvInstructions.setPadding(dp(12), dp(8), dp(12), dp(8));
                 tvInstructions.setPadding(12, 8, 12, 8);
                 layout.addView(headerRow);
                 layout.addView(tvCode);
@@ -177,8 +190,9 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             tvStatus.setText(String.format("Status: %s", d.getStatus()));
             tvStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
             tvStatus.setTextSize(13);
+            tvStatus.setMaxLines(2);
             tvStatus.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvStatus.setPadding(0, 8, 0, 0);
+            tvStatus.setPadding(0, dp(8), 0, 0);
             layout.addView(tvStatus);
 
             card.addView(layout);
