@@ -497,10 +497,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         argsList.add(driverUsername);
 
         if (filterStatus != null && !"ALL".equalsIgnoreCase(filterStatus)) {
-            query += " AND status=?";
-            argsList.add(filterStatus);
+            if ("DELIVERED".equalsIgnoreCase(filterStatus) || "COMPLETED".equalsIgnoreCase(filterStatus)) {
+                // Historical data may use either DELIVERED or COMPLETED for successful deliveries.
+                query += " AND UPPER(status) IN ('DELIVERED', 'COMPLETED')";
+            } else if ("FAILED".equalsIgnoreCase(filterStatus)) {
+                query += " AND UPPER(status)='FAILED'";
+            } else {
+                query += " AND UPPER(status)=?";
+                argsList.add(filterStatus.toUpperCase(Locale.ROOT));
+            }
         } else {
-            query += " AND (status='DELIVERED' OR status='FAILED' OR status='CANCELLED')";
+            query += " AND UPPER(status) IN ('DELIVERED', 'COMPLETED', 'FAILED', 'CANCELLED')";
         }
 
         query += " ORDER BY sequence_number ASC, id DESC";
