@@ -399,12 +399,24 @@
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
 
-                <!-- Hidden compatibility views -->
+                <!-- DRIVER NAVIGATION & TASKS: restored dashboard action cards -->
                 <TextView
-                    android:id="@+id/tvDutyStatusPill"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="Driver Navigation &amp; Tasks"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
 
                 <TextView
                     android:id="@+id/tvGpsTrackingLabel"
@@ -444,30 +456,6 @@
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardAssignedDeliveries"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardDriverMap"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardDeliveryHistory"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardEmergencySupport"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/tvDelivBadge"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:visibility="gone" />
