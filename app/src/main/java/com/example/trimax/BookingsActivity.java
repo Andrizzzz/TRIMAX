@@ -175,7 +175,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
     private void resetChipStyle(MaterialButton chip) {
         if (chip == null) return;
         chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0x00000000)); // Transparent
-        chip.setTextColor(0xFF0F172A);
+        chip.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary));
         chip.setStrokeColor(android.content.res.ColorStateList.valueOf(0xFFCBD5E1));
         chip.setStrokeWidth(2);
     }
