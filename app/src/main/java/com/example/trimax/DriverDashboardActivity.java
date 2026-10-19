@@ -67,7 +67,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         locationHelper = new LocationHelper(this);
 
         drawerLayout = findViewById(R.id.drawerLayout);
-        View mainContent = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
+        View mainContent = findViewById(R.id.mainContent);
 
         if (mainContent != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
@@ -206,6 +206,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         // Dark Mode Toggle
         ImageView btnThemeToggle = findViewById(R.id.btnThemeToggle);
         if (btnThemeToggle != null) {
+            updateThemeToggleIcon(btnThemeToggle);
             btnThemeToggle.setOnClickListener(v -> toggleDarkMode());
         }
 
@@ -341,6 +342,14 @@ public class DriverDashboardActivity extends AppCompatActivity {
             tvHeroStatusPill.setTextColor(0xFF059669);
             btnHeroStartDelivery.setText("CONTINUE DELIVERY");
         }
+    }
+
+    private void updateThemeToggleIcon(ImageView toggle) {
+        boolean darkMode = ThemeHelper.THEME_DARK.equalsIgnoreCase(ThemeHelper.getSelectedTheme(this));
+        toggle.setImageResource(darkMode ? R.drawable.ic_moon : R.drawable.ic_sun);
+        toggle.setContentDescription(darkMode
+                ? "Dark mode is on. Tap to switch to light mode."
+                : "Light mode is on. Tap to switch to dark mode.");
     }
 
     private void toggleDarkMode() {
