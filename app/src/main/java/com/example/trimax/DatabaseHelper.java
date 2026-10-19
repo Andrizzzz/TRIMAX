@@ -1190,6 +1190,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
+    public String getCustomerCodeByPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) return null;
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT id FROM " + TABLE_CUSTOMERS + " WHERE phone=? ORDER BY id LIMIT 1",
+                new String[]{phone.trim()});
+        String code = null;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) code = "CUST-" + cursor.getLong(0);
+            cursor.close();
+        }
+        return code;
+    }
+
     public boolean saveCustomer(String name, String phone, String email, String address) {
         return saveCustomer(name, phone, email, address, 0, 0);
     }
