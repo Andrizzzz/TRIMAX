@@ -32,7 +32,7 @@ public class ClientDetailActivity extends AppCompatActivity {
         View cardHistory2 = findViewById(R.id.tvHist2Id) != null ? (View) findViewById(R.id.tvHist2Id).getParent().getParent() : null;
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> navigateBack());
         }
 
         if (name != null) tvClientName.setText(name);
@@ -73,5 +73,14 @@ public class ClientDetailActivity extends AppCompatActivity {
         intent.putExtra("STATUS", status);
         intent.putExtra("TOTAL_AMOUNT", amount);
         startActivity(intent);
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
