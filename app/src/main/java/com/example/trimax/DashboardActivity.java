@@ -304,6 +304,11 @@ public class DashboardActivity extends AppCompatActivity {
         // 8. BOTTOM NAVIGATION
         if (bottomNavigation != null) {
             setupBottomNavigation(bottomNavigation);
+            bottomNavigation.setOnItemReselectedListener(item -> {
+                if (item.getItemId() == R.id.nav_home) {
+                    refreshDashboardContent();
+                }
+            });
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
 
