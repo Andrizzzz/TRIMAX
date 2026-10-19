@@ -74,6 +74,15 @@ public class SessionManager {
         return role;
     }
 
+    public String getProfilePhotoUri() {
+        return pref.getString("profilePhotoUri", "");
+    }
+
+    public void setProfilePhotoUri(String uri) {
+        editor.putString("profilePhotoUri", uri != null ? uri : "");
+        editor.apply();
+    }
+
     public void updateProfile(String fullName, String email, String phone) {
         if (fullName != null && !fullName.trim().isEmpty()) {
             editor.putString(KEY_FULL_NAME, fullName.trim());
