@@ -59,7 +59,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         MaterialButton btnEdit = findViewById(R.id.btnEdit);
         MaterialButton btnConfirmBooking = findViewById(R.id.btnConfirmBooking);
 
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> navigateBack());
         btnEdit.setOnClickListener(v -> finish());
 
         if (customerName != null) tvCustomerName.setText(customerName);
@@ -109,5 +109,14 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             startActivity(confirmedIntent);
             finishAffinity(); // Close creation flow stack
         });
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
