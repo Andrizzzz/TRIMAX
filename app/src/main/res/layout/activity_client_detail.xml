@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".ClientDetailActivity">
 
     <!-- Top Left Accent Shape -->
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Client Details"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -85,7 +85,7 @@
                         android:contentDescription="Avatar"
                         android:padding="16dp"
                         android:src="@drawable/ic_user"
-                        app:tint="#2563EB" />
+                        app:tint="@color/primary_blue" />
 
                     <TextView
                         android:id="@+id/tvClientName"
@@ -93,7 +93,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="Juan Dela Cruz"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
@@ -103,7 +103,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="📞 0917 123 4567"
-                        android:textColor="#2563EB"
+                        android:textColor="@color/primary_blue"
                         android:textSize="14sp" />
 
                     <TextView
@@ -112,7 +112,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="✉ juan@gmail.com"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                 </LinearLayout>
@@ -124,7 +124,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="Booking History"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -146,7 +146,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="BK-2026-00123"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -156,7 +156,7 @@
                         android:layout_below="@+id/tvHist1Id"
                         android:layout_marginTop="2dp"
                         android:text="July 19, 2026"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
                     <TextView
@@ -191,7 +191,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="BK-2026-00110"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -201,7 +201,7 @@
                         android:layout_below="@+id/tvHist2Id"
                         android:layout_marginTop="2dp"
                         android:text="July 10, 2026"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
                     <TextView
