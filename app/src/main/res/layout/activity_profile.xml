@@ -59,11 +59,14 @@
 
             <!-- Avatar -->
             <ImageView
+                android:id="@+id/ivProfilePhoto"
                 android:layout_width="88dp"
                 android:layout_height="88dp"
                 android:background="@drawable/bg_pill_unselected"
-                android:contentDescription="Avatar"
-                android:padding="18dp"
+                android:contentDescription="Profile picture. Tap to change."
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleType="centerCrop"
                 android:src="@drawable/ic_user"
                 app:tint="@color/primary_blue" />
 
