@@ -124,7 +124,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Notifications -->
                     <RelativeLayout
@@ -167,7 +167,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Help & Support -->
                     <RelativeLayout
@@ -209,7 +209,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- About TRIMAX -->
                     <RelativeLayout
@@ -250,7 +250,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Logout -->
                     <RelativeLayout
