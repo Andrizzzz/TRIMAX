@@ -1,6 +1,10 @@
 package com.example.trimax;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -16,7 +20,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -41,6 +47,7 @@ public class DashboardActivity extends AppCompatActivity {
     private LocationHelper locationHelper;
 
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +135,26 @@ public class DashboardActivity extends AppCompatActivity {
                 }
         );
 
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (granted) {
+                        launchAttendanceCamera();
+                    } else {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Camera Permission Required")
+                                .setMessage("Camera access is needed to take your attendance verification photo. Enable Camera permission in App Settings to start duty.")
+                                .setPositiveButton("Open Settings", (dialog, which) -> {
+                                    Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            Uri.parse("package:" + getPackageName()));
+                                    startActivity(settingsIntent);
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    }
+                }
+        );
+
         if (btnAgentStartDuty != null) {
             btnAgentStartDuty.setOnClickListener(v -> toggleAgentDutyState());
         }
@@ -145,6 +172,15 @@ public class DashboardActivity extends AppCompatActivity {
                 Intent intent = new Intent(DashboardActivity.this, DriverMapActivity.class);
                 intent.putExtra("DELIVERY_ID", "BK-2026-00123");
                 startActivity(intent);
+            });
+        }
+
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefreshDashboard);
+        if (swipeRefresh != null) {
+            swipeRefresh.setColorSchemeResources(R.color.primary_blue);
+            swipeRefresh.setOnRefreshListener(() -> {
+                refreshDashboardContent();
+                swipeRefresh.setRefreshing(false);
             });
         }
 
@@ -189,6 +225,7 @@ public class DashboardActivity extends AppCompatActivity {
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (itemId == R.id.drawer_home) {
+                    refreshDashboardContent();
                     return true;
                 } else if (itemId == R.id.drawer_bookings) {
                     startActivity(new Intent(DashboardActivity.this, BookingsActivity.class));
@@ -319,13 +356,19 @@ public class DashboardActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchAttendanceCamera();
         } else {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            try {
-                attendanceCameraLauncher.launch(takePictureIntent);
-            } catch (Exception e) {
-                Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
-            }
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void launchAttendanceCamera() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            attendanceCameraLauncher.launch(takePictureIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -369,17 +412,18 @@ public class DashboardActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         BottomNavigationView dashboardNavigation = findViewById(R.id.bottomNavigation);
-        if (dashboardNavigation != null) {
+        if (dashboardNavigation != null && dashboardNavigation.getSelectedItemId() != R.id.nav_home) {
             dashboardNavigation.setSelectedItemId(R.id.nav_home);
+        }
+        NavigationView dashboardDrawer = findViewById(R.id.navigationView);
+        if (dashboardDrawer != null) {
+            dashboardDrawer.setCheckedItem(R.id.drawer_home);
         }
         if (dashboardMapView != null) {
             dashboardMapView.onResume();
             dashboardMapView.startLiveDeliveryAnimation();
         }
-        updateHeaderUI();
-        updateAttendanceUI();
-        updateDashboardStats();
-        loadRecentBookings();
+        refreshDashboardContent();
     }
 
     private void updateHeaderUI() {
@@ -479,6 +523,13 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
+    private void refreshDashboardContent() {
+        updateHeaderUI();
+        updateAttendanceUI();
+        updateDashboardStats();
+        loadRecentBookings();
+    }
+
     private void updateDashboardStats() {
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         TextView tvStatTotalCount = findViewById(R.id.tvStatTotalCount);
@@ -531,6 +582,7 @@ public class DashboardActivity extends AppCompatActivity {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
+                refreshDashboardContent();
                 return true;
             } else if (itemId == R.id.nav_bookings) {
                 startActivity(new Intent(this, BookingsActivity.class));
