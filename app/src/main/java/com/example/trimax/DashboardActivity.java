@@ -227,7 +227,29 @@ public class DashboardActivity extends AppCompatActivity {
             btnNotifications.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class)));
         }
 
-        // 4. DASHBOARD STATS CARDS (Informational only, non-clickable)
+        // Dashboard quick actions
+        if (statTotalBookings != null) {
+            statTotalBookings.setOnClickListener(v -> openBookingsWithFilter("ALL"));
+        }
+        if (statPendingBookings != null) {
+            // Tracking starts with active/confirmed bookings so the user can choose a delivery.
+            statPendingBookings.setOnClickListener(v -> openBookingsWithFilter("CONFIRMED"));
+        }
+        if (statConfirmedBookings != null) {
+            statConfirmedBookings.setOnClickListener(v -> openBookingsWithFilter("COMPLETED"));
+        }
+        View supportCard = findViewById(R.id.cardAgentAttendance);
+        if (supportCard != null) {
+            supportCard.setOnClickListener(v -> new AlertDialog.Builder(DashboardActivity.this)
+                    .setTitle("TRIMAX Support")
+                    .setMessage("Need help with a booking or delivery? Open Notifications for the latest updates, or contact your TRIMAX administrator for assistance.")
+                    .setPositiveButton("Open Notifications", (dialog, which) ->
+                            startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class)))
+                    .setNegativeButton("Close", null)
+                    .show());
+        }
+
+        // 4. DASHBOARD STATS CARDS
 
         // 5. RECENT BOOKING CARDS
         loadRecentBookings();
