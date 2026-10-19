@@ -17,6 +17,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
+import java.util.Calendar;
+
 public class ReportsActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
@@ -26,6 +28,7 @@ public class ReportsActivity extends AppCompatActivity {
     private TextView tvReportConfirmedCount;
     private TextView tvReportPendingCount;
     private TextView tvReportCancelledCount;
+    private int selectedDateRange = -1; // -1 means all time
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,10 +125,23 @@ public class ReportsActivity extends AppCompatActivity {
     private void updateMetrics() {
         if (dbHelper == null) return;
 
-        int total = dbHelper.getBookingCountByStatus("ALL");
-        int confirmed = dbHelper.getBookingCountByStatus("CONFIRMED");
-        int pending = dbHelper.getBookingCountByStatus("PENDING");
-        int cancelled = dbHelper.getBookingCountByStatus("CANCELLED");
+        int total;
+        int confirmed;
+        int pending;
+        int cancelled;
+
+        if (selectedDateRange == -1) {
+            total = dbHelper.getBookingCountByStatus("ALL");
+            confirmed = dbHelper.getBookingCountByStatus("CONFIRMED");
+            pending = dbHelper.getBookingCountByStatus("PENDING");
+            cancelled = dbHelper.getBookingCountByStatus("CANCELLED");
+        } else {
+            long[] range = getSelectedDateBounds(selectedDateRange);
+            total = dbHelper.getBookingCountByStatusAndDateRange("ALL", range[0], range[1]);
+            confirmed = dbHelper.getBookingCountByStatusAndDateRange("CONFIRMED", range[0], range[1]);
+            pending = dbHelper.getBookingCountByStatusAndDateRange("PENDING", range[0], range[1]);
+            cancelled = dbHelper.getBookingCountByStatusAndDateRange("CANCELLED", range[0], range[1]);
+        }
 
         if (tvReportTotalCount != null) tvReportTotalCount.setText(String.valueOf(total));
         if (tvReportConfirmedCount != null) tvReportConfirmedCount.setText(String.valueOf(confirmed));
@@ -134,18 +150,65 @@ public class ReportsActivity extends AppCompatActivity {
     }
 
     private void showDateRangePicker() {
-        String[] options = {"July 2026", "June 2026", "Last 30 Days", "Quarter 2 2026", "Year to Date 2026"};
+        String[] options = {"All Time", "This Month", "Last Month", "Last 30 Days", "This Quarter", "Year to Date"};
         new AlertDialog.Builder(this)
                 .setTitle("Select Report Date Range")
                 .setItems(options, (dialog, which) -> {
+                    selectedDateRange = which == 0 ? -1 : which;
                     MaterialButton btnDateFilter = findViewById(R.id.btnDateFilter);
                     if (btnDateFilter != null) {
-                        btnDateFilter.setText(String.format("%s 📅", options[which]));
+                        btnDateFilter.setText(options[which] + " 📅");
                     }
                     updateMetrics();
-                    Toast.makeText(this, "Report data updated for " + options[which], Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Report data filtered: " + options[which], Toast.LENGTH_SHORT).show();
                 })
                 .show();
+    }
+
+    private long[] getSelectedDateBounds(int rangeOption) {
+        Calendar start = Calendar.getInstance();
+        Calendar end = Calendar.getInstance();
+        end.set(Calendar.HOUR_OF_DAY, 23);
+        end.set(Calendar.MINUTE, 59);
+        end.set(Calendar.SECOND, 59);
+        end.set(Calendar.MILLISECOND, 999);
+
+        switch (rangeOption) {
+            case 1: // This Month
+                start.set(Calendar.DAY_OF_MONTH, 1);
+                break;
+            case 2: // Last Month
+                start.add(Calendar.MONTH, -1);
+                start.set(Calendar.DAY_OF_MONTH, 1);
+                end.set(Calendar.DAY_OF_MONTH, 1);
+                end.add(Calendar.DAY_OF_MONTH, -1);
+                end.set(Calendar.HOUR_OF_DAY, 23);
+                end.set(Calendar.MINUTE, 59);
+                end.set(Calendar.SECOND, 59);
+                end.set(Calendar.MILLISECOND, 999);
+                break;
+            case 3: // Last 30 Days, including today
+                start.add(Calendar.DAY_OF_YEAR, -29);
+                break;
+            case 4: // This Quarter
+                int currentMonth = start.get(Calendar.MONTH);
+                int firstMonthOfQuarter = (currentMonth / 3) * 3;
+                start.set(Calendar.MONTH, firstMonthOfQuarter);
+                start.set(Calendar.DAY_OF_MONTH, 1);
+                break;
+            case 5: // Year to Date
+                start.set(Calendar.MONTH, Calendar.JANUARY);
+                start.set(Calendar.DAY_OF_MONTH, 1);
+                break;
+            default:
+                start.set(Calendar.DAY_OF_MONTH, 1);
+                break;
+        }
+        start.set(Calendar.HOUR_OF_DAY, 0);
+        start.set(Calendar.MINUTE, 0);
+        start.set(Calendar.SECOND, 0);
+        start.set(Calendar.MILLISECOND, 0);
+        return new long[]{start.getTimeInMillis(), end.getTimeInMillis()};
     }
 
     private void openBookingsWithFilter(String filter) {
