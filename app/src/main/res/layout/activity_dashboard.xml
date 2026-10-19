@@ -173,9 +173,6 @@
                             android:id="@+id/statTotalBookings"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
                             android:gravity="center"
                             android:orientation="horizontal"
                             android:padding="12dp">
@@ -228,9 +225,6 @@
                             android:id="@+id/statPendingBookings"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
                             android:gravity="center"
                             android:orientation="horizontal"
                             android:padding="12dp">
@@ -283,9 +277,6 @@
                             android:id="@+id/statConfirmedBookings"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
                             android:gravity="center"
                             android:orientation="horizontal"
                             android:padding="12dp">
@@ -337,9 +328,6 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
                             android:gravity="center"
                             android:orientation="horizontal"
                             android:padding="12dp">
