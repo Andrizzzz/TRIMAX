@@ -78,6 +78,21 @@ public class ClientsActivity extends AppCompatActivity {
     private void renderCustomers(String query) {
         if (clientsListContainer == null || dbHelper == null) return;
         clientsListContainer.removeAllViews();
+        com.google.android.material.button.MaterialButton addCustomer = new com.google.android.material.button.MaterialButton(this);
+        addCustomer.setText("+ Add New Customer");
+        addCustomer.setTextAllCaps(false);
+        addCustomer.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.card_bg)));
+        addCustomer.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+        LinearLayout.LayoutParams addParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+        addParams.bottomMargin = dp(14);
+        clientsListContainer.addView(addCustomer, addParams);
+        addCustomer.setOnClickListener(v -> {
+            Intent intent = new Intent(this, NewBookingCustomerActivity.class);
+            intent.putExtra("CUSTOMER_DIRECTORY_ONLY", true);
+            startActivity(intent);
+        });
         List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers(query);
         if (customers.isEmpty()) {
             TextView empty = new TextView(this);
