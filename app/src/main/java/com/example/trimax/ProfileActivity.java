@@ -1,12 +1,15 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -29,6 +32,20 @@ public class ProfileActivity extends AppCompatActivity {
 
         session = new SessionManager(this);
 
+        ActivityResultLauncher<String[]> photoPicker = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(), uri -> {
+                    if (uri != null) {
+                        try {
+                            getContentResolver().takePersistableUriPermission(
+                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        } catch (SecurityException ignored) {
+                            // Some document providers do not offer persistable URI grants.
+                        }
+                        session.setProfilePhotoUri(uri.toString());
+                        updateProfileHeader();
+                    }
+                });
+
         View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
         if (root != null) {
             ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
@@ -39,6 +56,8 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
+        ImageView ivProfilePhoto = findViewById(R.id.ivProfilePhoto);
+        if (ivProfilePhoto != null) ivProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
         View cardEditProfile = findViewById(R.id.cardEditProfile);
         View cardChangePassword = findViewById(R.id.cardChangePassword);
         View cardReports = findViewById(R.id.cardReports);
@@ -82,12 +101,28 @@ public class ProfileActivity extends AppCompatActivity {
     private void updateProfileHeader() {
         TextView tvAgentName = findViewById(R.id.tvAgentName);
         TextView tvAgentEmail = findViewById(R.id.tvAgentEmail);
+        ImageView ivProfilePhoto = findViewById(R.id.ivProfilePhoto);
 
         String name = session.getFullName();
         String email = session.getEmail();
 
         if (tvAgentName != null) tvAgentName.setText(name);
         if (tvAgentEmail != null) tvAgentEmail.setText(email);
+        if (ivProfilePhoto != null) {
+            String photoUri = session.getProfilePhotoUri();
+            if (photoUri != null && !photoUri.isEmpty()) {
+                try {
+                    ivProfilePhoto.setImageURI(Uri.parse(photoUri));
+                    ivProfilePhoto.setColorFilter(null);
+                } catch (Exception ignored) {
+                    ivProfilePhoto.setImageResource(R.drawable.ic_user);
+                    ivProfilePhoto.setColorFilter(getColor(R.color.primary_blue));
+                }
+            } else {
+                ivProfilePhoto.setImageResource(R.drawable.ic_user);
+                ivProfilePhoto.setColorFilter(getColor(R.color.primary_blue));
+            }
+        }
     }
 
     private void handleBackNavigation() {
