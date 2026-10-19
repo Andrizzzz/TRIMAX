@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".ClientsActivity">
 
     <!-- Top Left Accent Shape -->
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:text="Clients Directory"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -49,11 +49,11 @@
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusTopStart="16dp"
-        app:boxStrokeColor="#2563EB"
-        app:hintTextColor="#2563EB"
+        app:boxStrokeColor="@color/primary_blue"
+        app:hintTextColor="@color/primary_blue"
         app:layout_constraintTop_toBottomOf="@+id/topBar"
         app:startIconDrawable="@drawable/ic_user"
-        app:startIconTint="#64748B">
+        app:startIconTint="@color/text_secondary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearch"
@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:inputType="text"
             android:paddingVertical="12dp"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -90,6 +90,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -107,7 +108,7 @@
                         android:contentDescription="Avatar"
                         android:padding="10dp"
                         android:src="@drawable/ic_user"
-                        app:tint="#2563EB" />
+                        app:tint="@color/primary_blue" />
 
                     <TextView
                         android:id="@+id/tvName1"
@@ -115,7 +116,7 @@
                         android:layout_height="wrap_content"
                         android:layout_toEndOf="@+id/ivAvatar1"
                         android:text="Juan Dela Cruz"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -126,7 +127,7 @@
                         android:layout_marginTop="2dp"
                         android:layout_toEndOf="@+id/ivAvatar1"
                         android:text="📞 0917 123 4567"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
@@ -138,7 +139,7 @@
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="3 Bookings"
-                        android:textColor="#059669"
+                        android:textColor="@color/status_confirmed"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
@@ -170,7 +171,7 @@
                         android:contentDescription="Avatar"
                         android:padding="10dp"
                         android:src="@drawable/ic_user"
-                        app:tint="#2563EB" />
+                        app:tint="@color/primary_blue" />
 
                     <TextView
                         android:id="@+id/tvName2"
@@ -178,7 +179,7 @@
                         android:layout_height="wrap_content"
                         android:layout_toEndOf="@+id/ivAvatar2"
                         android:text="Maria Santos"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -189,7 +190,7 @@
                         android:layout_marginTop="2dp"
                         android:layout_toEndOf="@+id/ivAvatar2"
                         android:text="📞 0918 987 6543"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
@@ -201,7 +202,7 @@
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="5 Bookings"
-                        android:textColor="#059669"
+                        android:textColor="@color/status_confirmed"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
@@ -215,11 +216,11 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:elevation="8dp"
-        app:itemIconTint="#64748B"
+        app:itemIconTint="@color/text_secondary"
         app:itemRippleColor="#3B82F6"
-        app:itemTextColor="#64748B"
+        app:itemTextColor="@color/text_secondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 
