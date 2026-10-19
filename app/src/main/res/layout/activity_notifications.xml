@@ -106,6 +106,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif1Message"
                         android:layout_below="@+id/tvNotif1Title"
                         android:layout_marginTop="4dp"
                         android:text="Booking #BK-2026-00123 has been submitted successfully."
@@ -115,6 +116,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif1Time"
                         android:layout_alignParentEnd="true"
                         android:text="2 mins ago"
                         android:textColor="@color/text_secondary"
@@ -152,6 +154,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif2Message"
                         android:layout_below="@+id/tvNotif2Title"
                         android:layout_marginTop="4dp"
                         android:text="Booking #BK-2026-00122 has been confirmed by dispatch."
@@ -161,6 +164,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif2Time"
                         android:layout_alignParentEnd="true"
                         android:text="1 hour ago"
                         android:textColor="@color/text_secondary"
