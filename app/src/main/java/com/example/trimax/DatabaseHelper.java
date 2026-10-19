@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 7; // Saved customer directory
+    private static final int DATABASE_VERSION = 8; // Saved customer addresses and coordinates
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -239,20 +239,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_CUSTOMERS + " ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "full_name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, address TEXT, "
-                + "created_at TEXT, updated_at TEXT)");
+                + "latitude REAL DEFAULT 0, longitude REAL DEFAULT 0, created_at TEXT, updated_at TEXT)");
     }
 
     private void syncCustomersFromBookings(SQLiteDatabase db) {
-        Cursor cursor = db.rawQuery("SELECT customer_name, customer_phone, MAX(destination) FROM "
-                + TABLE_DELIVERIES + " WHERE customer_name IS NOT NULL AND TRIM(customer_name)<>'' "
+        Cursor cursor = db.rawQuery("SELECT customer_name, customer_phone, MAX(destination), "
+                + "MAX(destination_latitude), MAX(destination_longitude) FROM " + TABLE_DELIVERIES
+                + " WHERE customer_name IS NOT NULL AND TRIM(customer_name)<>'' "
                 + "GROUP BY customer_name, customer_phone", null);
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 String name = cursor.getString(0), phone = cursor.getString(1), address = cursor.getString(2);
+                double latitude = cursor.getDouble(3), longitude = cursor.getDouble(4);
                 if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) continue;
                 ContentValues values = new ContentValues();
                 values.put("full_name", name.trim()); values.put("phone", phone.trim());
                 values.put("email", ""); values.put("address", address != null ? address : "");
+                values.put("latitude", latitude); values.put("longitude", longitude);
                 values.put("created_at", String.valueOf(System.currentTimeMillis()));
                 values.put("updated_at", String.valueOf(System.currentTimeMillis()));
                 int updated = db.update(TABLE_CUSTOMERS, values, "phone=?", new String[]{phone.trim()});
@@ -452,7 +455,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 6) {
             try { seedInitialData(db); } catch (Exception ignored) {}
         }
-        if (oldVersion < 7) syncCustomersFromBookings(db);
+        if (oldVersion < 8) {
+            try { db.execSQL("ALTER TABLE " + TABLE_CUSTOMERS + " ADD COLUMN latitude REAL DEFAULT 0"); } catch (Exception ignored) {}
+            try { db.execSQL("ALTER TABLE " + TABLE_CUSTOMERS + " ADD COLUMN longitude REAL DEFAULT 0"); } catch (Exception ignored) {}
+        }
+        if (oldVersion < 8) syncCustomersFromBookings(db);
     }
 
     // Authenticate User with Secure Password Verification & Legacy Plaintext Upgrade
@@ -1113,15 +1120,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static class SavedCustomer {
         private final long id;
         private final String name, phone, email, address;
+        private final double latitude, longitude;
         private final int bookingCount;
-        public SavedCustomer(long id, String name, String phone, String email, String address, int bookingCount) {
-            this.id=id; this.name=name; this.phone=phone; this.email=email; this.address=address; this.bookingCount=bookingCount;
+        public SavedCustomer(long id, String name, String phone, String email, String address,
+                             double latitude, double longitude, int bookingCount) {
+            this.id=id; this.name=name; this.phone=phone; this.email=email; this.address=address;
+            this.latitude=latitude; this.longitude=longitude; this.bookingCount=bookingCount;
         }
         public long getId(){return id;}
         public String getName(){return name;}
         public String getPhone(){return phone;}
         public String getEmail(){return email;}
         public String getAddress(){return address;}
+        public double getLatitude(){return latitude;}
+        public double getLongitude(){return longitude;}
         public int getBookingCount(){return bookingCount;}
         @Override public String toString(){return name+" • "+phone;}
     }
@@ -1129,7 +1141,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<SavedCustomer> getSavedCustomers(String searchQuery) {
         List<SavedCustomer> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT c.id, c.full_name, c.phone, c.email, c.address, "
+        String query = "SELECT c.id, c.full_name, c.phone, c.email, c.address, c.latitude, c.longitude, "
                 + "(SELECT COUNT(*) FROM " + TABLE_DELIVERIES + " d WHERE d.customer_phone=c.phone) "
                 + "FROM " + TABLE_CUSTOMERS + " c";
         List<String> args = new ArrayList<>();
@@ -1142,13 +1154,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery(query, args.toArray(new String[0]));
         if (cursor != null) {
             while (cursor.moveToNext()) list.add(new SavedCustomer(cursor.getLong(0), cursor.getString(1),
-                    cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5)));
+                    cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getDouble(5),
+                    cursor.getDouble(6), cursor.getInt(7)));
             cursor.close();
         }
         return list;
     }
 
     public boolean saveCustomer(String name, String phone, String email, String address) {
+        return saveCustomer(name, phone, email, address, 0, 0);
+    }
+
+    public boolean saveCustomer(String name, String phone, String email, String address, double latitude, double longitude) {
         if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) return false;
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -1156,17 +1173,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("email", email != null ? email.trim() : "");
         values.put("address", address != null ? address.trim() : "");
         values.put("updated_at", String.valueOf(System.currentTimeMillis()));
-        Cursor cursor = db.rawQuery("SELECT id, address FROM " + TABLE_CUSTOMERS
+        Cursor cursor = db.rawQuery("SELECT id, address, email, latitude, longitude FROM " + TABLE_CUSTOMERS
                 + " WHERE phone=? ORDER BY id LIMIT 1", new String[]{phone.trim()});
-        long existingId = -1; String existingAddress = "";
+        long existingId = -1; String existingAddress = "", existingEmail = "";
+        double existingLatitude = 0, existingLongitude = 0;
         if (cursor != null) {
-            if (cursor.moveToFirst()) { existingId=cursor.getLong(0); existingAddress=cursor.getString(1); }
+            if (cursor.moveToFirst()) {
+                existingId=cursor.getLong(0); existingAddress=cursor.getString(1); existingEmail=cursor.getString(2);
+                existingLatitude=cursor.getDouble(3); existingLongitude=cursor.getDouble(4);
+            }
             cursor.close();
         }
         if (existingId >= 0) {
             if (address == null || address.trim().isEmpty()) values.put("address", existingAddress != null ? existingAddress : "");
+            if (email == null || email.trim().isEmpty()) values.put("email", existingEmail != null ? existingEmail : "");
+            if (latitude != 0 || longitude != 0) { values.put("latitude", latitude); values.put("longitude", longitude); }
+            else { values.put("latitude", existingLatitude); values.put("longitude", existingLongitude); }
             return db.update(TABLE_CUSTOMERS, values, "id=?", new String[]{String.valueOf(existingId)}) > 0;
         }
+        values.put("latitude", latitude); values.put("longitude", longitude);
         values.put("created_at", String.valueOf(System.currentTimeMillis()));
         return db.insert(TABLE_CUSTOMERS, null, values) != -1;
     }
