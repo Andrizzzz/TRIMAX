@@ -25,6 +25,7 @@ public class NotificationsActivity extends AppCompatActivity {
     private CardView cardNotif1, cardNotif2;
     private TextView tvNotif1Title, tvNotif1Message;
     private TextView tvNotif2Title, tvNotif2Message;
+    private TextView tvNotif1Time, tvNotif2Time;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +50,10 @@ public class NotificationsActivity extends AppCompatActivity {
         cardNotif2 = findViewById(R.id.cardNotif2);
         tvNotif1Title = findViewById(R.id.tvNotif1Title);
         tvNotif2Title = findViewById(R.id.tvNotif2Title);
+        tvNotif1Message = findViewById(R.id.tvNotif1Message);
+        tvNotif2Message = findViewById(R.id.tvNotif2Message);
+        tvNotif1Time = findViewById(R.id.tvNotif1Time);
+        tvNotif2Time = findViewById(R.id.tvNotif2Time);
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
@@ -68,21 +73,18 @@ public class NotificationsActivity extends AppCompatActivity {
             });
         }
 
-        if (cardNotif1 != null) {
-            cardNotif1.setOnClickListener(v -> {
+        View.OnClickListener notificationClick = v -> {
+            Object value = v.getTag();
+            if (value instanceof String && !((String) value).isEmpty()) {
                 Intent intent = new Intent(NotificationsActivity.this, BookingDetailActivity.class);
-                intent.putExtra("BOOKING_ID", "BK-2026-00123");
+                intent.putExtra("BOOKING_ID", (String) value);
                 startActivity(intent);
-            });
-        }
-
-        if (cardNotif2 != null) {
-            cardNotif2.setOnClickListener(v -> {
-                Intent intent = new Intent(NotificationsActivity.this, BookingDetailActivity.class);
-                intent.putExtra("BOOKING_ID", "BK-2026-00122");
-                startActivity(intent);
-            });
-        }
+            } else {
+                Toast.makeText(this, "This notification is not linked to a booking.", Toast.LENGTH_SHORT).show();
+            }
+        };
+        if (cardNotif1 != null) cardNotif1.setOnClickListener(notificationClick);
+        if (cardNotif2 != null) cardNotif2.setOnClickListener(notificationClick);
 
         loadNotifications();
     }
@@ -97,18 +99,33 @@ public class NotificationsActivity extends AppCompatActivity {
         if (dbHelper == null || session == null) return;
         List<DatabaseHelper.NotificationItem> notifications = dbHelper.getNotificationsForUser(session.getUsername());
 
-        if (notifications != null && !notifications.isEmpty()) {
-            if (notifications.size() > 0 && tvNotif1Title != null) {
-                DatabaseHelper.NotificationItem n1 = notifications.get(0);
-                String prefix = n1.isRead() ? "⚪ " : "🔴 ";
-                tvNotif1Title.setText(prefix + n1.getTitle());
-            }
-            if (notifications.size() > 1 && tvNotif2Title != null) {
-                DatabaseHelper.NotificationItem n2 = notifications.get(1);
-                String prefix = n2.isRead() ? "⚪ " : "🔴 ";
-                tvNotif2Title.setText(prefix + n2.getTitle());
-            }
+        bindNotification(0, notifications != null && notifications.size() > 0 ? notifications.get(0) : null);
+        bindNotification(1, notifications != null && notifications.size() > 1 ? notifications.get(1) : null);
+    }
+
+    private void bindNotification(int index, DatabaseHelper.NotificationItem notification) {
+        CardView card = index == 0 ? cardNotif1 : cardNotif2;
+        TextView title = index == 0 ? tvNotif1Title : tvNotif2Title;
+        TextView message = index == 0 ? tvNotif1Message : tvNotif2Message;
+        TextView time = index == 0 ? tvNotif1Time : tvNotif2Time;
+        if (card == null) return;
+
+        if (notification == null) {
+            card.setVisibility(View.GONE);
+            return;
         }
+
+        card.setVisibility(View.VISIBLE);
+        if (title != null) title.setText((notification.isRead() ? "⚪ " : "🔴 ") + notification.getTitle());
+        if (message != null) message.setText(notification.getMessage() == null ? "" : notification.getMessage());
+        if (time != null) time.setText(notification.getTimestamp() == null ? "" : notification.getTimestamp());
+
+        String searchableText = (notification.getTitle() == null ? "" : notification.getTitle()) + " "
+                + (notification.getMessage() == null ? "" : notification.getMessage());
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(searchableText);
+        card.setTag(matcher.find() ? matcher.group() : null);
     }
 
     private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
