@@ -163,6 +163,11 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
             bottomNavigation.setSelectedItemId(R.id.nav_home);
             setupBottomNavigation(bottomNavigation);
+            bottomNavigation.setOnItemReselectedListener(item -> {
+                if (item.getItemId() == R.id.nav_home) {
+                    refreshDriverDashboard();
+                }
+            });
         }
 
         if (navigationView != null) {
