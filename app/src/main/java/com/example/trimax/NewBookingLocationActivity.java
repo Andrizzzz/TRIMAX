@@ -68,6 +68,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         customerName = intent.getStringExtra("CUSTOMER_NAME");
         customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
         customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
+        String savedAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
+        if (savedAddress != null && !savedAddress.trim().isEmpty()) selectedCustomerAddress = savedAddress.trim();
         service = intent.getStringExtra("SERVICE");
         quantity = intent.getIntExtra("QUANTITY", 1);
         date = intent.getStringExtra("DATE");
@@ -83,6 +85,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         FloatingActionButton btnMyLocation = findViewById(R.id.btnMyLocation);
 
         TextView tvCustomerAddress = findViewById(R.id.tvCustomerAddress);
+        if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
 
         MaterialButton btnUseCurrentLocation = findViewById(R.id.btnUseCurrentLocation);
