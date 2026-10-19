@@ -22,6 +22,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     private TextInputEditText etCustomerName, etPhone, etEmail, etCustomerAddress;
     private DatabaseHelper dbHelper;
     private String selectedCustomerAddress = "";
+    private boolean directoryOnly = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_new_booking_customer);
         dbHelper = new DatabaseHelper(this);
+        directoryOnly = getIntent().getBooleanExtra("CUSTOMER_DIRECTORY_ONLY", false);
 
         View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
         if (root != null) {
@@ -48,6 +50,11 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
         MaterialButton btnSaveCustomer = findViewById(R.id.btnSaveCustomer);
         MaterialButton btnNext = findViewById(R.id.btnNext);
+        android.widget.TextView tvStepTitle = findViewById(R.id.tvStepTitle);
+        if (directoryOnly) {
+            if (tvStepTitle != null) tvStepTitle.setText("Add Customer");
+            if (btnNext != null) btnNext.setVisibility(View.GONE);
+        }
 
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
         if (btnChooseCustomer != null) btnChooseCustomer.setOnClickListener(v -> showSavedCustomers());
@@ -151,6 +158,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (dbHelper.saveCustomer(name, phone, email, address)) {
             selectedCustomerAddress = address;
             Toast.makeText(this, "Customer saved to directory.", Toast.LENGTH_SHORT).show();
+            if (directoryOnly) finish();
         } else {
             Toast.makeText(this, "Unable to save customer. Check the required details.", Toast.LENGTH_LONG).show();
         }
