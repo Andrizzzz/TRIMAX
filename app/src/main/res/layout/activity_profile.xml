@@ -68,7 +68,7 @@
                 android:focusable="true"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_user"
-                app:tint="@color/primary_blue" />
+                />
             
             <TextView
                 android:layout_width="wrap_content"
