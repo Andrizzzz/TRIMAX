@@ -45,6 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
         android:hint="Search clients by name or phone..."
+        app:boxBackgroundColor="@color/card_bg"
         app:boxCornerRadiusBottomEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
