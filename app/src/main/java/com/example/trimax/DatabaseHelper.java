@@ -867,6 +867,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return count;
     }
 
+
+    /**
+     * Counts bookings by status within an inclusive date range.
+     * created_at can be stored either as epoch milliseconds or an ISO-like date string.
+     */
+    public int getBookingCountByStatusAndDateRange(String status, long startMillis, long endMillis) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String createdAtEpochSeconds = "CASE "
+                + "WHEN CAST(created_at AS INTEGER) > 100000000000 "
+                + "THEN CAST(CAST(created_at AS INTEGER) / 1000 AS INTEGER) "
+                + "ELSE CAST(strftime('%s', created_at) AS INTEGER) END";
+        StringBuilder query = new StringBuilder("SELECT COUNT(*) FROM " + TABLE_DELIVERIES
+                + " WHERE " + createdAtEpochSeconds + " BETWEEN ? AND ?");
+        List<String> argsList = new ArrayList<>();
+        argsList.add(String.valueOf(startMillis / 1000L));
+        argsList.add(String.valueOf(endMillis / 1000L));
+
+        if ("ALL".equalsIgnoreCase(status) || status == null || status.isEmpty()) {
+            // No additional status condition.
+        } else if ("COMPLETED".equalsIgnoreCase(status)) {
+            query.append(" AND (UPPER(status)='COMPLETED' OR UPPER(status)='DELIVERED')");
+        } else {
+            query.append(" AND UPPER(status)=?");
+            argsList.add(status.toUpperCase());
+        }
+
+        Cursor cursor = db.rawQuery(query.toString(), argsList.toArray(new String[0]));
+        int count = 0;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) count = cursor.getInt(0);
+            cursor.close();
+        }
+        return count;
+    }
+
     public boolean cancelBooking(String bookingId) {
         return updateDeliveryStatus(bookingId, "CANCELLED");
     }
