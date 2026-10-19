@@ -1,12 +1,15 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -36,7 +39,23 @@ public class DriverProfileActivity extends AppCompatActivity {
 
         session = new SessionManager(this);
 
+        ActivityResultLauncher<String[]> photoPicker = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(), uri -> {
+                    if (uri != null) {
+                        try {
+                            getContentResolver().takePersistableUriPermission(
+                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        } catch (SecurityException ignored) {
+                            // Some document providers do not offer persistable URI grants.
+                        }
+                        session.setProfilePhotoUri(uri.toString());
+                        updateProfileHeader();
+                    }
+                });
+
         ImageView btnBack = findViewById(R.id.btnBack);
+        ImageView ivDriverProfilePhoto = findViewById(R.id.ivDriverProfilePhoto);
+        if (ivDriverProfilePhoto != null) ivDriverProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
         TextView tvDriverName = findViewById(R.id.tvDriverName);
         TextView tvDriverEmail = findViewById(R.id.tvDriverEmail);
 
@@ -55,8 +74,7 @@ public class DriverProfileActivity extends AppCompatActivity {
             }
         });
 
-        if (tvDriverName != null) tvDriverName.setText(session.getFullName());
-        if (tvDriverEmail != null) tvDriverEmail.setText(session.getEmail());
+        updateProfileHeader();
 
         if (cardEditProfile != null) {
             cardEditProfile.setOnClickListener(v -> startActivity(new Intent(this, EditProfileActivity.class)));
@@ -69,6 +87,35 @@ public class DriverProfileActivity extends AppCompatActivity {
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutDialog());
         }
+    }
+
+    private void updateProfileHeader() {
+        TextView tvDriverName = findViewById(R.id.tvDriverName);
+        TextView tvDriverEmail = findViewById(R.id.tvDriverEmail);
+        ImageView photo = findViewById(R.id.ivDriverProfilePhoto);
+        if (tvDriverName != null) tvDriverName.setText(session.getFullName());
+        if (tvDriverEmail != null) tvDriverEmail.setText(session.getEmail());
+        if (photo != null) {
+            String photoUri = session.getProfilePhotoUri();
+            if (photoUri != null && !photoUri.isEmpty()) {
+                try {
+                    photo.setImageURI(Uri.parse(photoUri));
+                    photo.setColorFilter(null);
+                } catch (Exception ignored) {
+                    photo.setImageResource(R.drawable.ic_user);
+                    photo.setColorFilter(getColor(R.color.primary_blue));
+                }
+            } else {
+                photo.setImageResource(R.drawable.ic_user);
+                photo.setColorFilter(getColor(R.color.primary_blue));
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateProfileHeader();
     }
 
     private void handleBackNavigation() {
