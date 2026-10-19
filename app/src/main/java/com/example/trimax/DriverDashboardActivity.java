@@ -281,6 +281,12 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
         updateDutyUI();
         loadAssignedHeroDelivery();
+
+        // Whenever a driver screen closes and returns here, restore the Dashboard tab highlight.
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null && bottomNavigation.getSelectedItemId() != R.id.nav_home) {
+            bottomNavigation.setSelectedItemId(R.id.nav_home);
+        }
     }
 
     @Override
