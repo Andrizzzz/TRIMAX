@@ -69,6 +69,14 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_user"
                 app:tint="@color/primary_blue" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Tap photo to change"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
 
             <!-- Name & Role -->
             <TextView
