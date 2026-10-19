@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".DriverHistoryActivity">
 
     <!-- Top Left Accent Shape -->
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Delivery History"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -68,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginEnd="8dp"
-                android:backgroundTint="#2563EB"
+                android:backgroundTint="@color/primary_blue"
                 android:text="All"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
@@ -83,10 +83,10 @@
                 android:layout_marginEnd="8dp"
                 android:text="Completed"
                 android:textAllCaps="false"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp"
                 app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+                app:strokeColor="@color/border_subtle" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipFailed"
@@ -95,10 +95,10 @@
                 android:layout_height="36dp"
                 android:text="Failed"
                 android:textAllCaps="false"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp"
                 app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+                app:strokeColor="@color/border_subtle" />
 
         </LinearLayout>
     </HorizontalScrollView>
