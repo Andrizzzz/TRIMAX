@@ -368,6 +368,10 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        BottomNavigationView dashboardNavigation = findViewById(R.id.bottomNavigation);
+        if (dashboardNavigation != null) {
+            dashboardNavigation.setSelectedItemId(R.id.nav_home);
+        }
         if (dashboardMapView != null) {
             dashboardMapView.onResume();
             dashboardMapView.startLiveDeliveryAnimation();
