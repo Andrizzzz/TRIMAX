@@ -159,7 +159,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
             // This menu is shared with the agent dashboard, so label it for driver tasks.
             bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
             bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
-            bottomNavigation.getMenu().findItem(R.id.nav_reports).setTitle("Reports");
+            bottomNavigation.getMenu().findItem(R.id.nav_reports).setTitle("History");
 
             bottomNavigation.setSelectedItemId(R.id.nav_home);
             setupBottomNavigation(bottomNavigation);
@@ -171,6 +171,15 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
 
         if (navigationView != null) {
+            // The shared agent drawer includes Clients, which has no driver destination.
+            // Hide it for drivers and label the history destination accurately.
+            if (navigationView.getMenu().findItem(R.id.drawer_clients) != null) {
+                navigationView.getMenu().findItem(R.id.drawer_clients).setVisible(false);
+            }
+            if (navigationView.getMenu().findItem(R.id.drawer_reports) != null) {
+                navigationView.getMenu().findItem(R.id.drawer_reports).setTitle("Delivery History");
+            }
+
             View headerView = navigationView.getHeaderView(0);
             if (headerView != null) {
                 TextView tvNavName = headerView.findViewById(R.id.tvNavHeaderName);
