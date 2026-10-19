@@ -36,6 +36,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
     private String customerName, customerPhone, customerEmail;
     private String customerAddress;
+    private double customerLatitude, customerLongitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         customerPhone = getIntent().getStringExtra("CUSTOMER_PHONE");
         customerEmail = getIntent().getStringExtra("CUSTOMER_EMAIL");
         customerAddress = getIntent().getStringExtra("CUSTOMER_ADDRESS");
+        customerLatitude = getIntent().getDoubleExtra("CUSTOMER_LAT", 0);
+        customerLongitude = getIntent().getDoubleExtra("CUSTOMER_LNG", 0);
 
         ImageView btnBack = findViewById(R.id.btnBack);
         spinnerService = findViewById(R.id.spinnerService);
@@ -105,6 +108,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 intent.putExtra("CUSTOMER_PHONE", customerPhone);
                 intent.putExtra("CUSTOMER_EMAIL", customerEmail);
                 intent.putExtra("CUSTOMER_ADDRESS", customerAddress);
+                intent.putExtra("CUSTOMER_LAT", customerLatitude);
+                intent.putExtra("CUSTOMER_LNG", customerLongitude);
                 intent.putExtra("SERVICE", service);
                 intent.putExtra("QUANTITY", quantity);
                 intent.putExtra("DATE", selectedDate.isEmpty() ? "July 19, 2026" : selectedDate);
