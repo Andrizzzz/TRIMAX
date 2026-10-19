@@ -255,7 +255,11 @@
 
                                 <TextView
                                     android:id="@+id/tvHeroBookingId"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="match_parent"
+                                    android:layout_toStartOf="@id/tvHeroStatusPill"
+                                    android:layout_marginEnd="8dp"
+                                    android:maxLines="2"
+                                    android:ellipsize="end"
                                     android:layout_height="wrap_content"
                                     android:text="TRK-2024001"
                                     android:textColor="@color/text_primary"
@@ -302,8 +306,11 @@
 
                                 <TextView
                                     android:id="@+id/tvHeroCustomerName"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:maxLines="2"
                                     android:text="Juan Dela Cruz"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="12sp" />
@@ -318,16 +325,20 @@
 
                                 <TextView
                                     android:id="@+id/tvHeroPickup"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:breakStrategy="simple"
+                                    android:hyphenationFrequency="none"
                                     android:text="Pickup: San Jose del Monte"
                                     android:textColor="@color/text_primary"
                                     android:textSize="13sp" />
 
                                 <TextView
                                     android:id="@+id/tvHeroDestination"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:breakStrategy="simple"
+                                    android:hyphenationFrequency="none"
                                     android:layout_marginTop="4dp"
                                     android:text="Drop-off: Quezon City"
                                     android:textColor="@color/text_primary"
@@ -335,8 +346,10 @@
 
                                 <TextView
                                     android:id="@+id/tvHeroSpecialInstructions"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:breakStrategy="simple"
+                                    android:hyphenationFrequency="none"
                                     android:layout_marginTop="6dp"
                                     android:text="⚠️ Special Instructions"
                                     android:textColor="#D97706"
@@ -448,9 +461,13 @@
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:layout_toStartOf="@id/tvDelivBadge"
+                                android:layout_marginEnd="8dp"
+                                android:maxLines="2"
+                                android:ellipsize="end"
                                 android:text="📦 All Assigned Bookings"
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp"
@@ -475,9 +492,11 @@
                             android:layout_height="match_parent"
                             android:padding="16dp">
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:maxLines="2"
+                                android:ellipsize="end"
                                 android:text="🗺 Driver Live Map"
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp"
@@ -512,9 +531,11 @@
                             android:layout_height="match_parent"
                             android:padding="16dp">
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:maxLines="2"
+                                android:ellipsize="end"
                                 android:text="📜 Delivery History"
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp"
@@ -539,9 +560,11 @@
                             android:layout_height="match_parent"
                             android:padding="16dp">
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:maxLines="2"
+                                android:ellipsize="end"
                                 android:text="🚨 Support &amp; Emergency"
                                 android:textColor="#EF4444"
                                 android:textSize="14sp"
