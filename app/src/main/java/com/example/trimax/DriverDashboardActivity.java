@@ -144,6 +144,12 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
                 return insets;
             });
+
+            // This menu is shared with the agent dashboard, so label it for driver tasks.
+            bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
+            bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
+            bottomNavigation.getMenu().findItem(R.id.nav_reports).setTitle("Reports");
+
             bottomNavigation.setSelectedItemId(R.id.nav_home);
             setupBottomNavigation(bottomNavigation);
         }
@@ -475,10 +481,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(this, DriverDeliveriesActivity.class));
                 return true;
             } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
+                startActivity(new Intent(this, DriverNotificationsActivity.class));
                 return true;
             } else if (itemId == R.id.nav_reports) {
-                startActivity(new Intent(this, ReportsActivity.class));
+                startActivity(new Intent(this, DriverHistoryActivity.class));
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, DriverProfileActivity.class));
