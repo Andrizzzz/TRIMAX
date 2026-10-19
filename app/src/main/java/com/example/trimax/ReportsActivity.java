@@ -48,7 +48,7 @@ public class ReportsActivity extends AppCompatActivity {
         tvReportCancelledCount = findViewById(R.id.tvReportCancelledCount);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> navigateBack());
         }
 
         if (btnDateFilter != null) {
@@ -195,5 +195,18 @@ public class ReportsActivity extends AppCompatActivity {
         Intent intent = new Intent(ReportsActivity.this, BookingsActivity.class);
         intent.putExtra("FILTER", filter);
         startActivity(intent);
+    }
+
+    /**
+     * Return to the previous screen, or restore the agent dashboard if this
+     * screen was launched as the root of the task.
+     */
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
