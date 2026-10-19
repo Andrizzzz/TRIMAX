@@ -70,7 +70,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
         if (list.isEmpty()) {
             TextView tvEmpty = new TextView(this);
             tvEmpty.setText("No delivery history records found.");
-            tvEmpty.setTextColor(0xFF64748B);
+            tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
             tvEmpty.setTextSize(16);
             tvEmpty.setPadding(20, 40, 20, 20);
             containerHistory.addView(tvEmpty);
@@ -84,6 +84,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
             cardParams.setMargins(0, 0, 0, 24);
             card.setLayoutParams(cardParams);
             card.setRadius(18);
+            card.setCardBackgroundColor(getResources().getColor(R.color.card_bg));
             card.setCardElevation(3);
             card.setClickable(true);
             card.setFocusable(true);
@@ -94,25 +95,25 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
             TextView tvCode = new TextView(this);
             tvCode.setText(String.format("Delivery #%s", d.getDeliveryId()));
-            tvCode.setTextColor(0xFF0F172A);
+            tvCode.setTextColor(getResources().getColor(R.color.text_primary));
             tvCode.setTextSize(16);
             tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
 
             TextView tvCustomer = new TextView(this);
             tvCustomer.setText(String.format("Customer: %s", d.getCustomerName()));
-            tvCustomer.setTextColor(0xFF2563EB);
+            tvCustomer.setTextColor(getResources().getColor(R.color.primary_blue));
             tvCustomer.setTextSize(14);
             tvCustomer.setPadding(0, 6, 0, 0);
 
             TextView tvDest = new TextView(this);
             tvDest.setText(String.format("Destination: %s", d.getDestinationAddress()));
-            tvDest.setTextColor(0xFF64748B);
+            tvDest.setTextColor(getResources().getColor(R.color.text_secondary));
             tvDest.setTextSize(13);
             tvDest.setPadding(0, 4, 0, 0);
 
             TextView tvStatus = new TextView(this);
             tvStatus.setText(String.format("Status: %s", d.getStatus()));
-            tvStatus.setTextColor("DELIVERED".equalsIgnoreCase(d.getStatus()) ? 0xFF059669 : 0xFFEF4444);
+            tvStatus.setTextColor(getResources().getColor("DELIVERED".equalsIgnoreCase(d.getStatus()) ? R.color.status_delivered : R.color.status_cancelled));
             tvStatus.setTextSize(13);
             tvStatus.setTypeface(null, android.graphics.Typeface.BOLD);
             tvStatus.setPadding(0, 6, 0, 0);
