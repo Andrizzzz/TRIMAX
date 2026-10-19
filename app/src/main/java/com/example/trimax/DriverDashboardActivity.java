@@ -72,7 +72,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
         if (mainContent != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), systemBars.bottom);
+                // Match Rider dashboard: apply top inset to content, but let bottom nav handle bottom inset.
+                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), 0);
                 return insets;
             });
         }
