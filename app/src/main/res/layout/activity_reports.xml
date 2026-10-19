@@ -63,13 +63,14 @@
             android:paddingTop="12dp"
             android:paddingBottom="36dp">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tvOverviewTitle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Monthly Overview 📊"
                     android:textColor="@color/text_primary"
@@ -82,8 +83,8 @@
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="8dp"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:text="All Time 📅"
@@ -92,7 +93,7 @@
                     android:textSize="12sp"
                     app:cornerRadius="10dp"
                     app:strokeColor="@color/primary_blue" />
-            </RelativeLayout>
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
