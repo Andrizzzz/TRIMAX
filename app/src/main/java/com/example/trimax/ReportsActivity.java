@@ -178,8 +178,9 @@ public class ReportsActivity extends AppCompatActivity {
                 start.set(Calendar.DAY_OF_MONTH, 1);
                 break;
             case 2: // Last Month
-                start.add(Calendar.MONTH, -1);
+                // Set day to 1 before changing months to avoid Calendar rollover on dates like March 31.
                 start.set(Calendar.DAY_OF_MONTH, 1);
+                start.add(Calendar.MONTH, -1);
                 end.set(Calendar.DAY_OF_MONTH, 1);
                 end.add(Calendar.DAY_OF_MONTH, -1);
                 end.set(Calendar.HOUR_OF_DAY, 23);
