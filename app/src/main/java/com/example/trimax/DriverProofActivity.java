@@ -1,6 +1,10 @@
 package com.example.trimax;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,6 +18,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -35,6 +40,7 @@ public class DriverProofActivity extends AppCompatActivity {
     private boolean photoCaptured = false;
     private String capturedPhotoPath = "";
     private ActivityResultLauncher<Intent> cameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +101,26 @@ public class DriverProofActivity extends AppCompatActivity {
             }
         }
 
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (granted) {
+                        launchProofCamera();
+                    } else {
+                        new androidx.appcompat.app.AlertDialog.Builder(this)
+                                .setTitle("Camera Permission Required")
+                                .setMessage("Camera access is required to capture delivery proof. Enable Camera permission in App Settings to continue.")
+                                .setPositiveButton("Open Settings", (dialog, which) -> {
+                                    Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            Uri.parse("package:" + getPackageName()));
+                                    startActivity(settingsIntent);
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    }
+                }
+        );
+
         // Camera Launcher Setup with RESULT_OK validation and Timestamp Overlay
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -137,11 +163,10 @@ public class DriverProofActivity extends AppCompatActivity {
 
         if (cardCapturePhoto != null) {
             cardCapturePhoto.setOnClickListener(v -> {
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                try {
-                    cameraLauncher.launch(takePictureIntent);
-                } catch (Exception e) {
-                    Toast.makeText(this, "Unable to launch camera app on this device.", Toast.LENGTH_SHORT).show();
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    launchProofCamera();
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
                 }
             });
         }
@@ -207,6 +232,15 @@ public class DriverProofActivity extends AppCompatActivity {
                     Toast.makeText(this, "Failed to save delivery proof in database", Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+    }
+
+    private void launchProofCamera() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            cameraLauncher.launch(takePictureIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Unable to launch camera app on this device.", Toast.LENGTH_SHORT).show();
         }
     }
 
