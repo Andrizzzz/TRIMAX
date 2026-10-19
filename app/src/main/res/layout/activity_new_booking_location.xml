@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".NewBookingLocationActivity">
 
     <!-- Decorative Top Accent Shape -->
@@ -50,7 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Confirm Location"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -58,7 +58,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Select the customer's location"
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -71,7 +71,7 @@
             android:paddingHorizontal="10dp"
             android:paddingVertical="4dp"
             android:text="Step 3 of 4"
-            android:textColor="#2563EB"
+            android:textColor="@color/primary_blue"
             android:textSize="11sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -117,8 +117,8 @@
                 app:boxCornerRadiusBottomStart="14dp"
                 app:boxCornerRadiusTopEnd="14dp"
                 app:boxCornerRadiusTopStart="14dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:startIconDrawable="@drawable/ic_location"
                 app:startIconTint="#2563EB">
 
@@ -128,7 +128,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:paddingVertical="12dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -137,6 +137,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="260dp"
                 android:minHeight="200dp"
+                    app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp">
 
@@ -205,7 +206,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="3dp">
 
                 <LinearLayout
@@ -235,7 +237,7 @@
                             android:layout_below="@+id/tvCustomerTag"
                             android:layout_marginTop="4dp"
                             android:text="San Jose del Monte, Bulacan"
-                            android:textColor="#0F172A"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -246,7 +248,7 @@
                             android:layout_below="@+id/tvCustomerAddress"
                             android:layout_marginTop="2dp"
                             android:text="Selected customer location • 1.8 km away"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </RelativeLayout>
 
@@ -267,7 +269,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="📍 Pickup / Hub Location"
-                            android:textColor="#2563EB"
+                            android:textColor="@color/primary_blue"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -291,7 +293,7 @@
                             android:layout_below="@+id/tvRiderTag"
                             android:layout_marginTop="4dp"
                             android:text="Your current GPS location"
-                            android:textColor="#0F172A"
+                            android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
@@ -319,10 +321,10 @@
                     android:insetBottom="0dp"
                     android:text="Use My Location"
                     android:textAllCaps="false"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#2563EB" />
 
                 <!-- Change Customer Location Button -->
@@ -337,10 +339,10 @@
                     android:insetBottom="0dp"
                     android:text="Change Location"
                     android:textAllCaps="false"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#CBD5E1" />
             </LinearLayout>
 
@@ -350,7 +352,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:layout_marginTop="16dp"
-                android:backgroundTint="#2563EB"
+                android:backgroundTint="@color/primary_blue"
                 android:text="Confirm Location"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"

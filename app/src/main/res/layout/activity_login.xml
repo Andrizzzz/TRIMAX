@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".LoginActivity">
 
     <!-- Top Left Accent Shape -->
@@ -62,7 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="TRI-"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="36sp"
                     android:textStyle="bold" />
 
@@ -70,7 +70,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MAX"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="36sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -81,7 +81,7 @@
                 android:layout_marginTop="4dp"
                 android:letterSpacing="0.25"
                 android:text="BOOK   •   TRACK   •   DELIVER"
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -92,7 +92,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="48dp"
                 android:text="Welcome Back!"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
@@ -102,7 +102,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="Please login to your account to continue."
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="15sp" />
 
             <!-- Username / Email Input -->
@@ -116,10 +116,10 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:startIconDrawable="@drawable/ic_user"
-                app:startIconTint="#64748B">
+                app:startIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etEmail"
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
                     android:paddingVertical="16dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -142,12 +142,12 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:passwordToggleEnabled="true"
-                app:passwordToggleTint="#64748B"
+                app:passwordToggleTint="@color/text_secondary"
                 app:startIconDrawable="@drawable/ic_lock"
-                app:startIconTint="#64748B">
+                app:startIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPassword"
@@ -155,7 +155,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:paddingVertical="16dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -170,7 +170,7 @@
                 android:focusable="true"
                 android:padding="6dp"
                 android:text="Forgot Password?"
-                android:textColor="#2563EB"
+                android:textColor="@color/primary_blue"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -180,7 +180,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:layout_marginTop="24dp"
-                android:backgroundTint="#2563EB"
+                android:backgroundTint="@color/primary_blue"
                 android:text="Login"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
@@ -211,7 +211,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Don't have an account? "
-                    android:textColor="#64748B"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <TextView
@@ -222,7 +222,7 @@
                     android:focusable="true"
                     android:padding="4dp"
                     android:text="Register"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>

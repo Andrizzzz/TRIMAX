@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".DriverDeliveryDetailsActivity">
 
     <!-- Top Left Accent Shape -->
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Booking TRX-1024"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -78,7 +78,7 @@
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="6dp"
                     android:text="ASSIGNED"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -102,8 +102,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
                 app:cardBackgroundColor="#FFFBEB"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -136,7 +136,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="3dp">
 
                 <LinearLayout
@@ -149,7 +150,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="CUSTOMER &amp; CONTACT"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -159,7 +160,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Juan Dela Cruz"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="17sp"
                         android:textStyle="bold" />
 
@@ -177,9 +178,9 @@
                             android:layout_marginEnd="8dp"
                             android:text="📞 Call"
                             android:textAllCaps="false"
-                            android:textColor="#2563EB"
+                            android:textColor="@color/primary_blue"
                             android:textSize="12sp"
-                            app:cornerRadius="10dp"
+                            app:cornerRadius="14dp"
                             app:strokeColor="#2563EB" />
 
                         <com.google.android.material.button.MaterialButton
@@ -189,9 +190,9 @@
                             android:layout_height="38dp"
                             android:text="💬 Message"
                             android:textAllCaps="false"
-                            android:textColor="#0F172A"
+                            android:textColor="@color/text_primary"
                             android:textSize="12sp"
-                            app:cornerRadius="10dp"
+                            app:cornerRadius="14dp"
                             app:strokeColor="#CBD5E1" />
                     </LinearLayout>
 
@@ -205,7 +206,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="PICKUP LOCATION"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -215,7 +216,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="TRI-MAX Hub, San Jose del Monte"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                     <View
@@ -228,7 +229,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="DESTINATION LOCATION"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -238,7 +239,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="San Jose del Monte, Bulacan"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -252,7 +253,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="PACKAGE DETAILS &amp; SCHEDULE"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -262,7 +263,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Standard Freight Box (12 kg) • Today • 10:00 AM"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                 </LinearLayout>
@@ -273,7 +274,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="3dp">
 
                 <LinearLayout
@@ -286,7 +288,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="FINANCIAL SUMMARY &amp; DEPOSIT"
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -299,7 +301,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Original Amount:"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <TextView
@@ -308,7 +310,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:text="₱ 1,000.00"
-                            android:textColor="#0F172A"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
@@ -323,7 +325,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Deposit Required:"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <TextView
@@ -346,7 +348,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Adjustments / Charges:"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <TextView
@@ -355,7 +357,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:text="₱ 0.00"
-                            android:textColor="#2563EB"
+                            android:textColor="@color/primary_blue"
                             android:textSize="14sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
@@ -374,7 +376,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="FINAL TOTAL AMOUNT:"
-                            android:textColor="#0F172A"
+                            android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -407,7 +409,7 @@
                             android:textAllCaps="false"
                             android:textColor="#D97706"
                             android:textSize="12sp"
-                            app:cornerRadius="10dp"
+                            app:cornerRadius="14dp"
                             app:strokeColor="#D97706" />
 
                         <com.google.android.material.button.MaterialButton
@@ -421,7 +423,7 @@
                             android:textAllCaps="false"
                             android:textColor="#DC2626"
                             android:textSize="12sp"
-                            app:cornerRadius="10dp"
+                            app:cornerRadius="14dp"
                             app:strokeColor="#DC2626" />
                     </LinearLayout>
 
@@ -434,7 +436,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="#2563EB"
+                android:backgroundTint="@color/primary_blue"
                 android:text="START DELIVERY"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
@@ -450,7 +452,7 @@
                 android:layout_marginTop="10dp"
                 android:text="🗺 NAVIGATE ON MAP"
                 android:textAllCaps="false"
-                android:textColor="#2563EB"
+                android:textColor="@color/primary_blue"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 app:cornerRadius="14dp"

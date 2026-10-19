@@ -14,26 +14,6 @@
         android:layout_height="match_parent"
         android:background="@color/bg_main">
 
-        <!-- Top Left Accent Shape -->
-        <ImageView
-            android:layout_width="220dp"
-            android:layout_height="220dp"
-            android:contentDescription="Top Left Accent"
-            android:scaleType="fitStart"
-            android:src="@drawable/bg_top_left_accent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Bottom Right Accent Shape -->
-        <ImageView
-            android:layout_width="260dp"
-            android:layout_height="260dp"
-            android:contentDescription="Bottom Right Accent"
-            android:scaleType="fitEnd"
-            android:src="@drawable/bg_bottom_right_accent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
         <!-- TOP APP BAR -->
         <RelativeLayout
             android:id="@+id/topBar"
@@ -85,7 +65,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MAX"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="20sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -166,14 +146,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
-                    app:cardBackgroundColor="#2563EB"
+                    app:cardBackgroundColor="@color/navy_900"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="6dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="20dp">
+                        android:padding="20dp"
+                        android:background="@drawable/bg_dashboard_hero">
 
                         <TextView
                             android:id="@+id/tvWelcomeAgent"
@@ -200,7 +181,7 @@
                             android:layout_height="wrap_content"
                             android:layout_below="@+id/tvGreetingSubtitle"
                             android:layout_marginTop="16dp"
-                            android:background="#1D4ED8"
+                            android:background="@drawable/bg_dashboard_stats"
                             android:orientation="horizontal"
                             android:padding="12dp"
                             android:weightSum="3">
@@ -238,7 +219,7 @@
                             <View
                                 android:layout_width="1dp"
                                 android:layout_height="match_parent"
-                                android:background="#3B82F6" />
+                                android:background="@color/accent_blue" />
 
                             <!-- Pending Stat Pill -->
                             <LinearLayout
@@ -273,7 +254,7 @@
                             <View
                                 android:layout_width="1dp"
                                 android:layout_height="match_parent"
-                                android:background="#3B82F6" />
+                                android:background="@color/accent_blue" />
 
                             <!-- Confirmed/Delivered Stat Pill -->
                             <LinearLayout
@@ -316,6 +297,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="4dp">
 
@@ -359,7 +341,7 @@
                             android:layout_height="42dp"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:backgroundTint="#2563EB"
+                            android:backgroundTint="@color/primary_blue"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             android:paddingHorizontal="16dp"
@@ -379,6 +361,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="5dp">
 
@@ -391,7 +374,7 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="#1E3A8A"
+                            android:background="@color/navy_900"
                             android:paddingHorizontal="16dp"
                             android:paddingVertical="10dp">
 
@@ -404,7 +387,7 @@
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="4dp"
                                 android:text="● LIVE GPS TRACKING"
-                                android:textColor="#059669"
+                                android:textColor="@color/status_confirmed"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
@@ -451,7 +434,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="BK-2026-00123 • Cargo Express"
-                                    android:textColor="#2563EB"
+                                    android:textColor="@color/primary_blue"
                                     android:textSize="14sp"
                                     android:textStyle="bold" />
 
@@ -471,7 +454,7 @@
                                 android:layout_height="38dp"
                                 android:layout_alignParentEnd="true"
                                 android:layout_centerVertical="true"
-                                android:backgroundTint="#2563EB"
+                                android:backgroundTint="@color/primary_blue"
                                 android:insetTop="0dp"
                                 android:insetBottom="0dp"
                                 android:paddingHorizontal="12dp"
@@ -515,7 +498,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:layout_marginEnd="10dp"
-                            android:backgroundTint="#2563EB"
+                            android:backgroundTint="@color/primary_blue"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             android:paddingHorizontal="10dp"
@@ -534,7 +517,7 @@
                             android:focusable="true"
                             android:padding="2dp"
                             android:text="View All"
-                            android:textColor="#2563EB"
+                            android:textColor="@color/primary_blue"
                             android:textSize="14sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -549,8 +532,9 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="3dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -617,7 +601,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentEnd="true"
                                 android:text="₱ 1,024.00"
-                                android:textColor="#2563EB"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
                         </RelativeLayout>
@@ -633,8 +617,9 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/card_bg"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="3dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -664,7 +649,7 @@
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="4dp"
                                 android:text="CONFIRMED"
-                                android:textColor="#059669"
+                                android:textColor="@color/status_confirmed"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
                         </RelativeLayout>
@@ -701,7 +686,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentEnd="true"
                                 android:text="₱ 2,450.00"
-                                android:textColor="#2563EB"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
                         </RelativeLayout>
@@ -716,11 +701,11 @@
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/white"
+            android:background="@color/card_bg"
             app:elevation="8dp"
-            app:itemIconTint="#64748B"
-            app:itemRippleColor="#3B82F6"
-            app:itemTextColor="#64748B"
+            app:itemIconTint="@color/text_secondary"
+            app:itemRippleColor="@color/accent_blue"
+            app:itemTextColor="@color/text_secondary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:menu="@menu/bottom_nav_menu" />
 
@@ -732,10 +717,10 @@
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:headerLayout="@layout/nav_header"
-        app:itemIconTint="#2563EB"
-        app:itemTextColor="#0F172A"
+        app:itemIconTint="@color/primary_blue"
+        app:itemTextColor="@color/text_primary"
         app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

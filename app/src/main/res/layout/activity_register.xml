@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".RegisterActivity">
 
     <!-- Top Left Accent Shape -->
@@ -62,7 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="TRI-"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="32sp"
                     android:textStyle="bold" />
 
@@ -70,7 +70,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MAX"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="32sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -81,7 +81,7 @@
                 android:layout_marginTop="2dp"
                 android:letterSpacing="0.25"
                 android:text="BOOK   •   TRACK   •   DELIVER"
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -92,7 +92,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:text="Create Account"
-                android:textColor="#0F172A"
+                android:textColor="@color/text_primary"
                 android:textSize="26sp"
                 android:textStyle="bold" />
 
@@ -102,7 +102,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Sign up to get started with TRI-MAX."
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
             <!-- Full Name / Username Input -->
@@ -116,10 +116,10 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:startIconDrawable="@drawable/ic_user"
-                app:startIconTint="#64748B">
+                app:startIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etFullName"
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
                     android:paddingVertical="14dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -142,10 +142,10 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:startIconDrawable="@drawable/ic_email"
-                app:startIconTint="#64748B">
+                app:startIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etEmail"
@@ -153,7 +153,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
                     android:paddingVertical="14dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -168,12 +168,12 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:passwordToggleEnabled="true"
-                app:passwordToggleTint="#64748B"
+                app:passwordToggleTint="@color/text_secondary"
                 app:startIconDrawable="@drawable/ic_lock"
-                app:startIconTint="#64748B">
+                app:startIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPassword"
@@ -181,7 +181,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:paddingVertical="14dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -196,12 +196,12 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
                 app:passwordToggleEnabled="true"
-                app:passwordToggleTint="#64748B"
+                app:passwordToggleTint="@color/text_secondary"
                 app:startIconDrawable="@drawable/ic_lock"
-                app:startIconTint="#64748B">
+                app:startIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etConfirmPassword"
@@ -209,7 +209,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:paddingVertical="14dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -219,7 +219,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="#2563EB"
+                android:backgroundTint="@color/primary_blue"
                 android:text="Create Account"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
@@ -250,7 +250,7 @@
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="12dp"
                     android:text="Or sign up with"
-                    android:textColor="#64748B"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
                 <View
@@ -277,9 +277,9 @@
                     android:layout_weight="1"
                     android:text="Google"
                     android:textAllCaps="false"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="14dp"
                     app:strokeColor="#CBD5E1" />
 
                 <com.google.android.material.button.MaterialButton
@@ -293,7 +293,7 @@
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
-                    app:cornerRadius="12dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
 
             <!-- Bottom Account Link -->
@@ -308,7 +308,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Already have an account? "
-                    android:textColor="#64748B"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <TextView
@@ -319,7 +319,7 @@
                     android:focusable="true"
                     android:padding="4dp"
                     android:text="Login"
-                    android:textColor="#2563EB"
+                    android:textColor="@color/primary_blue"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>

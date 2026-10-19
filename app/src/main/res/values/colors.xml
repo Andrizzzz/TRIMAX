@@ -3,18 +3,26 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Design System Colors -->
-    <color name="primary_blue">#2563EB</color>
-    <color name="primary_blue_dark">#1D4ED8</color>
+    <!-- TRIMAX Premium Corporate Design System -->
+    <color name="primary_blue">#1D4ED8</color>
+    <color name="primary_blue_dark">#163B75</color>
     <color name="accent_blue">#3B82F6</color>
+    <color name="navy_900">#0B1739</color>
+    <color name="navy_800">#10234D</color>
+    <color name="gradient_start">#10234D</color>
+    <color name="gradient_end">#1D4ED8</color>
 
-    <color name="bg_main">#F8FAFC</color>
+    <color name="bg_main">#F4F7FB</color>
     <color name="card_bg">#FFFFFF</color>
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#64748B</color>
+    <color name="surface_alt">#EDF3FA</color>
+    <color name="border_subtle">#DCE5F0</color>
+    <color name="text_primary">#14213D</color>
+    <color name="text_secondary">#62718A</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="field_bg">#FFFFFF</color>
 
-    <color name="status_pending">#D97706</color>
-    <color name="status_confirmed">#059669</color>
-    <color name="status_cancelled">#EF4444</color>
-    <color name="status_completed">#2563EB</color>
+    <color name="status_pending">#B7791F</color>
+    <color name="status_confirmed">#047857</color>
+    <color name="status_cancelled">#B91C1C</color>
+    <color name="status_completed">#1D4ED8</color>
 </resources>
