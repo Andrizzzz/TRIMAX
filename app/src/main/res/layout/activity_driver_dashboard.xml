@@ -368,15 +368,19 @@
                                     android:id="@+id/btnHeroStartDelivery"
                                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                                     android:layout_width="0dp"
-                                    android:layout_height="46dp"
+                                    android:layout_height="48dp"
                                     android:layout_marginEnd="6dp"
                                     android:layout_weight="1"
+                                    android:minWidth="0dp"
+                                    android:paddingHorizontal="2dp"
                                     android:insetTop="0dp"
                                     android:insetBottom="0dp"
                                     android:text="Start Delivery"
                                     android:textAllCaps="false"
                                     android:textColor="@color/primary_blue"
-                                    android:textSize="13sp"
+                                    android:textSize="11sp"
+                                    android:maxLines="2"
+                                    android:ellipsize="end"
                                     android:textStyle="bold"
                                     app:cornerRadius="12dp"
                                     app:strokeColor="@color/primary_blue" />
@@ -384,16 +388,20 @@
                                 <com.google.android.material.button.MaterialButton
                                     android:id="@+id/btnHeroViewDetails"
                                     android:layout_width="0dp"
-                                    android:layout_height="46dp"
+                                    android:layout_height="48dp"
                                     android:layout_marginStart="6dp"
                                     android:layout_weight="1"
+                                    android:minWidth="0dp"
+                                    android:paddingHorizontal="2dp"
                                     android:backgroundTint="@color/primary_blue"
                                     android:insetTop="0dp"
                                     android:insetBottom="0dp"
                                     android:text="View Details"
                                     android:textAllCaps="false"
                                     android:textColor="@android:color/white"
-                                    android:textSize="13sp"
+                                    android:textSize="11sp"
+                                    android:maxLines="2"
+                                    android:ellipsize="end"
                                     android:textStyle="bold"
                                     app:cornerRadius="12dp" />
                             </LinearLayout>
@@ -435,7 +443,7 @@
                     <androidx.cardview.widget.CardView
                         android:id="@+id/cardAssignedDeliveries"
                         android:layout_width="0dp"
-                        android:layout_height="100dp"
+                        android:layout_height="112dp"
                         android:layout_marginEnd="6dp"
                         android:layout_weight="1"
                         android:clickable="true"
@@ -447,7 +455,7 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="16dp">
+                            android:padding="12dp">
                             <TextView
                                 android:id="@+id/tvDelivBadge"
                                 android:layout_width="28dp"
@@ -490,11 +498,13 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="16dp">
+                            android:padding="12dp">
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:layout_alignParentStart="true"
+                                android:gravity="start|bottom"
                                 android:maxLines="2"
                                 android:ellipsize="end"
                                 android:text="🗺 Driver Live Map"
@@ -529,11 +539,13 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="16dp">
+                            android:padding="12dp">
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:layout_alignParentStart="true"
+                                android:gravity="start|bottom"
                                 android:maxLines="2"
                                 android:ellipsize="end"
                                 android:text="📜 Delivery History"
