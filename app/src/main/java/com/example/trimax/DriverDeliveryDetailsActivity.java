@@ -75,8 +75,15 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
         btnReportDamage = findViewById(R.id.btnReportDamage);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         if (btnCallCustomer != null) {
             btnCallCustomer.setOnClickListener(v -> {
@@ -363,5 +370,14 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
         builder.setNegativeButton("Cancel", null);
         builder.show();
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

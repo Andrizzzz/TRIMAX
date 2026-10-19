@@ -27,5 +27,10 @@
     <color name="status_completed">#3282F6</color>
     <color name="status_delivered">#13A77A</color>
 
+    <color name="status_confirmed_bg">#064E3B</color>
+    <color name="status_cancelled_bg">#7F1D1D</color>
+    <color name="status_completed_bg">#064E3B</color>
+    <color name="status_pending_bg">#78350F</color>
+
     <color name="sos_red">#E53935</color>
 </resources>

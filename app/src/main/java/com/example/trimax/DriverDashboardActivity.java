@@ -473,19 +473,15 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.nav_bookings) {
                 startActivity(new Intent(this, DriverDeliveriesActivity.class));
-                finish();
                 return true;
             } else if (itemId == R.id.nav_clients) {
                 startActivity(new Intent(this, ClientsActivity.class));
-                finish();
                 return true;
             } else if (itemId == R.id.nav_reports) {
                 startActivity(new Intent(this, ReportsActivity.class));
-                finish();
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, DriverProfileActivity.class));
-                finish();
                 return true;
             }
             return false;

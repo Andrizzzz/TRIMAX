@@ -39,8 +39,15 @@ public class DriverHistoryActivity extends AppCompatActivity {
         MaterialButton chipFailed = findViewById(R.id.chipFailed);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         if (chipAll != null) chipAll.setOnClickListener(v -> setFilter("ALL"));
         if (chipCompleted != null) chipCompleted.setOnClickListener(v -> setFilter("DELIVERED"));
@@ -125,5 +132,14 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
             containerHistory.addView(card);
         }
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

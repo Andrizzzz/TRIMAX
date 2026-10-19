@@ -57,8 +57,15 @@ public class DriverProofActivity extends AppCompatActivity {
         MaterialButton btnConfirmDelivery = findViewById(R.id.btnConfirmDelivery);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
         if (currentDelivery != null) {
@@ -190,5 +197,14 @@ public class DriverProofActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

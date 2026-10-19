@@ -47,8 +47,15 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         tvNotif2Title = findViewById(R.id.tvNotif2Title);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         List<Delivery> assigned = dbHelper.getAssignedDeliveries(session.getUsername());
         String deliveryId1 = (assigned != null && assigned.size() > 0) ? assigned.get(0).getBookingId() : "TRX-1024";
@@ -97,5 +104,14 @@ public class DriverNotificationsActivity extends AppCompatActivity {
                 tvNotif2Title.setText(prefix + n2.getTitle());
             }
         }
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

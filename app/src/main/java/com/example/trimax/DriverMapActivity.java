@@ -1,5 +1,6 @@
 package com.example.trimax;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -56,8 +57,15 @@ public class DriverMapActivity extends AppCompatActivity {
         MaterialButton btnStartNavigation = findViewById(R.id.btnStartNavigation);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         Delivery d = dbHelper.getDeliveryByCode(deliveryCode);
         if (d != null) {
@@ -95,5 +103,14 @@ public class DriverMapActivity extends AppCompatActivity {
                 Toast.makeText(this, "Starting Live Turn-by-Turn GPS Navigation...", Toast.LENGTH_LONG).show();
             });
         }
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

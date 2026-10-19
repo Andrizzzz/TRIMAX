@@ -38,8 +38,15 @@ public class DriverSupportActivity extends AppCompatActivity {
         MaterialButton btnEmergencySos = findViewById(R.id.btnEmergencySos);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         if (cardReportVehicle != null) {
             cardReportVehicle.setOnClickListener(v -> showReportVehicleDialog());
@@ -80,6 +87,15 @@ public class DriverSupportActivity extends AppCompatActivity {
                         .show();
             });
         }
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 
     private void showReportVehicleDialog() {
