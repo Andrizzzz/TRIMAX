@@ -247,22 +247,51 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "MAX(destination_latitude), MAX(destination_longitude) FROM " + TABLE_DELIVERIES
                 + " WHERE customer_name IS NOT NULL AND TRIM(customer_name)<>'' "
                 + "GROUP BY customer_name, customer_phone", null);
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                String name = cursor.getString(0), phone = cursor.getString(1), address = cursor.getString(2);
-                double latitude = cursor.getDouble(3), longitude = cursor.getDouble(4);
-                if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) continue;
+        if (cursor == null) return;
+        while (cursor.moveToNext()) {
+            String name = cursor.getString(0), phone = cursor.getString(1), address = cursor.getString(2);
+            double latitude = cursor.getDouble(3), longitude = cursor.getDouble(4);
+            if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) continue;
+
+            Cursor existing = db.rawQuery("SELECT id, address, latitude, longitude FROM " + TABLE_CUSTOMERS
+                    + " WHERE phone=? ORDER BY id LIMIT 1", new String[]{phone.trim()});
+            long existingId = -1;
+            String existingAddress = "";
+            double existingLatitude = 0, existingLongitude = 0;
+            if (existing != null) {
+                if (existing.moveToFirst()) {
+                    existingId = existing.getLong(0);
+                    existingAddress = existing.getString(1);
+                    existingLatitude = existing.getDouble(2);
+                    existingLongitude = existing.getDouble(3);
+                }
+                existing.close();
+            }
+
+            if (existingId < 0) {
                 ContentValues values = new ContentValues();
-                values.put("full_name", name.trim()); values.put("phone", phone.trim());
-                values.put("email", ""); values.put("address", address != null ? address : "");
-                values.put("latitude", latitude); values.put("longitude", longitude);
+                values.put("full_name", name.trim());
+                values.put("phone", phone.trim());
+                values.put("email", "");
+                values.put("address", address != null ? address : "");
+                values.put("latitude", latitude);
+                values.put("longitude", longitude);
                 values.put("created_at", String.valueOf(System.currentTimeMillis()));
                 values.put("updated_at", String.valueOf(System.currentTimeMillis()));
-                int updated = db.update(TABLE_CUSTOMERS, values, "phone=?", new String[]{phone.trim()});
-                if (updated == 0) db.insert(TABLE_CUSTOMERS, null, values);
+                db.insert(TABLE_CUSTOMERS, null, values);
+            } else if ((existingLatitude == 0 || existingLongitude == 0)
+                    && latitude != 0 && longitude != 0) {
+                ContentValues values = new ContentValues();
+                values.put("latitude", latitude);
+                values.put("longitude", longitude);
+                if (existingAddress == null || existingAddress.trim().isEmpty()) {
+                    values.put("address", address != null ? address : "");
+                }
+                values.put("updated_at", String.valueOf(System.currentTimeMillis()));
+                db.update(TABLE_CUSTOMERS, values, "id=?", new String[]{String.valueOf(existingId)});
             }
-            cursor.close();
         }
+        cursor.close();
     }
 
     private void seedInitialData(SQLiteDatabase db) {
