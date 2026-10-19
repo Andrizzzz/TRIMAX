@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
@@ -35,6 +36,15 @@ public class ReportsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_reports);
+
+        View reportTopBar = findViewById(R.id.topBar);
+        if (reportTopBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(reportTopBar, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), 16 + systemBars.top, v.getPaddingRight(), 12);
+                return insets;
+            });
+        }
 
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);
