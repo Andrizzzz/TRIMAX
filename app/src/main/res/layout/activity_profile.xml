@@ -144,7 +144,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Earnings -->
                     <RelativeLayout
@@ -187,7 +187,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Delivery History -->
                     <RelativeLayout
@@ -229,7 +229,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Settings -->
                     <RelativeLayout
@@ -272,7 +272,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#E2EAF5" />
+                        android:background="@color/border_subtle" />
 
                     <!-- Help & Support -->
                     <RelativeLayout
