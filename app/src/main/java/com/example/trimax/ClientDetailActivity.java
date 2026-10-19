@@ -33,11 +33,13 @@ public class ClientDetailActivity extends AppCompatActivity {
         String name = intent.getStringExtra("CLIENT_NAME");
         String phone = intent.getStringExtra("CLIENT_PHONE");
         String email = intent.getStringExtra("CLIENT_EMAIL");
+        String address = intent.getStringExtra("CLIENT_ADDRESS");
 
         ImageView btnBack = findViewById(R.id.btnBack);
         TextView tvClientName = findViewById(R.id.tvClientName);
         TextView tvPhone = findViewById(R.id.tvPhone);
         TextView tvEmail = findViewById(R.id.tvEmail);
+        TextView tvAddress = findViewById(R.id.tvAddress);
 
         View cardHistory1 = findViewById(R.id.tvHist1Id) != null ? (View) findViewById(R.id.tvHist1Id).getParent().getParent() : null;
         View cardHistory2 = findViewById(R.id.tvHist2Id) != null ? (View) findViewById(R.id.tvHist2Id).getParent().getParent() : null;
@@ -48,7 +50,10 @@ public class ClientDetailActivity extends AppCompatActivity {
 
         if (name != null) tvClientName.setText(name);
         if (phone != null) tvPhone.setText(String.format("📞 %s", phone));
-        if (email != null) tvEmail.setText(String.format("✉ %s", email));
+        if (email != null && !email.trim().isEmpty()) tvEmail.setText(String.format("✉ %s", email));
+        else if (tvEmail != null) tvEmail.setVisibility(View.GONE);
+        if (tvAddress != null) tvAddress.setText(address != null && !address.trim().isEmpty()
+                ? "📍 " + address : "📍 Address not saved yet");
 
         // Phone call intent action
         if (tvPhone != null) {
