@@ -486,7 +486,7 @@
                     <androidx.cardview.widget.CardView
                         android:id="@+id/cardDriverMap"
                         android:layout_width="0dp"
-                        android:layout_height="100dp"
+                        android:layout_height="112dp"
                         android:layout_marginStart="6dp"
                         android:layout_weight="1"
                         android:clickable="true"
@@ -527,7 +527,7 @@
                     <androidx.cardview.widget.CardView
                         android:id="@+id/cardDeliveryHistory"
                         android:layout_width="0dp"
-                        android:layout_height="100dp"
+                        android:layout_height="112dp"
                         android:layout_marginEnd="6dp"
                         android:layout_weight="1"
                         android:clickable="true"
@@ -558,7 +558,7 @@
                     <androidx.cardview.widget.CardView
                         android:id="@+id/cardEmergencySupport"
                         android:layout_width="0dp"
-                        android:layout_height="100dp"
+                        android:layout_height="112dp"
                         android:layout_marginStart="6dp"
                         android:layout_weight="1"
                         android:clickable="true"
@@ -570,11 +570,13 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="16dp">
+                            android:padding="12dp">
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentBottom="true"
+                                android:layout_alignParentStart="true"
+                                android:gravity="start|bottom"
                                 android:maxLines="2"
                                 android:ellipsize="end"
                                 android:text="🚨 Support &amp; Emergency"
