@@ -46,8 +46,15 @@ public class ProfileActivity extends AppCompatActivity {
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         if (bottomNavigation != null) {
             ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
@@ -81,6 +88,17 @@ public class ProfileActivity extends AppCompatActivity {
 
         if (tvAgentName != null) tvAgentName.setText(name);
         if (tvAgentEmail != null) tvAgentEmail.setText(email);
+    }
+
+    private void handleBackNavigation() {
+        // If Profile was opened as the task's first screen, return to the agent dashboard
+        // instead of finishing the app and leaving the user on the launcher.
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 
     private void showLogoutDialog() {
