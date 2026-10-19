@@ -7,13 +7,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -34,17 +30,8 @@ public class ReportsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+        // Match DashboardActivity system-bar handling; do not apply the status-bar inset twice.
         setContentView(R.layout.activity_reports);
-
-        View reportTopBar = findViewById(R.id.topBar);
-        if (reportTopBar != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(reportTopBar, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), 16 + systemBars.top, v.getPaddingRight(), 12);
-                return insets;
-            });
-        }
 
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);
@@ -67,11 +54,6 @@ public class ReportsActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-                return insets;
-            });
             bottomNavigation.setSelectedItemId(R.id.nav_reports);
             setupBottomNavigation(bottomNavigation);
         }
