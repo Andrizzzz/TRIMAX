@@ -219,6 +219,7 @@ public class DashboardActivity extends AppCompatActivity {
         // Dark Mode Dashboard Toggle
         ImageView btnThemeToggle = findViewById(R.id.btnThemeToggle);
         if (btnThemeToggle != null) {
+            updateThemeToggleIcon(btnThemeToggle);
             btnThemeToggle.setOnClickListener(v -> toggleDarkMode());
         }
 
@@ -283,6 +284,12 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         updateAttendanceUI();
+    }
+
+    private void updateThemeToggleIcon(ImageView toggle) {
+        boolean darkMode = ThemeHelper.THEME_DARK.equalsIgnoreCase(ThemeHelper.getSelectedTheme(this));
+        toggle.setImageResource(darkMode ? R.drawable.ic_moon : R.drawable.ic_sun);
+        toggle.setContentDescription(darkMode ? "Dark mode is on. Tap to switch to light mode." : "Light mode is on. Tap to switch to dark mode.");
     }
 
     private void toggleDarkMode() {
