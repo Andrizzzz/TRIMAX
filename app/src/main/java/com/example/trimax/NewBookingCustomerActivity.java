@@ -2,6 +2,8 @@ package com.example.trimax;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.ImageView;
@@ -47,6 +49,19 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etEmail = findViewById(R.id.etEmail);
         etCustomerAddress = findViewById(R.id.etCustomerAddress);
+        if (etCustomerAddress != null) {
+            etCustomerAddress.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String currentAddress = s != null ? s.toString().trim() : "";
+                    if (!currentAddress.equals(selectedCustomerAddress)) {
+                        selectedCustomerLatitude = 0;
+                        selectedCustomerLongitude = 0;
+                    }
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
         MaterialButton btnChooseCustomer = findViewById(R.id.btnChooseCustomer);
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
         MaterialButton btnSaveCustomer = findViewById(R.id.btnSaveCustomer);
