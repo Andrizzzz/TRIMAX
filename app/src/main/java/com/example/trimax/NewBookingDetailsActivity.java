@@ -65,7 +65,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         etNotes = findViewById(R.id.etNotes);
         btnContinue = findViewById(R.id.btnContinue);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
         // Setup Spinner options
         String[] services = {"Standard Cargo Express", "Fragile Package Handler", "Bulk Commercial Cargo", "VIP Priority Delivery"};
@@ -136,5 +136,14 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             if (btnSelectTime != null) btnSelectTime.setText(selectedTime);
         }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false);
         dialog.show();
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
