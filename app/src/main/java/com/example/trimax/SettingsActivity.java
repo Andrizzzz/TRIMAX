@@ -51,7 +51,7 @@ public class SettingsActivity extends AppCompatActivity {
         View cardAbout = findViewById(R.id.cardAbout);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> navigateBack());
         }
 
         updateThemeSubtitle();
@@ -195,5 +195,18 @@ public class SettingsActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    /**
+     * Return to the previous screen, or restore the agent dashboard if this
+     * screen was launched as the root of the task.
+     */
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
