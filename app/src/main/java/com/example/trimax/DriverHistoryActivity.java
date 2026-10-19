@@ -55,6 +55,8 @@ public class DriverHistoryActivity extends AppCompatActivity {
         loadHistory();
     }
 
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+
     private void setFilter(String filter) {
         this.activeFilter = filter;
         loadHistory();
@@ -71,7 +73,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
             tvEmpty.setText("No delivery history records found.");
             tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
             tvEmpty.setTextSize(16);
-            tvEmpty.setPadding(20, 40, 20, 20);
+            tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
             containerHistory.addView(tvEmpty);
             return;
         }
@@ -80,7 +82,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
             CardView card = new CardView(this);
             CardView.LayoutParams cardParams = new CardView.LayoutParams(
                     CardView.LayoutParams.MATCH_PARENT, CardView.LayoutParams.WRAP_CONTENT);
-            cardParams.setMargins(0, 0, 0, 24);
+            cardParams.setMargins(0, 0, 0, dp(16));
             card.setLayoutParams(cardParams);
             card.setRadius(18);
             card.setCardBackgroundColor(getResources().getColor(R.color.card_bg));
@@ -90,32 +92,40 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
             LinearLayout layout = new LinearLayout(this);
             layout.setOrientation(LinearLayout.VERTICAL);
-            layout.setPadding(24, 24, 24, 24);
+            layout.setPadding(dp(18), dp(18), dp(18), dp(18));
 
             TextView tvCode = new TextView(this);
             tvCode.setText(String.format("Delivery #%s", d.getDeliveryId()));
             tvCode.setTextColor(getResources().getColor(R.color.text_primary));
             tvCode.setTextSize(16);
+            tvCode.setMaxLines(2);
+            tvCode.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            tvCode.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
             tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
 
             TextView tvCustomer = new TextView(this);
             tvCustomer.setText(String.format("Customer: %s", d.getCustomerName()));
             tvCustomer.setTextColor(getResources().getColor(R.color.primary_blue));
             tvCustomer.setTextSize(14);
-            tvCustomer.setPadding(0, 6, 0, 0);
+            tvCustomer.setMaxLines(3);
+            tvCustomer.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+            tvCustomer.setPadding(0, dp(6), 0, 0);
 
             TextView tvDest = new TextView(this);
             tvDest.setText(String.format("Destination: %s", d.getDestinationAddress()));
             tvDest.setTextColor(getResources().getColor(R.color.text_secondary));
             tvDest.setTextSize(13);
-            tvDest.setPadding(0, 4, 0, 0);
+            tvDest.setMaxLines(3);
+            tvDest.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+            tvDest.setPadding(0, dp(6), 0, 0);
 
             TextView tvStatus = new TextView(this);
             tvStatus.setText(String.format("Status: %s", d.getStatus()));
             tvStatus.setTextColor(getResources().getColor("DELIVERED".equalsIgnoreCase(d.getStatus()) ? R.color.status_delivered : R.color.status_cancelled));
             tvStatus.setTextSize(13);
+            tvStatus.setMaxLines(2);
             tvStatus.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvStatus.setPadding(0, 6, 0, 0);
+            tvStatus.setPadding(0, dp(8), 0, 0);
 
             layout.addView(tvCode);
             layout.addView(tvCustomer);
