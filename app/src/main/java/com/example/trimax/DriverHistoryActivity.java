@@ -1,6 +1,7 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -52,6 +53,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
         if (chipCompleted != null) chipCompleted.setOnClickListener(v -> setFilter("DELIVERED"));
         if (chipFailed != null) chipFailed.setOnClickListener(v -> setFilter("FAILED"));
 
+        updateFilterChipStyles();
         loadHistory();
     }
 
@@ -59,7 +61,31 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
     private void setFilter(String filter) {
         this.activeFilter = filter;
+        updateFilterChipStyles();
         loadHistory();
+    }
+
+    private void updateFilterChipStyles() {
+        MaterialButton chipAll = findViewById(R.id.chipAll);
+        MaterialButton chipCompleted = findViewById(R.id.chipCompleted);
+        MaterialButton chipFailed = findViewById(R.id.chipFailed);
+        styleFilterChip(chipAll, "ALL".equals(activeFilter));
+        styleFilterChip(chipCompleted, "DELIVERED".equals(activeFilter));
+        styleFilterChip(chipFailed, "FAILED".equals(activeFilter));
+    }
+
+    private void styleFilterChip(MaterialButton chip, boolean selected) {
+        if (chip == null) return;
+        int fillColor = getResources().getColor(selected ? R.color.primary_blue : R.color.card_bg);
+        int textColor = getResources().getColor(selected ? android.R.color.white : R.color.text_primary);
+        int strokeColor = getResources().getColor(selected ? R.color.primary_blue : R.color.border_subtle);
+        chip.setBackgroundTintList(ColorStateList.valueOf(fillColor));
+        chip.setTextColor(textColor);
+        chip.setStrokeColor(ColorStateList.valueOf(strokeColor));
+        chip.setStrokeWidth(dp(selected ? 0 : 1));
+        chip.setClickable(true);
+        chip.setFocusable(true);
+        chip.setAlpha(1f);
     }
 
     private void loadHistory() {
