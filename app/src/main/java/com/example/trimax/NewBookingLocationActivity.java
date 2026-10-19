@@ -187,6 +187,34 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             });
         }
 
+        // If an older saved customer only has a typed address, try resolving it to a map pin.
+        if (savedAddress != null && !savedAddress.trim().isEmpty()
+                && (savedCustomerLatitude == 0 || savedCustomerLongitude == 0)) {
+            nominatimSearchService.searchLocation(savedAddress, new NominatimSearchService.SearchCallback() {
+                @Override
+                public void onSearchResults(List<SearchResultItem> results, String searchPattern) {
+                    if (results != null && !results.isEmpty() && mockMapView != null) {
+                        SearchResultItem result = results.get(0);
+                        selectedCustomerAddress = result.getFullAddress();
+                        if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
+                        mockMapView.setDestinationLocation(result.getLatitude(), result.getLongitude(),
+                                result.getShortName(), result.getFullAddress());
+                    } else {
+                        Toast.makeText(NewBookingLocationActivity.this,
+                                "Saved address could not be located automatically. Please search and select it on the map.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Toast.makeText(NewBookingLocationActivity.this,
+                            "Could not locate the saved address. Please select it on the map.",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
         // Wire Mock Map Location Selection Listener
         if (mockMapView != null) {
             mockMapView.setOnLocationChangeListener((address, distanceText) -> {
