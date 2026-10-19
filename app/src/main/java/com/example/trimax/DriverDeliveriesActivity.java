@@ -171,7 +171,6 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
                 tvInstructions.setMaxLines(4);
                 tvInstructions.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
                 tvInstructions.setPadding(dp(12), dp(8), dp(12), dp(8));
-                tvInstructions.setPadding(12, 8, 12, 8);
                 layout.addView(headerRow);
                 layout.addView(tvCode);
                 layout.addView(tvCustomer);
