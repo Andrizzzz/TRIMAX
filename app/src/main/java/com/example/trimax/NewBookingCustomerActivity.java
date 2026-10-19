@@ -22,6 +22,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     private TextInputEditText etCustomerName, etPhone, etEmail, etCustomerAddress;
     private DatabaseHelper dbHelper;
     private String selectedCustomerAddress = "";
+    private double selectedCustomerLatitude = 0, selectedCustomerLongitude = 0;
     private boolean directoryOnly = false;
 
     @Override
@@ -64,6 +65,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
             etEmail.setText("");
             if (etCustomerAddress != null) etCustomerAddress.setText("");
             selectedCustomerAddress = "";
+            selectedCustomerLatitude = 0;
+            selectedCustomerLongitude = 0;
             etCustomerName.requestFocus();
             Toast.makeText(this, "Enter the new customer's information.", Toast.LENGTH_SHORT).show();
         });
@@ -94,13 +97,15 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                     btnNext.setEnabled(false);
                     selectedCustomerAddress = etCustomerAddress != null && etCustomerAddress.getText() != null
                             ? etCustomerAddress.getText().toString().trim() : selectedCustomerAddress;
-                    dbHelper.saveCustomer(name, phone, email, selectedCustomerAddress);
+                    dbHelper.saveCustomer(name, phone, email, selectedCustomerAddress, selectedCustomerLatitude, selectedCustomerLongitude);
 
                     Intent intent = new Intent(NewBookingCustomerActivity.this, NewBookingDetailsActivity.class);
                     intent.putExtra("CUSTOMER_NAME", name);
                     intent.putExtra("CUSTOMER_PHONE", phone);
                     intent.putExtra("CUSTOMER_EMAIL", email);
                     intent.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
+                    intent.putExtra("CUSTOMER_LAT", selectedCustomerLatitude);
+                    intent.putExtra("CUSTOMER_LNG", selectedCustomerLongitude);
                     startActivity(intent);
                 }
             });
@@ -137,6 +142,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
             etPhone.setText(customer.getPhone());
             etEmail.setText(customer.getEmail());
             selectedCustomerAddress = customer.getAddress() != null ? customer.getAddress() : "";
+            selectedCustomerLatitude = customer.getLatitude();
+            selectedCustomerLongitude = customer.getLongitude();
             if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
             Toast.makeText(this, "Customer information loaded.", Toast.LENGTH_SHORT).show();
         }).setNegativeButton("Cancel", null).show();
@@ -155,7 +162,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.setError("Valid email address is required"); etEmail.requestFocus(); return;
         }
-        if (dbHelper.saveCustomer(name, phone, email, address)) {
+        if (dbHelper.saveCustomer(name, phone, email, address, selectedCustomerLatitude, selectedCustomerLongitude)) {
             selectedCustomerAddress = address;
             Toast.makeText(this, "Customer saved to directory.", Toast.LENGTH_SHORT).show();
             if (directoryOnly) finish();
