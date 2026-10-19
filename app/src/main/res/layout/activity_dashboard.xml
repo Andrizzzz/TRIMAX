@@ -380,7 +380,7 @@
 
                 <!-- Agent selfie attendance card connected to DashboardActivity camera flow -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cardAgentAttendance"
+                    android:id="@+id/cardAgentAttendanceSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="20dp"
