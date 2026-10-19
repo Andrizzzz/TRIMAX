@@ -89,7 +89,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         MaterialButton btnChangeCustomerLocation = findViewById(R.id.btnChangeCustomerLocation);
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
         // Permission Launcher Setup
         locationPermissionLauncher = registerForActivityResult(
@@ -287,5 +287,14 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             mockMapView.recenter();
         }
         Toast.makeText(this, String.format(Locale.US, "Map centered on device GPS coordinates (%.4f, %.4f)", locationHelper.getLatitude(), locationHelper.getLongitude()), Toast.LENGTH_SHORT).show();
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
