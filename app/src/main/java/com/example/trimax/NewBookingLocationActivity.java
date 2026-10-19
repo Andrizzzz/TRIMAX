@@ -69,6 +69,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
         customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
         String savedAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
+        double savedCustomerLatitude = intent.getDoubleExtra("CUSTOMER_LAT", 0);
+        double savedCustomerLongitude = intent.getDoubleExtra("CUSTOMER_LNG", 0);
         if (savedAddress != null && !savedAddress.trim().isEmpty()) selectedCustomerAddress = savedAddress.trim();
         service = intent.getStringExtra("SERVICE");
         quantity = intent.getIntExtra("QUANTITY", 1);
@@ -86,6 +88,10 @@ public class NewBookingLocationActivity extends AppCompatActivity {
 
         TextView tvCustomerAddress = findViewById(R.id.tvCustomerAddress);
         if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
+        if (mockMapView != null && savedCustomerLatitude != 0 && savedCustomerLongitude != 0) {
+            mockMapView.setDestinationLocation(savedCustomerLatitude, savedCustomerLongitude,
+                    selectedCustomerAddress, selectedCustomerAddress);
+        }
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
 
         MaterialButton btnUseCurrentLocation = findViewById(R.id.btnUseCurrentLocation);
