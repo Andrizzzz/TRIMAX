@@ -88,7 +88,7 @@
                     android:layout_centerVertical="true"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:text="July 2026 📅"
+                    android:text="All Time 📅"
                     android:textAllCaps="false"
                     android:textColor="@color/primary_blue"
                     android:textSize="12sp"
