@@ -115,6 +115,15 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
+                    <TextView
+                        android:id="@+id/tvAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Address not saved yet"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
