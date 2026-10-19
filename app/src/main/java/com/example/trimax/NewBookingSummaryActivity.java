@@ -103,6 +103,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             newBooking.setPriority("NORMAL");
 
             dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
+            newBooking.setCustomerId(dbHelper.getCustomerCodeByPhone(customerPhone));
             dbHelper.addBooking(newBooking);
             dbHelper.addNotification(session.getUsername(), "New Booking Submitted", "Booking #" + generatedBookingId + " created for " + (customerName != null ? customerName : "Customer"));
 
