@@ -26,7 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="36dp">
+                android:paddingBottom="16dp">
 
                 <!-- TOP BLUE HEADER SECTION -->
                 <RelativeLayout
