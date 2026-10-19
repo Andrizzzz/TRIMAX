@@ -41,7 +41,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         MaterialButton btnNext = findViewById(R.id.btnNext);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
@@ -84,5 +84,14 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (btnNext != null) {
             btnNext.setEnabled(true);
         }
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }
