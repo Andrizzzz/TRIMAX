@@ -7,16 +7,6 @@
     android:background="@color/bg_main"
     tools:context=".BookingsActivity">
 
-    <!-- Top Left Accent Shape -->
-    <ImageView
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:contentDescription="Top Left Accent"
-        android:scaleType="fitStart"
-        android:src="@drawable/bg_top_left_accent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- TOP BAR -->
     <RelativeLayout
         android:id="@+id/topBar"
@@ -27,32 +17,46 @@
         android:paddingBottom="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="Back"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:text="My Bookings"
+            android:layout_centerInParent="true"
+            android:text="Booking History"
             android:textColor="@color/text_primary"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNewBooking"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:backgroundTint="@color/primary_blue"
-            android:paddingHorizontal="12dp"
+            android:paddingHorizontal="10dp"
             android:text="+ New"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold"
-            app:cornerRadius="10dp" />
+            app:cornerRadius="18dp" />
     </RelativeLayout>
 
-    <!-- SEARCH INPUT FIELD -->
+    <!-- SEARCH INPUT FIELD (Optional/Hidden in mockup but maintained for code compatibility) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -60,7 +64,8 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="4dp"
-        android:hint="Search by Booking ID, customer or phone..."
+        android:hint="Search bookings..."
+        app:boxBackgroundColor="@color/card_bg"
         app:boxCornerRadiusBottomEnd="14dp"
         app:boxCornerRadiusBottomStart="14dp"
         app:boxCornerRadiusTopEnd="14dp"
@@ -76,102 +81,84 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
-            android:paddingVertical="12dp"
+            android:paddingVertical="10dp"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Filter Chips Row -->
-    <HorizontalScrollView
+    <!-- Filter Pills Row -->
+    <LinearLayout
         android:id="@+id/filterScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="12dp"
         android:paddingHorizontal="20dp"
-        android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@+id/searchLayout">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingBottom="8dp">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/chipAll"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/primary_blue"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="All"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:cornerRadius="19dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipAll"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:backgroundTint="@color/primary_blue"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="All"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="12sp"
-                app:cornerRadius="18dp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/chipCompleted"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_marginHorizontal="3dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/surface_alt"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Completed"
+            android:textAllCaps="false"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            app:cornerRadius="19dp"
+            app:strokeWidth="0dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipPending"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Pending"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/chipCancelled"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/surface_alt"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Cancelled"
+            android:textAllCaps="false"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            app:cornerRadius="19dp"
+            app:strokeWidth="0dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipConfirmed"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Confirmed"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+        <!-- Hidden chips for code compatibility -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/chipPending"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipCancelled"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Cancelled"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/chipConfirmed"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipCompleted"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Completed"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
-
-        </LinearLayout>
-    </HorizontalScrollView>
+    </LinearLayout>
 
     <!-- CONTENT LIST -->
     <androidx.core.widget.NestedScrollView
@@ -186,7 +173,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="8dp"
+            android:paddingTop="12dp"
             android:paddingBottom="24dp">
 
             <TextView
@@ -196,7 +183,7 @@
                 android:layout_marginTop="40dp"
                 android:gravity="center"
                 android:text="No bookings found"
-                android:textColor="#94A3B8"
+                android:textColor="@color/text_secondary"
                 android:textSize="15sp"
                 android:visibility="gone" />
 
@@ -216,11 +203,11 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:elevation="8dp"
-        app:itemIconTint="#64748B"
+        app:itemIconTint="@color/primary_blue"
         app:itemRippleColor="#3B82F6"
-        app:itemTextColor="#64748B"
+        app:itemTextColor="@color/primary_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 

@@ -13,779 +13,463 @@
         android:layout_height="match_parent"
         android:background="@color/bg_main">
 
-        <!-- Top Left Accent Shape -->
-        <ImageView
-            android:layout_width="220dp"
-            android:layout_height="220dp"
-            android:contentDescription="Top Left Accent"
-            android:scaleType="fitStart"
-            android:src="@drawable/bg_top_left_accent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- TOP BAR HEADER -->
-        <RelativeLayout
-            android:id="@+id/topBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="20dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="12dp"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:id="@+id/btnMenu"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:contentDescription="Menu"
-                android:focusable="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_menu"
-                app:tint="@color/text_primary" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="6dp"
-                    android:contentDescription="TRI-MAX Logo"
-                    android:src="@drawable/ic_trimax_logo" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DRIVER"
-                    android:textColor="@color/primary_blue"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- Notification Bell & Theme Toggle Container -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <!-- Dark Mode Toggle Button -->
-                <ImageView
-                    android:id="@+id/btnThemeToggle"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:contentDescription="Toggle Dark Mode"
-                    android:focusable="true"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_lock"
-                    app:tint="@color/text_primary" />
-
-                <ImageView
-                    android:id="@+id/btnDriverNotifications"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:contentDescription="Notifications"
-                    android:focusable="true"
-                    android:padding="8dp"
-                    android:src="@drawable/baseline_notifications_none_24"
-                    app:tint="@color/text_primary" />
-            </LinearLayout>
-        </RelativeLayout>
-
         <!-- SCROLLABLE BODY -->
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:fillViewport="true"
-            android:overScrollMode="never"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/topBar">
+            android:overScrollMode="never">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingTop="12dp"
                 android:paddingBottom="36dp">
 
-                <!-- DRIVER GREETING & DUTY CARD -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardBackgroundColor="#2563EB"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="6dp">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="20dp">
-
-                        <TextView
-                            android:id="@+id/tvDriverGreeting"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Good morning, Test Driver 👋"
-                            android:textColor="@android:color/white"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvDriverId"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/tvDriverGreeting"
-                            android:layout_marginTop="2dp"
-                            android:text="Driver ID: driver01 • Assigned by Admin"
-                            android:textColor="#E0E7FF"
-                            android:textSize="13sp" />
-
-                        <!-- Duty Status Bar -->
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/tvDriverId"
-                            android:layout_marginTop="14dp"
-                            android:background="#1D4ED8"
-                            android:padding="12dp">
-
-                            <TextView
-                                android:id="@+id/tvDutyStatusPill"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_centerVertical="true"
-                                android:text="● ONLINE"
-                                android:textColor="#34D399"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnToggleDuty"
-                                android:layout_width="wrap_content"
-                                android:layout_height="38dp"
-                                android:layout_alignParentEnd="true"
-                                android:layout_centerVertical="true"
-                                android:backgroundTint="@android:color/white"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:text="END DUTY"
-                                android:textAllCaps="false"
-                                android:textColor="#EF4444"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                app:cornerRadius="10dp" />
-                        </RelativeLayout>
-
-                    </RelativeLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- LIVE GPS STATUS CARD -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardGpsStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="18dp"
-                    app:cardCornerRadius="18dp"
-                    app:cardElevation="3dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🛰 REAL-TIME GPS TRACKING"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvGpsTrackingLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:background="@drawable/bg_status_confirmed"
-                                android:paddingHorizontal="10dp"
-                                android:paddingVertical="4dp"
-                                android:text="● LIVE"
-                                android:textColor="#059669"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            android:weightSum="3">
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Latitude"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-
-                                <TextView
-                                    android:id="@+id/tvLat"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="14.8115"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold" />
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Longitude"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-
-                                <TextView
-                                    android:id="@+id/tvLng"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="121.0453"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold" />
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Accuracy"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-
-                                <TextView
-                                    android:id="@+id/tvAccuracy"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="±10m"
-                                    android:textColor="@color/primary_blue"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- FOODPANDA STYLE LIVE GPS MAP TRACKING CARD ON DRIVER DASHBOARD -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardLiveTrackingMap"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="5dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <!-- Live Status Header -->
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="#1E3A8A"
-                            android:paddingHorizontal="16dp"
-                            android:paddingVertical="10dp">
-
-                            <TextView
-                                android:id="@+id/tvLiveStatusBadge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_centerVertical="true"
-                                android:background="@drawable/bg_status_confirmed"
-                                android:paddingHorizontal="10dp"
-                                android:paddingVertical="4dp"
-                                android:text="● DRIVER LIVE ROUTE"
-                                android:textColor="#059669"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvLiveEta"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:layout_centerVertical="true"
-                                android:text="ETA: ~6 mins (1.8 km)"
-                                android:textColor="@android:color/white"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
-
-                        <!-- Live Interactive Map View -->
-                        <FrameLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="180dp">
-
-                            <com.example.trimax.MockMapView
-                                android:id="@+id/driverDashboardMapView"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent" />
-
-                        </FrameLayout>
-
-                        <!-- Bottom Live Delivery Info & Action -->
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@color/card_bg"
-                            android:padding="14dp">
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentStart="true"
-                                android:layout_toStartOf="@+id/btnTrackFullMap"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:id="@+id/tvLiveBookingId"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="TRX-1024 • Active Delivery"
-                                    android:textColor="@color/primary_blue"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvLiveCustomer"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:text="Dest: San Jose del Monte • Juan Dela Cruz"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="12sp" />
-                            </LinearLayout>
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnTrackFullMap"
-                                android:layout_width="wrap_content"
-                                android:layout_height="38dp"
-                                android:layout_alignParentEnd="true"
-                                android:layout_centerVertical="true"
-                                android:backgroundTint="@color/primary_blue"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:paddingHorizontal="12dp"
-                                android:text="Full Map 🗺"
-                                android:textAllCaps="false"
-                                android:textColor="@android:color/white"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                app:cornerRadius="10dp" />
-
-                        </RelativeLayout>
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- SECTION TITLE: ASSIGNED DELIVERY HERO CARD -->
+                <!-- TOP BLUE HEADER SECTION -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp">
+                    android:background="@drawable/bg_header_card"
+                    android:paddingHorizontal="20dp"
+                    android:paddingTop="28dp"
+                    android:paddingBottom="24dp">
 
-                    <TextView
-                        android:id="@+id/tvAssignedDeliveryHeader"
+                    <!-- Menu & Actions Top Bar -->
+                    <ImageView
+                        android:id="@+id/btnMenu"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:contentDescription="Menu"
+                        android:focusable="true"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_menu"
+                        app:tint="@android:color/white" />
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ASSIGNED DELIVERY"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentTop="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Online Status Badge Pill Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnToggleDuty"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="8dp"
+                            android:backgroundTint="#10B981"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="12dp"
+                            android:text="Online"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="18dp" />
+
+                        <ImageView
+                            android:id="@+id/btnThemeToggle"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="4dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:contentDescription="Theme"
+                            android:focusable="true"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_user"
+                            app:tint="@android:color/white" />
+
+                        <ImageView
+                            android:id="@+id/btnDriverNotifications"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:contentDescription="Notifications"
+                            android:focusable="true"
+                            android:padding="6dp"
+                            android:src="@drawable/baseline_notifications_none_24"
+                            app:tint="@android:color/white" />
+                    </LinearLayout>
+
+                    <!-- Driver Greeting -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/btnMenu"
+                        android:layout_marginTop="16dp"
+                        android:text="Good Morning,"
+                        android:textColor="#D1E2FF"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/tvDriverGreeting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/btnMenu"
+                        android:layout_marginTop="34dp"
+                        android:text="Juan Santos 👋"
+                        android:textColor="@android:color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <!-- STATS ROW (3 COLUMNS) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvDriverGreeting"
+                        android:layout_marginTop="20dp"
+                        android:background="#1AFFFFFF"
+                        android:orientation="horizontal"
+                        android:paddingVertical="12dp"
+                        android:weightSum="3">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="12"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Deliveries"
+                                android:textColor="#D1E2FF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="#33FFFFFF" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₱1,200"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Earnings"
+                                android:textColor="#D1E2FF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="#33FFFFFF" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="98%"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="On Time"
+                                android:textColor="#D1E2FF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+
+                <!-- CURRENT DELIVERY CARD -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current Delivery"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tvHeroSequence"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_status_confirmed"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
-                        android:text="Seq #1"
-                        android:textColor="#059669"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <!-- HERO CARD FOR CURRENT ASSIGNED DELIVERY -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardAssignedDeliveryHero"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
-                    app:cardCornerRadius="18dp"
-                    app:cardElevation="4dp">
-
-                    <LinearLayout
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/cardAssignedDeliveryHero"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="18dp">
+                        android:layout_marginTop="10dp"
+                        app:cardBackgroundColor="@color/card_bg"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="3dp">
 
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:id="@+id/tvHeroBookingId"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="TRX-1024"
-                                android:textColor="@color/primary_blue"
-                                android:textSize="20sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvHeroStatusPill"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:background="@drawable/bg_status_pending"
-                                android:paddingHorizontal="12dp"
-                                android:paddingVertical="4dp"
-                                android:text="ASSIGNED"
-                                android:textColor="@color/primary_blue"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginVertical="10dp"
-                            android:background="#3364748B" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Customer:"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvHeroCustomerName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Juan Dela Cruz"
-                            android:textColor="@color/text_primary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Pickup:"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvHeroPickup"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="TRI-MAX Hub"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Destination:"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvHeroDestination"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="San Jose del Monte"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Special Instructions:"
-                            android:textColor="#D97706"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvHeroSpecialInstructions"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="#19D97706"
-                            android:padding="8dp"
-                            android:text="Handle with care. ₱500 deposit required."
-                            android:textColor="#D97706"
-                            android:textSize="13sp" />
-
-                        <!-- BUTTON ACTIONS (NO ACCEPT / NO DECLINE) -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
-                            android:orientation="horizontal">
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <RelativeLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <TextView
+                                    android:id="@+id/tvHeroBookingId"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="TRK-2024001"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tvHeroStatusPill"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentEnd="true"
+                                    android:background="@drawable/bg_pill_unselected"
+                                    android:backgroundTint="#DCFCE7"
+                                    android:paddingHorizontal="10dp"
+                                    android:paddingVertical="3dp"
+                                    android:text="In Transit"
+                                    android:textColor="#16A34A"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold" />
+                            </RelativeLayout>
+
+                            <!-- Sequence & Customer -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tvHeroSequence"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Seq #1"
+                                    android:textColor="@color/primary_blue"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="6dp"
+                                    android:text="•"
+                                    android:textColor="@color/text_secondary" />
+
+                                <TextView
+                                    android:id="@+id/tvHeroCustomerName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Juan Dela Cruz"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <!-- Addresses -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tvHeroPickup"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Pickup: San Jose del Monte"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp" />
+
+                                <TextView
+                                    android:id="@+id/tvHeroDestination"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="Drop-off: Quezon City"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp" />
+
+                                <TextView
+                                    android:id="@+id/tvHeroSpecialInstructions"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="⚠️ Special Instructions"
+                                    android:textColor="#D97706"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <!-- Action Buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:orientation="horizontal"
+                                android:weightSum="2">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnHeroStartDelivery"
+                                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="46dp"
+                                    android:layout_marginEnd="6dp"
+                                    android:layout_weight="1"
+                                    android:insetTop="0dp"
+                                    android:insetBottom="0dp"
+                                    android:text="Start Delivery"
+                                    android:textAllCaps="false"
+                                    android:textColor="@color/primary_blue"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    app:cornerRadius="12dp"
+                                    app:strokeColor="@color/primary_blue" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnHeroViewDetails"
+                                    android:layout_width="0dp"
+                                    android:layout_height="46dp"
+                                    android:layout_marginStart="6dp"
+                                    android:layout_weight="1"
+                                    android:backgroundTint="@color/primary_blue"
+                                    android:insetTop="0dp"
+                                    android:insetBottom="0dp"
+                                    android:text="View Details"
+                                    android:textAllCaps="false"
+                                    android:textColor="@android:color/white"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    app:cornerRadius="12dp" />
+                            </LinearLayout>
 
                             <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnHeroViewDetails"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                android:layout_width="0dp"
-                                android:layout_height="48dp"
-                                android:layout_marginEnd="6dp"
-                                android:layout_weight="1"
-                                android:text="VIEW DETAILS"
+                                android:id="@+id/btnHeroReportProblem"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="4dp"
+                                android:text="Report Problem"
                                 android:textAllCaps="false"
-                                android:textColor="@color/primary_blue"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                app:cornerRadius="12dp"
-                                app:strokeColor="#2563EB" />
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnHeroStartDelivery"
-                                android:layout_width="0dp"
-                                android:layout_height="48dp"
-                                android:layout_marginStart="6dp"
-                                android:layout_weight="1"
-                                android:backgroundTint="@color/primary_blue"
-                                android:text="START DELIVERY"
-                                android:textAllCaps="false"
-                                android:textColor="@android:color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                app:cornerRadius="12dp" />
-                        </LinearLayout>
-
-                        <!-- REPORT PROBLEM BUTTON -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnHeroReportProblem"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="42dp"
-                            android:layout_marginTop="8dp"
-                            android:text="⚠️ REPORT PROBLEM"
-                            android:textAllCaps="false"
-                            android:textColor="#EF4444"
-                            android:textSize="12sp"
-                            app:cornerRadius="10dp"
-                            app:strokeColor="#EF4444" />
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- SECTION TITLE -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="Driver Navigation &amp; Tasks"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <!-- 2x2 ACTION CARDS -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="2">
-
-                    <!-- Assigned Deliveries Card -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cardAssignedDeliveries"
-                        android:layout_width="0dp"
-                        android:layout_height="100dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:id="@+id/tvDelivBadge"
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
-                                android:layout_alignParentEnd="true"
-                                android:background="@drawable/bg_icon_badge"
-                                android:backgroundTint="@color/primary_blue"
-                                android:gravity="center"
-                                android:text="3"
-                                android:textColor="@android:color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentBottom="true"
-                                android:text="📦 All Assigned Bookings"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Driver Map Card -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cardDriverMap"
-                        android:layout_width="0dp"
-                        android:layout_height="100dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentBottom="true"
-                                android:text="🗺 Driver Live Map"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal"
-                    android:weightSum="2">
-
-                    <!-- Delivery History Card -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cardDeliveryHistory"
-                        android:layout_width="0dp"
-                        android:layout_height="100dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentBottom="true"
-                                android:text="📜 Delivery History"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Emergency & Support Card -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cardEmergencySupport"
-                        android:layout_width="0dp"
-                        android:layout_height="100dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentBottom="true"
-                                android:text="🚨 Support &amp; Emergency"
                                 android:textColor="#EF4444"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-                        </RelativeLayout>
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
+
+                <!-- Hidden compatibility views -->
+                <TextView
+                    android:id="@+id/tvDutyStatusPill"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvGpsTrackingLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvLat"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvLng"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvAccuracy"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <com.example.trimax.MockMapView
+                    android:id="@+id/driverDashboardMapView"
+                    android:layout_width="1dp"
+                    android:layout_height="1dp"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTrackFullMap"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardAssignedDeliveries"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardDriverMap"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardDeliveryHistory"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardEmergencySupport"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvDelivBadge"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
@@ -798,10 +482,10 @@
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:headerLayout="@layout/nav_header"
-        app:itemIconTint="#2563EB"
-        app:itemTextColor="#0F172A"
+        app:itemIconTint="@color/primary_blue"
+        app:itemTextColor="@color/text_primary"
         app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

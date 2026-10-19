@@ -56,6 +56,11 @@ public class RegisterActivity extends AppCompatActivity {
         MaterialButton btnGoogle = findViewById(R.id.btnGoogleRegister);
         MaterialButton btnFacebook = findViewById(R.id.btnFacebookRegister);
         android.widget.TextView tvLoginLink = findViewById(R.id.tvLoginLink);
+        android.widget.ImageView btnBack = findViewById(R.id.btnBack);
+
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         tvLoginLink.setOnClickListener(v -> {
             Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);

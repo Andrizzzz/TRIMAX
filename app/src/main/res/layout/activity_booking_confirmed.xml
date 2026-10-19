@@ -7,25 +7,16 @@
     android:background="@color/bg_main"
     tools:context=".BookingConfirmedActivity">
 
-    <!-- Top Left Accent Shape -->
+    <!-- Bottom Skyline Accent -->
     <ImageView
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:contentDescription="Top Left Accent"
-        android:scaleType="fitStart"
-        android:src="@drawable/bg_top_left_accent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Bottom Right Accent Shape -->
-    <ImageView
-        android:layout_width="260dp"
-        android:layout_height="260dp"
-        android:contentDescription="Bottom Right Accent"
-        android:scaleType="fitEnd"
-        android:src="@drawable/bg_bottom_right_accent"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:contentDescription="City Skyline"
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_city_skyline"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,47 +29,51 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:layout_width="88dp"
-            android:layout_height="88dp"
-            android:contentDescription="Confirmed Icon"
-            android:src="@drawable/ic_check_circle" />
+        <!-- Confetti & Big Green Circle Badge -->
+        <RelativeLayout
+            android:layout_width="120dp"
+            android:layout_height="120dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Confirmed Icon"
+                android:src="@drawable/ic_check_circle"
+                app:tint="#10B981" />
+        </RelativeLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="24dp"
             android:text="Booking Confirmed!"
             android:textColor="@color/text_primary"
-            android:textSize="26sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Your booking has been\nsuccessfully created."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvBookingId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_status_confirmed"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:text="Booking #BK-2026-00123"
-            android:textColor="#059669"
-            android:textSize="14sp"
+            android:layout_marginTop="20dp"
+            android:text="TRK-2024001"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
             android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="Your booking request has been successfully submitted and logged into the system."
-            android:textColor="@color/text_secondary"
-            android:textSize="15sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewBooking"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="54dp"
             android:layout_marginTop="36dp"
             android:backgroundTint="@color/primary_blue"
             android:text="View Booking"
@@ -86,20 +81,18 @@
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:cornerRadius="16dp" />
+            app:cornerRadius="27dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackToDashboard"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="12dp"
-            android:text="Back to Dashboard"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:text="Back to Home"
             android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            app:cornerRadius="16dp"
-            app:strokeColor="#CBD5E1" />
+            android:textColor="@color/primary_blue"
+            android:textSize="15sp" />
 
     </LinearLayout>
 

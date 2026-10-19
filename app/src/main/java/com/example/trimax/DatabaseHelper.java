@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 5; // Updated for Secure Password Hashing & Migrations
+    private static final int DATABASE_VERSION = 6; // Updated for Driver login and Seeding
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -416,7 +416,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "longitude REAL, "
                 + "created_at TEXT)");
         db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
-        if (oldVersion < 5) {
+        if (oldVersion < 6) {
             try {
                 seedInitialData(db);
             } catch (Exception ignored) {}
