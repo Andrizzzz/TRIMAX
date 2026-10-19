@@ -36,6 +36,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String customerName = intent.getStringExtra("CUSTOMER_NAME");
         String customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
+        String customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
         String service = intent.getStringExtra("SERVICE");
         int quantity = intent.getIntExtra("QUANTITY", 1);
         String date = intent.getStringExtra("DATE");
@@ -101,6 +102,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             newBooking.setStatus("PENDING");
             newBooking.setPriority("NORMAL");
 
+            dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address);
             dbHelper.addBooking(newBooking);
             dbHelper.addNotification(session.getUsername(), "New Booking Submitted", "Booking #" + generatedBookingId + " created for " + (customerName != null ? customerName : "Customer"));
 
