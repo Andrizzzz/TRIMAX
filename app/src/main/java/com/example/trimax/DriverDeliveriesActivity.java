@@ -8,11 +8,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.cardview.widget.CardView;
 
 import com.google.android.material.button.MaterialButton;
@@ -28,16 +24,8 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+        // Match Driver History and Reports system-bar spacing without a duplicate inset.
         setContentView(R.layout.activity_driver_deliveries);
-
-        // Keep screen content clear of the status and navigation bars.
-        View root = findViewById(android.R.id.content);
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);
@@ -81,7 +69,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         if (deliveries.isEmpty()) {
             TextView tvEmpty = new TextView(this);
             tvEmpty.setText("No active assigned bookings found.");
-            tvEmpty.setTextColor(0xFF64748B);
+            tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
             tvEmpty.setTextSize(16);
             tvEmpty.setPadding(20, 40, 20, 20);
             containerDeliveries.addView(tvEmpty);
@@ -138,26 +126,26 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             // Booking ID & Customer
             TextView tvCode = new TextView(this);
             tvCode.setText(String.format("Booking #%s", d.getBookingId()));
-            tvCode.setTextColor(0xFF0F172A);
+            tvCode.setTextColor(getResources().getColor(R.color.text_primary));
             tvCode.setTextSize(18);
             tvCode.setPadding(0, 8, 0, 0);
             tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
 
             TextView tvCustomer = new TextView(this);
             tvCustomer.setText(String.format("Customer: %s • %s", d.getCustomerName(), d.getCustomerPhone()));
-            tvCustomer.setTextColor(0xFF2563EB);
+            tvCustomer.setTextColor(getResources().getColor(R.color.primary_blue));
             tvCustomer.setTextSize(14);
             tvCustomer.setPadding(0, 4, 0, 0);
 
             TextView tvPickup = new TextView(this);
             tvPickup.setText(String.format("Pickup: %s", d.getPickupLocation()));
-            tvPickup.setTextColor(0xFF475569);
+            tvPickup.setTextColor(getResources().getColor(R.color.text_secondary));
             tvPickup.setTextSize(13);
             tvPickup.setPadding(0, 4, 0, 0);
 
             TextView tvDest = new TextView(this);
             tvDest.setText(String.format("Destination: %s", d.getDestination()));
-            tvDest.setTextColor(0xFF0F172A);
+            tvDest.setTextColor(getResources().getColor(R.color.text_primary));
             tvDest.setTextSize(13);
             tvDest.setTypeface(null, android.graphics.Typeface.BOLD);
             tvDest.setPadding(0, 2, 0, 0);
@@ -166,8 +154,8 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             if (!TextUtils.isEmpty(d.getSpecialInstructions())) {
                 TextView tvInstructions = new TextView(this);
                 tvInstructions.setText(String.format("⚠️ Instructions: %s", d.getSpecialInstructions()));
-                tvInstructions.setTextColor(0xFF92400E);
-                tvInstructions.setBackgroundColor(0xFFFFFBEB);
+                tvInstructions.setTextColor(getResources().getColor(R.color.text_primary));
+                tvInstructions.setBackgroundResource(R.drawable.bg_pill_unselected);
                 tvInstructions.setTextSize(12);
                 tvInstructions.setPadding(12, 8, 12, 8);
                 tvInstructions.setPadding(12, 8, 12, 8);
