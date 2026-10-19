@@ -80,6 +80,30 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnChooseCustomer"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:text="Choose Saved Customer"
+                android:textAllCaps="false"
+                android:textColor="@color/primary_blue"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/primary_blue"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddCustomer"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="Add New Customer / Clear Form"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp" />
+
             <!-- Customer Name -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -157,6 +181,45 @@
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Saved Customer Address (optional)"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="@color/primary_blue"
+                app:hintTextColor="@color/primary_blue"
+                app:startIconDrawable="@drawable/ic_location"
+                app:startIconTint="@color/text_secondary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCustomerAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPostalAddress|textMultiLine"
+                    android:minLines="2"
+                    android:paddingVertical="16dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveCustomer"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:text="Save Customer to Directory"
+                android:textAllCaps="false"
+                android:textColor="@color/primary_blue"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/border_subtle"
+                app:strokeWidth="1dp" />
 
             <View
                 android:layout_width="match_parent"
