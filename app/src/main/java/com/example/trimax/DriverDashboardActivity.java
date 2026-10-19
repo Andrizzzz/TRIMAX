@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -138,6 +139,15 @@ public class DriverDashboardActivity extends AppCompatActivity {
             btnMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
         }
 
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefreshDashboard);
+        if (swipeRefresh != null) {
+            swipeRefresh.setColorSchemeResources(R.color.primary_blue);
+            swipeRefresh.setOnRefreshListener(() -> {
+                refreshDriverDashboard();
+                swipeRefresh.setRefreshing(false);
+            });
+        }
+
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
             ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
@@ -174,6 +184,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (itemId == R.id.drawer_home) {
+                    refreshDriverDashboard();
                     return true;
                 } else if (itemId == R.id.drawer_bookings) {
                     startActivity(new Intent(this, DriverDeliveriesActivity.class));
@@ -279,8 +290,12 @@ public class DriverDashboardActivity extends AppCompatActivity {
             driverDashboardMapView.onResume();
             driverDashboardMapView.startLiveDeliveryAnimation();
         }
-        updateDutyUI();
-        loadAssignedHeroDelivery();
+        refreshDriverDashboard();
+
+        NavigationView dashboardDrawer = findViewById(R.id.navigationView);
+        if (dashboardDrawer != null) {
+            dashboardDrawer.setCheckedItem(R.id.drawer_home);
+        }
 
         // Whenever a driver screen closes and returns here, restore the Dashboard tab highlight.
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
@@ -294,6 +309,15 @@ public class DriverDashboardActivity extends AppCompatActivity {
         super.onPause();
         if (driverDashboardMapView != null) {
             driverDashboardMapView.onPause();
+        }
+    }
+
+    private void refreshDriverDashboard() {
+        updateDutyUI();
+        loadAssignedHeroDelivery();
+        TextView tvDriverGreeting = findViewById(R.id.tvDriverGreeting);
+        if (tvDriverGreeting != null && session != null) {
+            tvDriverGreeting.setText(String.format("Good morning, %s 👋", session.getFullName()));
         }
     }
 
@@ -492,6 +516,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
+                refreshDriverDashboard();
                 return true;
             } else if (itemId == R.id.nav_bookings) {
                 startActivity(new Intent(this, DriverDeliveriesActivity.class));
