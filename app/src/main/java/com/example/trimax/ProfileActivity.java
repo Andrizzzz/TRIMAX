@@ -3,6 +3,7 @@ package com.example.trimax;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -37,11 +38,16 @@ public class ProfileActivity extends AppCompatActivity {
             });
         }
 
-        CardView cardEditProfile = findViewById(R.id.cardEditProfile);
-        CardView cardChangePassword = findViewById(R.id.cardChangePassword);
-        CardView cardReports = findViewById(R.id.cardReports);
+        ImageView btnBack = findViewById(R.id.btnBack);
+        View cardEditProfile = findViewById(R.id.cardEditProfile);
+        View cardChangePassword = findViewById(R.id.cardChangePassword);
+        View cardReports = findViewById(R.id.cardReports);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         if (bottomNavigation != null) {
             ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
@@ -108,8 +114,8 @@ public class ProfileActivity extends AppCompatActivity {
                 startActivity(new Intent(this, ClientsActivity.class));
                 finish();
                 return true;
-            } else if (itemId == R.id.nav_notifications) {
-                startActivity(new Intent(this, NotificationsActivity.class));
+            } else if (itemId == R.id.nav_reports) {
+                startActivity(new Intent(this, ReportsActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.nav_profile) {

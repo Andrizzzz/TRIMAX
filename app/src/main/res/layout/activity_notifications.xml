@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".NotificationsActivity">
 
     <!-- Top Left Accent Shape -->
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:text="Notifications 🔔"
-            android:textColor="#0F172A"
+            android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -46,7 +46,7 @@
             android:focusable="true"
             android:padding="4dp"
             android:text="Mark All as Read"
-            android:textColor="#2563EB"
+            android:textColor="@color/primary_blue"
             android:textSize="13sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -72,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:text="Today"
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -85,6 +85,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -98,7 +99,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🔵 New Booking Submitted"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -108,7 +109,7 @@
                         android:layout_below="@+id/tvNotif1Title"
                         android:layout_marginTop="4dp"
                         android:text="Booking #BK-2026-00123 has been submitted successfully."
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
@@ -116,7 +117,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:text="2 mins ago"
-                        android:textColor="#94A3B8"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
@@ -130,6 +131,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -143,7 +145,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🟢 Booking Confirmed"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -153,7 +155,7 @@
                         android:layout_below="@+id/tvNotif2Title"
                         android:layout_marginTop="4dp"
                         android:text="Booking #BK-2026-00122 has been confirmed by dispatch."
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
@@ -161,7 +163,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:text="1 hour ago"
-                        android:textColor="#94A3B8"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
@@ -174,11 +176,11 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="@color/card_bg"
         app:elevation="8dp"
-        app:itemIconTint="#64748B"
+        app:itemIconTint="@color/primary_blue"
         app:itemRippleColor="#3B82F6"
-        app:itemTextColor="#64748B"
+        app:itemTextColor="@color/primary_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 

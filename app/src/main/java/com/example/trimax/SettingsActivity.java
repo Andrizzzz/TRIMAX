@@ -38,17 +38,17 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
-        CardView cardThemeSettings = findViewById(R.id.cardThemeSettings);
+        View cardThemeSettings = findViewById(R.id.cardThemeSettings);
         tvCurrentThemeSubtitle = findViewById(R.id.tvCurrentThemeSubtitle);
 
-        CardView cardNotificationSettings = findViewById(R.id.cardNotificationSettings);
-        CardView cardAccountSettings = findViewById(R.id.cardAccountSettings);
-        CardView cardPrivacy = findViewById(R.id.cardPrivacy);
-        CardView cardTerms = findViewById(R.id.cardTerms);
-        CardView cardRefundPolicy = findViewById(R.id.cardRefundPolicy);
-        CardView cardCookiesConsent = findViewById(R.id.cardCookiesConsent);
-        CardView cardBusinessDetails = findViewById(R.id.cardBusinessDetails);
-        CardView cardAbout = findViewById(R.id.cardAbout);
+        View cardNotificationSettings = findViewById(R.id.cardNotificationSettings);
+        View cardAccountSettings = findViewById(R.id.cardAccountSettings);
+        View cardPrivacy = findViewById(R.id.cardPrivacy);
+        View cardTerms = findViewById(R.id.cardTerms);
+        View cardRefundPolicy = findViewById(R.id.cardRefundPolicy);
+        View cardCookiesConsent = findViewById(R.id.cardCookiesConsent);
+        View cardBusinessDetails = findViewById(R.id.cardBusinessDetails);
+        View cardAbout = findViewById(R.id.cardAbout);
 
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());

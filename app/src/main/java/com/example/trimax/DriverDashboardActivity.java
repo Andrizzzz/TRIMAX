@@ -19,6 +19,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -134,6 +135,17 @@ public class DriverDashboardActivity extends AppCompatActivity {
         // Navigation Drawer
         if (btnMenu != null && drawerLayout != null) {
             btnMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+        }
+
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+            bottomNavigation.setSelectedItemId(R.id.nav_home);
+            setupBottomNavigation(bottomNavigation);
         }
 
         if (navigationView != null) {
@@ -452,5 +464,31 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                return true;
+            } else if (itemId == R.id.nav_bookings) {
+                startActivity(new Intent(this, DriverDeliveriesActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_clients) {
+                startActivity(new Intent(this, ClientsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_reports) {
+                startActivity(new Intent(this, ReportsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                startActivity(new Intent(this, DriverProfileActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 }

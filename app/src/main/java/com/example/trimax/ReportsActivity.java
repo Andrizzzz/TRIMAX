@@ -10,7 +10,11 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 public class ReportsActivity extends AppCompatActivity {
@@ -69,7 +73,44 @@ public class ReportsActivity extends AppCompatActivity {
             cardCancelledBookings.setOnClickListener(v -> openBookingsWithFilter("CANCELLED"));
         }
 
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+            bottomNavigation.setSelectedItemId(R.id.nav_reports);
+            setupBottomNavigation(bottomNavigation);
+        }
+
         updateMetrics();
+    }
+
+    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                startActivity(new Intent(this, DashboardActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_bookings) {
+                startActivity(new Intent(this, BookingsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_clients) {
+                startActivity(new Intent(this, ClientsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_reports) {
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override

@@ -227,16 +227,7 @@ public class DashboardActivity extends AppCompatActivity {
             btnNotifications.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class)));
         }
 
-        // 4. DASHBOARD STATS CARDS
-        if (statTotalBookings != null) {
-            statTotalBookings.setOnClickListener(v -> openBookingsWithFilter("ALL"));
-        }
-        if (statPendingBookings != null) {
-            statPendingBookings.setOnClickListener(v -> openBookingsWithFilter("PENDING"));
-        }
-        if (statConfirmedBookings != null) {
-            statConfirmedBookings.setOnClickListener(v -> openBookingsWithFilter("CONFIRMED"));
-        }
+        // 4. DASHBOARD STATS CARDS (Informational only, non-clickable)
 
         // 5. RECENT BOOKING CARDS
         loadRecentBookings();
@@ -252,8 +243,8 @@ public class DashboardActivity extends AppCompatActivity {
 
         // 8. BOTTOM NAVIGATION
         if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_home);
             setupBottomNavigation(bottomNavigation);
+            bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
 
         // Back Press Handler for Navigation Drawer
@@ -445,7 +436,14 @@ public class DashboardActivity extends AppCompatActivity {
             tvAmount.setText(String.format("₱ %,.2f", delivery.getCurrentTotal()));
         }
 
-        card.setOnClickListener(v -> openBookingDetail(delivery.getBookingId(), delivery.getCustomerName(), delivery.getStatus(), String.format("₱ %,.2f", delivery.getCurrentTotal())));
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, BookingDetailActivity.class);
+            intent.putExtra("BOOKING_ID", delivery.getBookingId());
+            intent.putExtra("CUSTOMER_NAME", delivery.getCustomerName());
+            intent.putExtra("STATUS", delivery.getStatus());
+            intent.putExtra("TOTAL_AMOUNT", String.format("₱ %,.2f", delivery.getCurrentTotal()));
+            startActivity(intent);
+        });
     }
 
     private void updateDashboardStats() {
@@ -507,8 +505,8 @@ public class DashboardActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_clients) {
                 startActivity(new Intent(this, ClientsActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_notifications) {
-                startActivity(new Intent(this, NotificationsActivity.class));
+            } else if (itemId == R.id.nav_reports) {
+                startActivity(new Intent(this, ReportsActivity.class));
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));

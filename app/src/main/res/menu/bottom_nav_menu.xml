@@ -13,9 +13,9 @@
         android:icon="@drawable/ic_clients"
         android:title="Clients" />
     <item
-        android:id="@+id/nav_notifications"
-        android:icon="@drawable/baseline_notifications_none_24"
-        android:title="Notifications" />
+        android:id="@+id/nav_reports"
+        android:icon="@drawable/calendar"
+        android:title="Reports" />
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_account"

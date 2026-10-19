@@ -16,9 +16,11 @@
         <!-- SCROLLABLE BODY -->
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:fillViewport="true"
-            android:overScrollMode="never">
+            android:overScrollMode="never"
+            app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+            app:layout_constraintTop_toTopOf="parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -473,6 +475,19 @@
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
+
+        <!-- BOTTOM NAVIGATION -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_bg"
+            app:elevation="8dp"
+            app:itemIconTint="@color/primary_blue"
+            app:itemRippleColor="#3B82F6"
+            app:itemTextColor="@color/primary_blue"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:menu="@menu/bottom_nav_menu" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

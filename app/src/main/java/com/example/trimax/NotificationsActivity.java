@@ -57,7 +57,6 @@ public class NotificationsActivity extends AppCompatActivity {
                 v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
                 return insets;
             });
-            bottomNavigation.setSelectedItemId(R.id.nav_notifications);
             setupBottomNavigation(bottomNavigation);
         }
 
@@ -127,7 +126,9 @@ public class NotificationsActivity extends AppCompatActivity {
                 startActivity(new Intent(this, ClientsActivity.class));
                 finish();
                 return true;
-            } else if (itemId == R.id.nav_notifications) {
+            } else if (itemId == R.id.nav_reports) {
+                startActivity(new Intent(this, ReportsActivity.class));
+                finish();
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));

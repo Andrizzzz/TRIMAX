@@ -206,8 +206,8 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
                 startActivity(new Intent(this, ClientsActivity.class));
                 finish();
                 return true;
-            } else if (itemId == R.id.nav_notifications) {
-                startActivity(new Intent(this, NotificationsActivity.class));
+            } else if (itemId == R.id.nav_reports) {
+                startActivity(new Intent(this, ReportsActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.nav_profile) {
