@@ -28,7 +28,7 @@
             android:title="Profile" />
         <item
             android:id="@+id/drawer_settings"
-            android:icon="@drawable/ic_account"
+            android:icon="@drawable/ic_settings"
             android:title="Settings" />
     </group>
 
