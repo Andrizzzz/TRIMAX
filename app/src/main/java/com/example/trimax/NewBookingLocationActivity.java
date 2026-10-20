@@ -269,10 +269,10 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         // Confirm Location Button
         if (btnConfirmLocation != null) btnConfirmLocation.setOnClickListener(v -> {
             btnConfirmLocation.setEnabled(false);
-            GeoPoint pickupPoint = mockMapView != null ? mockMapView.getPickupGeoPoint() : new GeoPoint(14.8115, 121.0453);
+            GeoPoint pickupPoint = new GeoPoint(14.7826996, 121.0475865);
             GeoPoint destPoint = mockMapView != null ? mockMapView.getDestinationGeoPoint() : new GeoPoint(14.8150, 121.0500);
 
-            if (pickupPoint == null) pickupPoint = new GeoPoint(14.8115, 121.0453);
+            // Pickup is always the fixed TRIMAX Hub, never the device GPS position.
             if (destPoint == null) destPoint = new GeoPoint(14.8150, 121.0500);
 
             Intent detailsIntent = new Intent(NewBookingLocationActivity.this, NewBookingDetailsActivity.class);
@@ -286,8 +286,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             if (getIntent().hasExtra("SELECTED_PACKAGE")) {
                 detailsIntent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
             }
-            detailsIntent.putExtra("PICKUP_LAT", pickupPoint.getLatitude());
-            detailsIntent.putExtra("PICKUP_LNG", pickupPoint.getLongitude());
+            detailsIntent.putExtra("PICKUP_LAT", 14.7826996);
+            detailsIntent.putExtra("PICKUP_LNG", 121.0475865);
             detailsIntent.putExtra("DEST_LAT", destPoint.getLatitude());
             detailsIntent.putExtra("DEST_LNG", destPoint.getLongitude());
             startActivity(detailsIntent);
