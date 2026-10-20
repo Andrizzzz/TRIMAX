@@ -194,15 +194,20 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
     private void resetChipStyle(MaterialButton chip) {
         if (chip == null) return;
-        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0x00000000)); // Transparent
+        // Keep filter chips visually neutral unless selected. Remove the default
+        // hover overlay that can make All/Pending look selected unexpectedly.
+        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat.getColor(this, R.color.surface_alt)));
+        chip.setRippleColor(android.content.res.ColorStateList.valueOf(0x00000000));
         chip.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary));
-        chip.setStrokeColor(android.content.res.ColorStateList.valueOf(0xFFCBD5E1));
+        chip.setStrokeColor(android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat.getColor(this, R.color.border_subtle)));
         chip.setStrokeWidth(2);
     }
 
     private void setSelectedChipStyle(MaterialButton chip) {
         if (chip == null) return;
-        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF2563EB)); // Blue
+        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF2563EB)); // Selected blue
         chip.setTextColor(0xFFFFFFFF);
         chip.setStrokeWidth(0);
     }
