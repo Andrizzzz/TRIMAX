@@ -3,6 +3,7 @@ package com.example.trimax;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -97,8 +98,19 @@ public class TrackingMapActivity extends AppCompatActivity {
         if (mapView == null) return;
         mapView.getOverlays().clear();
 
+        // When opened from Booking Details, show only that booking's saved destination.
+        String selectedBookingId = getIntent().getStringExtra("BOOKING_ID");
+        if (TextUtils.isEmpty(selectedBookingId)) {
+            selectedBookingId = getIntent().getStringExtra("DELIVERY_ID");
+        }
+        if (!TextUtils.isEmpty(selectedBookingId)) {
+            showBookingDestination(selectedBookingId.trim(), subtitle);
+            return;
+        }
+
         List<DatabaseHelper.SavedCustomer> customers = dbHelper != null ? dbHelper.getSavedCustomers("") : new ArrayList<>();
         int pinCount = 0;
+        int missingLocationCount = 0;
         List<GeoPoint> validPoints = new ArrayList<>();
 
         if (customers != null) {
@@ -107,10 +119,10 @@ public class TrackingMapActivity extends AppCompatActivity {
                 double lat = customer.getLatitude();
                 double lng = customer.getLongitude();
 
+                // Never invent a map pin for a customer whose real coordinates are missing.
                 if (!isValidCoordinate(lat, lng)) {
-                    long id = customer.getId() > 0 ? customer.getId() : (pinCount + 1);
-                    lat = 14.8115 + (((id * 7) % 11) - 5) * 0.008;
-                    lng = 121.0453 + (((id * 13) % 11) - 5) * 0.008;
+                    missingLocationCount++;
+                    continue;
                 }
 
                 GeoPoint point = new GeoPoint(lat, lng);
@@ -153,7 +165,13 @@ public class TrackingMapActivity extends AppCompatActivity {
 
         if (subtitle != null) {
             if (!validPoints.isEmpty()) {
-                subtitle.setText(pinCount + " client location pin(s) on map. Tap any pin for details.");
+                String summary = pinCount + " client location pin(s) on map. Tap any pin for details.";
+                if (missingLocationCount > 0) {
+                    summary += " " + missingLocationCount + " customer(s) have no saved coordinates.";
+                }
+                subtitle.setText(summary);
+            } else if (missingLocationCount > 0) {
+                subtitle.setText("No saved customer coordinates are available yet. Update each customer's saved map location.");
             } else {
                 subtitle.setText("No customers found. Add customers in Clients or New Booking to view map pins.");
             }
@@ -176,7 +194,47 @@ public class TrackingMapActivity extends AppCompatActivity {
                 });
             }
         } else {
-            mapView.getController().setCenter(new GeoPoint(14.8115, 121.0453));
+            // No fallback coordinates: leave the map uncentered rather than implying a false location.
+            mapView.getController().setZoom(4.0);
+        }
+        mapView.invalidate();
+    }
+
+    private void showBookingDestination(String bookingId, TextView subtitle) {
+        Delivery delivery = dbHelper != null ? dbHelper.getDeliveryByCode(bookingId) : null;
+        if (delivery == null) {
+            if (subtitle != null) subtitle.setText("Booking #" + bookingId + " was not found.");
+            mapView.getController().setZoom(4.0);
+            mapView.invalidate();
+            return;
+        }
+
+        double lat = delivery.getDestinationLatitude();
+        double lng = delivery.getDestinationLongitude();
+        String address = delivery.getDestination();
+        if (!isValidCoordinate(lat, lng)) {
+            if (subtitle != null) {
+                subtitle.setText("No saved map coordinates for booking #" + bookingId
+                        + (TextUtils.isEmpty(address) ? "." : ". Destination: " + address));
+            }
+            mapView.getController().setZoom(4.0);
+            mapView.invalidate();
+            return;
+        }
+
+        GeoPoint point = new GeoPoint(lat, lng);
+        Marker marker = new Marker(mapView);
+        marker.setPosition(point);
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        marker.setTitle(TextUtils.isEmpty(delivery.getCustomerName()) ? "Customer Destination" : delivery.getCustomerName());
+        marker.setSnippet((TextUtils.isEmpty(address) ? "Saved booking destination" : address)
+                + "\\nBooking #" + bookingId);
+        mapView.getOverlays().add(marker);
+        mapView.getController().setZoom(16.0);
+        mapView.getController().setCenter(point);
+        if (subtitle != null) {
+            subtitle.setText("Destination for booking #" + bookingId
+                    + (TextUtils.isEmpty(address) ? "" : ": " + address));
         }
         mapView.invalidate();
     }
