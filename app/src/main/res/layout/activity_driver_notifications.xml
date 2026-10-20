@@ -92,19 +92,21 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvNotif1Message"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvNotif1Title"
                         android:layout_marginTop="4dp"
-                        android:text="Delivery #TRX-1001 has been assigned to you."
+                        android:text="Notification message"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tvNotif1Time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
-                        android:text="10 mins ago"
+                        android:text="Just now"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </RelativeLayout>
@@ -138,19 +140,21 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvNotif2Message"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvNotif2Title"
                         android:layout_marginTop="4dp"
-                        android:text="Delivery #TRX-1002 priority updated to HIGH."
+                        android:text="Notification message"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tvNotif2Time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
-                        android:text="30 mins ago"
+                        android:text="Just now"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </RelativeLayout>
