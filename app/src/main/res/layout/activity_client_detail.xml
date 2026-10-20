@@ -137,95 +137,12 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Sample History Item 1 -->
-            <androidx.cardview.widget.CardView
+            <LinearLayout
+                android:id="@+id/clientBookingHistoryContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/tvHist1Id"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="BK-2026-00123"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/tvHist1Id"
-                        android:layout_marginTop="2dp"
-                        android:text="July 19, 2026"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_status_pending"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:text="PENDING"
-                        android:textColor="#D97706"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Sample History Item 2 -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/tvHist2Id"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="BK-2026-00110"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/tvHist2Id"
-                        android:layout_marginTop="2dp"
-                        android:text="July 10, 2026"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_status_confirmed"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:text="COMPLETED"
-                        android:textColor="#059669"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-            </androidx.cardview.widget.CardView>
+                android:orientation="vertical"
+                android:layout_marginTop="12dp" />
 
         </LinearLayout>
     </ScrollView>
