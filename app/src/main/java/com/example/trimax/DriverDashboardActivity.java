@@ -179,6 +179,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
             if (navigationView.getMenu().findItem(R.id.drawer_clients) != null) {
                 navigationView.getMenu().findItem(R.id.drawer_clients).setVisible(false);
             }
+            // Notifications already has a dedicated bottom-navigation destination for drivers.
+            if (navigationView.getMenu().findItem(R.id.drawer_notifications) != null) {
+                navigationView.getMenu().findItem(R.id.drawer_notifications).setVisible(false);
+            }
             if (navigationView.getMenu().findItem(R.id.drawer_reports) != null) {
                 navigationView.getMenu().findItem(R.id.drawer_reports).setTitle("Delivery History");
             }
