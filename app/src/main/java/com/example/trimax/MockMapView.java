@@ -82,7 +82,6 @@ public class MockMapView extends FrameLayout {
 
     private int sampleLocationIndex = 0;
     private boolean hasExplicitDestinationSelection = false;
-    private boolean hasExplicitDestinationSelection = false;
 
     private static final GeoPoint RIDER_POINT = new GeoPoint(14.7826996, 121.0475865); // Fixed TRIMAX Hub
 
