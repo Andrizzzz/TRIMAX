@@ -120,9 +120,17 @@ public class DriverMapActivity extends AppCompatActivity {
             return;
         }
 
-        double lat = currentDelivery.getDestinationLatitude();
-        double lng = currentDelivery.getDestinationLongitude();
-        String destination = currentDelivery.getDestination();
+        // Before pickup, navigate to the fixed TRIMAX Hub. After pickup, navigate to the customer.
+        String status = currentDelivery.getStatus() != null
+                ? currentDelivery.getStatus().trim().toUpperCase(Locale.ROOT) : "";
+        boolean navigateToHub = !(status.equals("PICKED UP") || status.equals("ON THE WAY")
+                || status.equals("ARRIVED AT DESTINATION") || status.equals("DELIVERED")
+                || status.equals("COMPLETED"));
+
+        double lat = navigateToHub ? 14.7826996 : currentDelivery.getDestinationLatitude();
+        double lng = navigateToHub ? 121.0475865 : currentDelivery.getDestinationLongitude();
+        String destination = navigateToHub
+                ? "TRIMAX Hub (14.782700, 121.047587)" : currentDelivery.getDestination();
 
         boolean hasValidCoords = isValidCoordinate(lat, lng);
         boolean hasValidAddress = destination != null && !destination.trim().isEmpty();
@@ -135,6 +143,9 @@ public class DriverMapActivity extends AppCompatActivity {
         String destinationQuery = hasValidCoords
                 ? String.format(Locale.US, "%.6f,%.6f", lat, lng)
                 : destination.trim();
+
+        Toast.makeText(this, navigateToHub ? "Navigation to TRIMAX Hub" : "Navigation to customer",
+                Toast.LENGTH_SHORT).show();
 
         // Prefer the installed Google Maps app for full turn-by-turn navigation.
         Uri navigationUri = Uri.parse("google.navigation:q=" + Uri.encode(destinationQuery) + "&mode=d");
