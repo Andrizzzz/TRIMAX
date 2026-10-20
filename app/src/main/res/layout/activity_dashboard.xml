@@ -523,7 +523,7 @@
                 </LinearLayout>
 
                 <!-- Hidden Map View & Full Map button for Java compatibility -->
-                <com.example.trimax.MockMapView
+                <View
                     android:id="@+id/dashboardMapView"
                     android:layout_width="1dp"
                     android:layout_height="1dp"
