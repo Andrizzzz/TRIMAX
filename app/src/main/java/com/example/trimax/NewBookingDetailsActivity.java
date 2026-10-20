@@ -56,16 +56,14 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         if (customerAddress == null || customerAddress.trim().isEmpty()) {
             customerAddress = intent.getStringExtra("ADDRESS");
         }
-        if (customerAddress == null || customerAddress.trim().isEmpty()) {
-            customerAddress = "San Jose del Monte, Bulacan";
-        }
+        if (customerAddress == null) customerAddress = "";
         customerLatitude = intent.getDoubleExtra("CUSTOMER_LAT", 0);
         customerLongitude = intent.getDoubleExtra("CUSTOMER_LNG", 0);
 
-        pickupLat = intent.getDoubleExtra("PICKUP_LAT", 14.8115);
-        pickupLng = intent.getDoubleExtra("PICKUP_LNG", 121.0453);
-        destLat = intent.getDoubleExtra("DEST_LAT", 14.8150);
-        destLng = intent.getDoubleExtra("DEST_LNG", 121.0500);
+        pickupLat = 14.7826996;
+        pickupLng = 121.0475865;
+        destLat = intent.getDoubleExtra("DEST_LAT", 0);
+        destLng = intent.getDoubleExtra("DEST_LNG", 0);
 
         ImageView btnBack = findViewById(R.id.btnBack);
         containerPackageCards = findViewById(R.id.containerPackageCards);
@@ -81,6 +79,13 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
         if (btnContinue != null) {
             btnContinue.setOnClickListener(v -> {
+                if (!Double.isFinite(destLat) || !Double.isFinite(destLng)
+                        || destLat < -90 || destLat > 90 || destLng < -180 || destLng > 180
+                        || (destLat == 0 && destLng == 0)
+                        || customerAddress == null || customerAddress.trim().isEmpty()) {
+                    android.widget.Toast.makeText(this, "Customer destination is missing. Go back and select a valid location.", android.widget.Toast.LENGTH_LONG).show();
+                    return;
+                }
                 StringBuilder serviceBuilder = new StringBuilder();
                 double totalPrice = 0;
                 int totalQuantity = 0;
