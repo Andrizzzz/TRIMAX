@@ -72,7 +72,7 @@
 
                     <!-- Account Settings -->
                     <RelativeLayout
-                        android:id="@+id/cardAccountSettings"
+                        android:id="@+id/cardThemeSettings"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:clickable="true"
@@ -95,10 +95,10 @@
                             android:orientation="vertical">
 
                             <TextView
-                                android:id="@+id/tvAccountSettingsTitle"
+                                android:id="@+id/tvThemeSettingsTitle"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Account Settings"
+                                android:text="Appearance"
                                 android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -106,7 +106,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Appearance Mode (Light Mode)"
+                                android:id="@+id/tvCurrentThemeSubtitle"
+                                android:text="System Default"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -294,19 +295,7 @@
 
             <!-- Hidden compatibility views -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/cardThemeSettings"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvThemeSettingsTitle"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvCurrentThemeSubtitle"
+                android:id="@+id/cardAccountSettings"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:visibility="gone" />
