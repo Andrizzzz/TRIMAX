@@ -110,13 +110,13 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             newBooking.setSpecialInstructions(notes != null ? notes : "");
             newBooking.setOriginalAmount(total);
             newBooking.setCurrentTotal(total);
-            newBooking.setStatus("PENDING");
+            newBooking.setStatus("CONFIRMED");
             newBooking.setPriority("NORMAL");
 
             dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
             newBooking.setCustomerId(dbHelper.getCustomerCodeByPhone(customerPhone));
             dbHelper.addBooking(newBooking);
-            dbHelper.addNotification(session.getUsername(), "New Booking Submitted", "Booking #" + generatedBookingId + " created for " + (customerName != null ? customerName : "Customer"));
+            dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + generatedBookingId + " was confirmed for " + (customerName != null ? customerName : "Customer"));
 
             Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
             confirmedIntent.putExtra("BOOKING_ID", generatedBookingId);
