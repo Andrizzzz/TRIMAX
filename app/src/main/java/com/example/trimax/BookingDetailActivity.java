@@ -1,10 +1,14 @@
 package com.example.trimax;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,21 +26,35 @@ import java.util.Locale;
 public class BookingDetailActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
+    private SessionManager session;
     private String currentBookingId;
+    private Delivery currentDelivery;
 
+    // View References
     private TextView tvHeaderTitle;
     private TextView tvStatusBadge;
+    private TextView tvService;
+    private TextView tvTotalAmount;
     private TextView tvCustomerName;
     private TextView tvPhone;
-    private TextView tvService;
-    private TextView tvScheduleTime;
+    private TextView tvPickupAddress;
     private TextView tvLocationAddress;
+    private TextView tvParcelDetails;
     private TextView tvSpecialInstructions;
-    private TextView tvTotalAmount;
+    private View dividerNotes;
+    private LinearLayout llNotesSection;
+    private TextView tvBookingIdValue;
+    private TextView tvScheduleTime;
+    private TextView tvAssignedDriverValue;
 
     private MaterialButton btnViewLocation;
     private MaterialButton btnConfirmBooking;
     private MaterialButton btnCancelBooking;
+
+    private LinearLayout llMainContent;
+    private LinearLayout llErrorState;
+    private TextView tvErrorTitle;
+    private TextView tvErrorMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,30 +72,50 @@ public class BookingDetailActivity extends AppCompatActivity {
         }
 
         dbHelper = new DatabaseHelper(this);
+        session = new SessionManager(this);
 
         Intent intent = getIntent();
         currentBookingId = intent.getStringExtra("BOOKING_ID");
-        if (currentBookingId == null || currentBookingId.isEmpty()) {
-            currentBookingId = "BK-2026-00123";
+        if (TextUtils.isEmpty(currentBookingId)) {
+            currentBookingId = intent.getStringExtra("DELIVERY_ID");
+        }
+        if (currentBookingId != null) {
+            currentBookingId = currentBookingId.trim();
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
         tvHeaderTitle = findViewById(R.id.tvHeaderTitle);
         tvStatusBadge = findViewById(R.id.tvStatusBadge);
+        tvService = findViewById(R.id.tvService);
+        tvTotalAmount = findViewById(R.id.tvTotalAmount);
         tvCustomerName = findViewById(R.id.tvCustomerName);
         tvPhone = findViewById(R.id.tvPhone);
-        tvService = findViewById(R.id.tvService);
-        tvScheduleTime = findViewById(R.id.tvScheduleTime);
+        tvPickupAddress = findViewById(R.id.tvPickupAddress);
         tvLocationAddress = findViewById(R.id.tvLocationAddress);
+        tvParcelDetails = findViewById(R.id.tvParcelDetails);
         tvSpecialInstructions = findViewById(R.id.tvSpecialInstructions);
-        tvTotalAmount = findViewById(R.id.tvTotalAmount);
+        dividerNotes = findViewById(R.id.dividerNotes);
+        llNotesSection = findViewById(R.id.llNotesSection);
+        tvBookingIdValue = findViewById(R.id.tvBookingIdValue);
+        tvScheduleTime = findViewById(R.id.tvScheduleTime);
+        tvAssignedDriverValue = findViewById(R.id.tvAssignedDriverValue);
 
         btnViewLocation = findViewById(R.id.btnViewLocation);
         btnConfirmBooking = findViewById(R.id.btnConfirmBooking);
         btnCancelBooking = findViewById(R.id.btnCancelBooking);
 
+        llMainContent = findViewById(R.id.llMainContent);
+        llErrorState = findViewById(R.id.llErrorState);
+        tvErrorTitle = findViewById(R.id.tvErrorTitle);
+        tvErrorMessage = findViewById(R.id.tvErrorMessage);
+        MaterialButton btnErrorBack = findViewById(R.id.btnErrorBack);
+
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> navigateBackToDashboard());
+        }
+
+        if (btnErrorBack != null) {
+            btnErrorBack.setOnClickListener(v -> navigateBackToDashboard());
         }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -89,54 +127,90 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         loadBookingDetails();
 
-        // Phone dial action
+        // Phone Dial Action
         if (tvPhone != null) {
             tvPhone.setOnClickListener(v -> {
-                String phone = tvPhone.getText() != null ? tvPhone.getText().toString().replaceAll("[^0-9+]", "") : "09171234567";
-                Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone));
-                startActivity(dialIntent);
-            });
-        }
-
-        // View location on Map
-        if (btnViewLocation != null) {
-            btnViewLocation.setOnClickListener(v -> {
-                Intent locIntent = new Intent(BookingDetailActivity.this, NewBookingLocationActivity.class);
-                locIntent.putExtra("CUSTOMER_NAME", tvCustomerName != null && tvCustomerName.getText() != null ? tvCustomerName.getText().toString() : "Customer");
-                startActivity(locIntent);
-            });
-        }
-
-        // Confirm Booking
-        if (btnConfirmBooking != null) {
-            btnConfirmBooking.setOnClickListener(v -> {
-                SessionManager session = new SessionManager(this);
-                boolean success = dbHelper.confirmBooking(currentBookingId);
-                if (success) {
-                    updateStatusUi("CONFIRMED");
-                    dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + currentBookingId + " was confirmed.");
-                    Toast.makeText(this, "Booking confirmed successfully!", Toast.LENGTH_SHORT).show();
+                String phoneStr = tvPhone.getText() != null ? tvPhone.getText().toString().replaceAll("[^0-9+]", "") : "";
+                if (!TextUtils.isEmpty(phoneStr)) {
+                    try {
+                        Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneStr));
+                        startActivity(dialIntent);
+                    } catch (ActivityNotFoundException e) {
+                        Toast.makeText(BookingDetailActivity.this, "Dialer app not available on this device", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    Toast.makeText(this, "Failed to update booking status", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(BookingDetailActivity.this, "No phone number available for this customer", Toast.LENGTH_SHORT).show();
                 }
             });
         }
 
-        // Cancel Booking with AlertDialog
+        // View Location on Map Action
+        if (btnViewLocation != null) {
+            btnViewLocation.setOnClickListener(v -> {
+                if (currentDelivery == null) return;
+                Intent locIntent = new Intent(BookingDetailActivity.this, TrackingMapActivity.class);
+                locIntent.putExtra("BOOKING_ID", currentDelivery.getBookingId());
+                locIntent.putExtra("DELIVERY_ID", currentDelivery.getBookingId());
+                locIntent.putExtra("CUSTOMER_NAME", currentDelivery.getCustomerName());
+                locIntent.putExtra("DESTINATION", currentDelivery.getDestination());
+                locIntent.putExtra("DEST_LAT", currentDelivery.getDestinationLatitude());
+                locIntent.putExtra("DEST_LNG", currentDelivery.getDestinationLongitude());
+                try {
+                    startActivity(locIntent);
+                } catch (Exception e) {
+                    Toast.makeText(BookingDetailActivity.this, "Unable to open map view", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        // Confirm Booking Action
+        if (btnConfirmBooking != null) {
+            btnConfirmBooking.setOnClickListener(v -> {
+                if (currentDelivery == null) return;
+                String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
+                if (!"PENDING".equals(currentStatus)) {
+                    Toast.makeText(this, "Only PENDING bookings can be confirmed", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                btnConfirmBooking.setEnabled(false);
+                boolean success = dbHelper.confirmBooking(currentDelivery.getBookingId());
+                btnConfirmBooking.setEnabled(true);
+
+                if (success) {
+                    dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + currentDelivery.getBookingId() + " was confirmed.");
+                    Toast.makeText(this, "Booking confirmed successfully!", Toast.LENGTH_SHORT).show();
+                    loadBookingDetails();
+                } else {
+                    Toast.makeText(this, "Failed to update booking status in database", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        // Cancel Booking Action
         if (btnCancelBooking != null) {
             btnCancelBooking.setOnClickListener(v -> {
-                SessionManager session = new SessionManager(this);
+                if (currentDelivery == null) return;
+                String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
+                if ("COMPLETED".equals(currentStatus) || "DELIVERED".equals(currentStatus) || "CANCELLED".equals(currentStatus)) {
+                    Toast.makeText(this, "Cannot cancel a booking that is already " + currentStatus, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 new AlertDialog.Builder(this)
                         .setTitle("Cancel Booking")
-                        .setMessage(String.format("Are you sure you want to cancel Booking #%s?", currentBookingId))
+                        .setMessage(String.format("Are you sure you want to cancel Booking #%s?", currentDelivery.getBookingId()))
                         .setPositiveButton("Confirm Cancellation", (dialog, which) -> {
-                            boolean success = dbHelper.cancelBooking(currentBookingId);
+                            btnCancelBooking.setEnabled(false);
+                            boolean success = dbHelper.cancelBooking(currentDelivery.getBookingId());
+                            btnCancelBooking.setEnabled(true);
+
                             if (success) {
-                                updateStatusUi("CANCELLED");
-                                dbHelper.addNotification(session.getUsername(), "Booking Cancelled", "Booking #" + currentBookingId + " was cancelled.");
+                                dbHelper.addNotification(session.getUsername(), "Booking Cancelled", "Booking #" + currentDelivery.getBookingId() + " was cancelled.");
                                 Toast.makeText(this, "Booking cancelled successfully", Toast.LENGTH_SHORT).show();
+                                loadBookingDetails();
                             } else {
-                                Toast.makeText(this, "Failed to cancel booking", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, "Failed to cancel booking in database", Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton("Keep Booking", null)
@@ -145,44 +219,96 @@ public class BookingDetailActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBookingDetails();
+    }
+
     private void loadBookingDetails() {
-        Delivery delivery = dbHelper.getDeliveryByCode(currentBookingId);
-
-        if (delivery != null) {
-            if (tvHeaderTitle != null) tvHeaderTitle.setText(String.format("Booking #%s", delivery.getBookingId()));
-            if (tvCustomerName != null) tvCustomerName.setText(delivery.getCustomerName());
-            if (tvPhone != null) tvPhone.setText(String.format("📞 %s", delivery.getCustomerPhone()));
-            if (tvService != null) tvService.setText(String.format("Service: %s", delivery.getPackageDetails()));
-            if (tvScheduleTime != null) tvScheduleTime.setText(String.format("Schedule: %s", delivery.getScheduledTime()));
-            if (tvLocationAddress != null) tvLocationAddress.setText(delivery.getDestination());
-
-            if (tvSpecialInstructions != null) {
-                String notes = delivery.getSpecialInstructions();
-                if (notes != null && !notes.trim().isEmpty()) {
-                    tvSpecialInstructions.setText(notes);
-                } else {
-                    tvSpecialInstructions.setText("None");
-                }
-            }
-
-            if (tvTotalAmount != null) {
-                tvTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", delivery.getCurrentTotal()));
-            }
-
-            updateStatusUi(delivery.getStatus());
-        } else {
-            // Intent fallback if not found in database
-            Intent intent = getIntent();
-            String name = intent.getStringExtra("CUSTOMER_NAME");
-            String status = intent.getStringExtra("STATUS");
-            String amount = intent.getStringExtra("TOTAL_AMOUNT");
-
-            if (tvHeaderTitle != null) tvHeaderTitle.setText(String.format("Booking #%s", currentBookingId));
-            if (tvCustomerName != null && name != null) tvCustomerName.setText(name);
-            if (tvTotalAmount != null && amount != null) tvTotalAmount.setText(amount);
-
-            updateStatusUi(status != null ? status : "PENDING");
+        if (!TextUtils.isEmpty(currentBookingId)) {
+            currentDelivery = dbHelper.getDeliveryByCode(currentBookingId);
         }
+
+        if (currentDelivery == null) {
+            showErrorState("Booking Not Found", "The requested booking ID (" + (currentBookingId != null ? currentBookingId : "None") + ") was not found in database records.");
+            return;
+        }
+
+        hideErrorState();
+
+        if (tvHeaderTitle != null) {
+            tvHeaderTitle.setText("Booking Details");
+        }
+
+        if (tvBookingIdValue != null) {
+            tvBookingIdValue.setText(currentDelivery.getBookingId());
+        }
+
+        if (tvCustomerName != null) {
+            tvCustomerName.setText(TextUtils.isEmpty(currentDelivery.getCustomerName()) ? "Customer" : currentDelivery.getCustomerName());
+        }
+
+        if (tvPhone != null) {
+            String phone = currentDelivery.getCustomerPhone();
+            tvPhone.setText(TextUtils.isEmpty(phone) ? "No phone provided" : "📞 " + phone);
+        }
+
+        if (tvService != null) {
+            String details = currentDelivery.getPackageDetails();
+            tvService.setText(TextUtils.isEmpty(details) ? "Standard Package Delivery" : details);
+        }
+
+        if (tvPickupAddress != null) {
+            String pickup = currentDelivery.getPickupLocation();
+            tvPickupAddress.setText(TextUtils.isEmpty(pickup) ? "Not specified" : pickup);
+        }
+
+        if (tvLocationAddress != null) {
+            String dest = currentDelivery.getDestination();
+            tvLocationAddress.setText(TextUtils.isEmpty(dest) ? "Not specified" : dest);
+        }
+
+        if (tvParcelDetails != null) {
+            String details = currentDelivery.getPackageDetails();
+            tvParcelDetails.setText(TextUtils.isEmpty(details) ? "Standard Cargo Parcel • Qty: 1" : details);
+        }
+
+        if (tvScheduleTime != null) {
+            String sched = currentDelivery.getScheduledTime();
+            if (TextUtils.isEmpty(sched)) {
+                sched = currentDelivery.getCreatedAt();
+            }
+            tvScheduleTime.setText(TextUtils.isEmpty(sched) ? "Standard Schedule" : sched);
+        }
+
+        if (tvSpecialInstructions != null) {
+            String notes = currentDelivery.getSpecialInstructions();
+            if (!TextUtils.isEmpty(notes) && !notes.trim().equalsIgnoreCase("none")) {
+                tvSpecialInstructions.setText(notes);
+                if (llNotesSection != null) llNotesSection.setVisibility(View.VISIBLE);
+                if (dividerNotes != null) dividerNotes.setVisibility(View.VISIBLE);
+            } else {
+                tvSpecialInstructions.setText("None");
+            }
+        }
+
+        if (tvAssignedDriverValue != null) {
+            String driver = currentDelivery.getDriverId();
+            if (TextUtils.isEmpty(driver) || "Unassigned".equalsIgnoreCase(driver)) {
+                tvAssignedDriverValue.setText("Not yet assigned");
+                tvAssignedDriverValue.setTextColor(0xFF64748B);
+            } else {
+                tvAssignedDriverValue.setText(driver);
+                tvAssignedDriverValue.setTextColor(0xFF0F172A);
+            }
+        }
+
+        if (tvTotalAmount != null) {
+            tvTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", currentDelivery.getCurrentTotal()));
+        }
+
+        updateStatusUi(currentDelivery.getStatus());
     }
 
     private void updateStatusUi(String status) {
@@ -222,6 +348,21 @@ public class BookingDetailActivity extends AppCompatActivity {
             if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.VISIBLE);
             if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void showErrorState(String title, String message) {
+        if (llMainContent != null) llMainContent.setVisibility(View.GONE);
+        if (llErrorState != null) llErrorState.setVisibility(View.VISIBLE);
+        if (tvErrorTitle != null) tvErrorTitle.setText(title);
+        if (tvErrorMessage != null) tvErrorMessage.setText(message);
+        if (tvHeaderTitle != null) tvHeaderTitle.setText("Booking Error");
+        if (tvStatusBadge != null) tvStatusBadge.setVisibility(View.GONE);
+    }
+
+    private void hideErrorState() {
+        if (llMainContent != null) llMainContent.setVisibility(View.VISIBLE);
+        if (llErrorState != null) llErrorState.setVisibility(View.GONE);
+        if (tvStatusBadge != null) tvStatusBadge.setVisibility(View.VISIBLE);
     }
 
     private void navigateBackToDashboard() {

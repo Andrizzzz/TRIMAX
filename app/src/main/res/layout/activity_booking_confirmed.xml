@@ -23,29 +23,32 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:paddingHorizontal="32dp"
+        android:paddingHorizontal="28dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Confetti & Big Green Circle Badge -->
-        <RelativeLayout
-            android:layout_width="120dp"
-            android:layout_height="120dp">
+        <!-- Big Green Circle Success Badge -->
+        <FrameLayout
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:background="@drawable/bg_icon_badge"
+            android:backgroundTint="#E6F4EA"
+            android:padding="20dp">
 
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:contentDescription="Confirmed Icon"
+                android:contentDescription="Success Checkmark"
                 android:src="@drawable/ic_check_circle"
                 app:tint="#10B981" />
-        </RelativeLayout>
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:text="Booking Confirmed!"
             android:textColor="@color/text_primary"
             android:textSize="24sp"
@@ -54,45 +57,75 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:gravity="center"
-            android:text="Your booking has been\nsuccessfully created."
+            android:text="Your delivery booking has been successfully\ncreated."
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/tvBookingId"
-            android:layout_width="wrap_content"
+        <!-- BOOKING ID CARD -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="TRK-2024001"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="28dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Booking ID"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBookingId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="TRX-2025-000123"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- VIEW BOOKING DETAILS BUTTON -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewBooking"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="36dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="28dp"
             android:backgroundTint="@color/primary_blue"
-            android:text="View Booking"
+            android:text="View Booking Details"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:cornerRadius="27dp" />
+            app:cornerRadius="16dp" />
 
+        <!-- BACK TO HOME BUTTON -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackToDashboard"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
             android:text="Back to Home"
             android:textAllCaps="false"
             android:textColor="@color/primary_blue"
-            android:textSize="15sp" />
+            android:textSize="16sp"
+            app:cornerRadius="16dp"
+            app:strokeColor="@color/primary_blue" />
 
     </LinearLayout>
 

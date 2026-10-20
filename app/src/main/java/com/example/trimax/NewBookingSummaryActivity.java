@@ -56,6 +56,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         TextView tvQuantity = findViewById(R.id.tvQuantity);
         TextView tvDateTime = findViewById(R.id.tvDateTime);
         TextView tvAddress = findViewById(R.id.tvAddress);
+        TextView tvDeliveryAddress = findViewById(R.id.tvDeliveryAddress);
         TextView tvTotalAmount = findViewById(R.id.tvTotalAmount);
 
         MaterialButton btnEdit = findViewById(R.id.btnEdit);
@@ -66,10 +67,13 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
 
         if (customerName != null) tvCustomerName.setText(customerName);
         if (customerPhone != null) tvCustomerPhone.setText(customerPhone);
-        if (service != null) tvService.setText(String.format("Service: %s", service));
-        tvQuantity.setText(String.format(Locale.US, "Quantity: %d", quantity));
-        tvDateTime.setText(String.format("Date & Time: %s • %s", (date != null ? date : "July 19, 2026"), (time != null ? time : "10:00 AM")));
-        if (address != null) tvAddress.setText(address);
+        if (service != null) tvService.setText(service);
+        if (tvQuantity != null) tvQuantity.setText(String.format(Locale.US, "%s • Qty: %d", (service != null ? service : "Parcel"), quantity));
+        if (tvDateTime != null) tvDateTime.setText(String.format("Date & Time: %s • %s", (date != null ? date : "July 19, 2026"), (time != null ? time : "10:00 AM")));
+        if (address != null) {
+            if (tvAddress != null) tvAddress.setText(address);
+            if (tvDeliveryAddress != null) tvDeliveryAddress.setText(address);
+        }
 
         // Package price calculation
         double total = selectedPrice * quantity;

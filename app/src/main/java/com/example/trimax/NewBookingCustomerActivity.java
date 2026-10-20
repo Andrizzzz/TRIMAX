@@ -77,9 +77,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
         MaterialButton btnSaveCustomer = findViewById(R.id.btnSaveCustomer);
         MaterialButton btnNext = findViewById(R.id.btnNext);
-        TextView tvStepTitle = findViewById(R.id.tvStepTitle);
         if (directoryOnly) {
-            if (tvStepTitle != null) tvStepTitle.setText("Add Customer");
             if (btnNext != null) btnNext.setVisibility(View.GONE);
         }
 

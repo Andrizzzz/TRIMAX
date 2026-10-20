@@ -98,8 +98,8 @@ public class PackagesActivity extends AppCompatActivity {
         list.add(new ServicePackage(
                 "pkg_fragile",
                 "Fragile Delivery",
-                "For fragile items needing special care.",
-                299.00,
+                "For delicate and high-value items.",
+                499.00,
                 R.drawable.ic_delivery_scooter,
                 Arrays.asList("Extra padding & care", "Hand-to-hand transfer", "Real-time tracking", "Delivery confirmation"),
                 "Up to 10 kg",
@@ -124,10 +124,6 @@ public class PackagesActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.nav_clients) {
                 startActivity(new Intent(this, ClientsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_reports) {
-                startActivity(new Intent(this, ReportsActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.nav_profile) {

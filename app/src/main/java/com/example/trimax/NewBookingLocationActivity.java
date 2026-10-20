@@ -261,6 +261,11 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             });
         }
 
+        MaterialButton btnBackStep = findViewById(R.id.btnBackStep);
+        if (btnBackStep != null) {
+            btnBackStep.setOnClickListener(v -> navigateBack());
+        }
+
         // Confirm Location Button
         if (btnConfirmLocation != null) btnConfirmLocation.setOnClickListener(v -> {
             btnConfirmLocation.setEnabled(false);

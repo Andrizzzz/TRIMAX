@@ -56,6 +56,12 @@ public class ClientDetailActivity extends AppCompatActivity {
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> navigateBack());
         }
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateBack();
+            }
+        });
 
         if (name != null) tvClientName.setText(name);
         if (phone != null) tvPhone.setText(String.format("📞 %s", phone));
@@ -81,14 +87,14 @@ public class ClientDetailActivity extends AppCompatActivity {
             });
         }
 
-        loadBookingHistory(phone);
+        loadBookingHistory(phone, name);
     }
 
-    private void loadBookingHistory(String phone) {
+    private void loadBookingHistory(String phone, String name) {
         if (clientBookingHistoryContainer == null) return;
         clientBookingHistoryContainer.removeAllViews();
 
-        List<Delivery> bookings = dbHelper.getBookingsForCustomer(phone);
+        List<Delivery> bookings = dbHelper.getBookingsForCustomer(phone, name);
         if (bookings == null || bookings.isEmpty()) {
             TextView tvEmpty = new TextView(this);
             tvEmpty.setText("No booking history found for this client.");
@@ -159,9 +165,11 @@ public class ClientDetailActivity extends AppCompatActivity {
     }
 
     private void navigateBack() {
-        Intent intent = new Intent(this, DashboardActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(intent);
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
         finish();
     }
 }

@@ -242,6 +242,10 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
                 startActivity(new Intent(this, ClientsActivity.class));
                 finish();
                 return true;
+            } else if (itemId == R.id.nav_packages) {
+                startActivity(new Intent(this, PackagesActivity.class));
+                finish();
+                return true;
             } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));
                 finish();

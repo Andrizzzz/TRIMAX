@@ -225,8 +225,8 @@ public class ClientsActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.nav_clients) {
                 return true;
-            } else if (itemId == R.id.nav_reports) {
-                startActivity(new Intent(this, ReportsActivity.class));
+            } else if (itemId == R.id.nav_packages) {
+                startActivity(new Intent(this, PackagesActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.nav_profile) {
