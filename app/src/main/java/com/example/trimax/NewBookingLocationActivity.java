@@ -36,6 +36,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
     private String customerName, customerPhone, customerEmail;
     private String service, date, time, notes;
     private int quantity;
+    private double selectedPrice = 99.00;
     private String selectedCustomerAddress = "San Jose del Monte, Bulacan";
 
     private LocationHelper locationHelper;
@@ -74,6 +75,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         if (savedAddress != null && !savedAddress.trim().isEmpty()) selectedCustomerAddress = savedAddress.trim();
         service = intent.getStringExtra("SERVICE");
         quantity = intent.getIntExtra("QUANTITY", 1);
+        selectedPrice = intent.getDoubleExtra("SELECTED_PRICE", 99.00);
         date = intent.getStringExtra("DATE");
         time = intent.getStringExtra("TIME");
         notes = intent.getStringExtra("NOTES");
@@ -278,6 +280,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             summaryIntent.putExtra("TIME", time != null ? time : "");
             summaryIntent.putExtra("NOTES", notes != null ? notes : "");
             summaryIntent.putExtra("ADDRESS", selectedCustomerAddress != null ? selectedCustomerAddress : "");
+            summaryIntent.putExtra("SELECTED_PRICE", selectedPrice);
             summaryIntent.putExtra("PICKUP_LAT", pickupPoint.getLatitude());
             summaryIntent.putExtra("PICKUP_LNG", pickupPoint.getLongitude());
             summaryIntent.putExtra("DEST_LAT", destPoint.getLatitude());

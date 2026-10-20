@@ -804,32 +804,51 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private Delivery extractDeliveryFromCursor(Cursor cursor) {
-        return new Delivery(
-                cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("booking_id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("driver_id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("customer_id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("customer_name")),
-                cursor.getString(cursor.getColumnIndexOrThrow("customer_phone")),
-                cursor.getString(cursor.getColumnIndexOrThrow("pickup_location")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("pickup_latitude")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("pickup_longitude")),
-                cursor.getString(cursor.getColumnIndexOrThrow("destination")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("destination_latitude")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("destination_longitude")),
-                cursor.getString(cursor.getColumnIndexOrThrow("special_instructions")),
-                cursor.getString(cursor.getColumnIndexOrThrow("package_details")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("original_amount")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("current_total")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("deposit_amount")),
-                cursor.getString(cursor.getColumnIndexOrThrow("deposit_status")),
-                cursor.getString(cursor.getColumnIndexOrThrow("status")),
-                cursor.getInt(cursor.getColumnIndexOrThrow("sequence_number")),
-                cursor.getString(cursor.getColumnIndexOrThrow("scheduled_time")),
-                cursor.getString(cursor.getColumnIndexOrThrow("priority")),
-                cursor.getString(cursor.getColumnIndexOrThrow("created_at")),
-                cursor.getString(cursor.getColumnIndexOrThrow("updated_at"))
-        );
+        Delivery d = new Delivery();
+        try {
+            d.setId(getSafeInt(cursor, "id"));
+            d.setBookingId(getSafeString(cursor, "booking_id"));
+            d.setDriverId(getSafeString(cursor, "driver_id"));
+            d.setCustomerId(getSafeString(cursor, "customer_id"));
+            d.setCustomerName(getSafeString(cursor, "customer_name"));
+            d.setCustomerPhone(getSafeString(cursor, "customer_phone"));
+            d.setPickupLocation(getSafeString(cursor, "pickup_location"));
+            d.setPickupLatitude(getSafeDouble(cursor, "pickup_latitude"));
+            d.setPickupLongitude(getSafeDouble(cursor, "pickup_longitude"));
+            d.setDestination(getSafeString(cursor, "destination"));
+            d.setDestinationLatitude(getSafeDouble(cursor, "destination_latitude"));
+            d.setDestinationLongitude(getSafeDouble(cursor, "destination_longitude"));
+            d.setSpecialInstructions(getSafeString(cursor, "special_instructions"));
+            d.setPackageDetails(getSafeString(cursor, "package_details"));
+            d.setOriginalAmount(getSafeDouble(cursor, "original_amount"));
+            d.setCurrentTotal(getSafeDouble(cursor, "current_total"));
+            d.setDepositAmount(getSafeDouble(cursor, "deposit_amount"));
+            d.setDepositStatus(getSafeString(cursor, "deposit_status"));
+            d.setStatus(getSafeString(cursor, "status"));
+            d.setSequenceNumber(getSafeInt(cursor, "sequence_number"));
+            d.setScheduledTime(getSafeString(cursor, "scheduled_time"));
+            d.setPriority(getSafeString(cursor, "priority"));
+            d.setCreatedAt(getSafeString(cursor, "created_at"));
+            d.setUpdatedAt(getSafeString(cursor, "updated_at"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return d;
+    }
+
+    private String getSafeString(Cursor c, String colName) {
+        int idx = c.getColumnIndex(colName);
+        return (idx != -1 && !c.isNull(idx)) ? c.getString(idx) : "";
+    }
+
+    private int getSafeInt(Cursor c, String colName) {
+        int idx = c.getColumnIndex(colName);
+        return (idx != -1 && !c.isNull(idx)) ? c.getInt(idx) : 0;
+    }
+
+    private double getSafeDouble(Cursor c, String colName) {
+        int idx = c.getColumnIndex(colName);
+        return (idx != -1 && !c.isNull(idx)) ? c.getDouble(idx) : 0.0;
     }
 
     public boolean addBooking(Delivery delivery) {
@@ -877,12 +896,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public List<Delivery> getBookingsForCustomer(String customerPhone) {
+        return getBookingsForCustomer(customerPhone, null);
+    }
+
+    public List<Delivery> getBookingsForCustomer(String customerPhone, String customerName) {
         List<Delivery> list = new ArrayList<>();
-        if (customerPhone == null || customerPhone.trim().isEmpty()) return list;
+        String phone = customerPhone != null ? customerPhone.trim() : "";
+        String name = customerName != null ? customerName.trim() : "";
+        if (phone.isEmpty() && name.isEmpty()) return list;
+
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_DELIVERIES
-                + " WHERE customer_phone=? ORDER BY id DESC",
-                new String[]{customerPhone.trim()});
+                + " WHERE (customer_phone IS NOT NULL AND customer_phone<>'' AND customer_phone=?) "
+                + " OR (customer_name IS NOT NULL AND customer_name<>'' AND LOWER(customer_name)=LOWER(?)) "
+                + " ORDER BY id DESC",
+                new String[]{phone, name});
         try {
             while (cursor != null && cursor.moveToNext()) {
                 list.add(extractDeliveryFromCursor(cursor));
@@ -1187,8 +1215,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<SavedCustomer> getSavedCustomers(String searchQuery) {
         List<SavedCustomer> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT c.id, c.full_name, c.phone, c.email, c.address, c.latitude, c.longitude, "
-                + "(SELECT COUNT(*) FROM " + TABLE_DELIVERIES + " d WHERE d.customer_phone=c.phone) "
+        String query = "SELECT c.id, c.full_name, c.phone, c.email, c.address, "
+                + "COALESCE(NULLIF(c.latitude, 0), (SELECT d.destination_latitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.destination_latitude<>0 ORDER BY d.id DESC LIMIT 1), (SELECT d.pickup_latitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.pickup_latitude<>0 ORDER BY d.id DESC LIMIT 1), 0) AS lat, "
+                + "COALESCE(NULLIF(c.longitude, 0), (SELECT d.destination_longitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.destination_longitude<>0 ORDER BY d.id DESC LIMIT 1), (SELECT d.pickup_longitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.pickup_longitude<>0 ORDER BY d.id DESC LIMIT 1), 0) AS lng, "
+                + "(SELECT COUNT(*) FROM " + TABLE_DELIVERIES + " d WHERE d.customer_phone=c.phone OR d.customer_name=c.full_name) "
                 + "FROM " + TABLE_CUSTOMERS + " c";
         List<String> args = new ArrayList<>();
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {

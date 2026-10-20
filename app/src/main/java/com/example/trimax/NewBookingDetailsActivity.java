@@ -9,7 +9,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,6 +36,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
     private String customerName, customerPhone, customerEmail;
     private String customerAddress;
     private double customerLatitude, customerLongitude;
+    private String selectedPackageName = "";
+    private double selectedPackagePrice = 99.00;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         customerAddress = getIntent().getStringExtra("CUSTOMER_ADDRESS");
         customerLatitude = getIntent().getDoubleExtra("CUSTOMER_LAT", 0);
         customerLongitude = getIntent().getDoubleExtra("CUSTOMER_LNG", 0);
+        selectedPackageName = getIntent().getStringExtra("SELECTED_PACKAGE");
+        selectedPackagePrice = getIntent().getDoubleExtra("SELECTED_PRICE", 99.00);
 
         ImageView btnBack = findViewById(R.id.btnBack);
         spinnerService = findViewById(R.id.spinnerService);
@@ -72,10 +75,20 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
-        // Setup Spinner options
-        String[] services = {"Standard Cargo Express", "Fragile Package Handler", "Bulk Commercial Cargo", "VIP Priority Delivery"};
+        // Setup Spinner options (Strictly NO Standard Delivery)
+        String[] services = {"Basic Delivery", "Express Delivery", "Bulk Delivery", "Fragile Delivery"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, services);
-        if (spinnerService != null) spinnerService.setAdapter(adapter);
+        if (spinnerService != null) {
+            spinnerService.setAdapter(adapter);
+            if (selectedPackageName != null) {
+                for (int i = 0; i < services.length; i++) {
+                    if (services[i].equalsIgnoreCase(selectedPackageName)) {
+                        spinnerService.setSelection(i);
+                        break;
+                    }
+                }
+            }
+        }
 
         if (btnMinus != null) {
             btnMinus.setOnClickListener(v -> {
@@ -98,10 +111,17 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
         if (btnContinue != null) {
             btnContinue.setOnClickListener(v -> {
-                String service = (spinnerService != null && spinnerService.getSelectedItem() != null) ? spinnerService.getSelectedItem().toString() : "Standard Cargo";
+                String service = (spinnerService != null && spinnerService.getSelectedItem() != null) ? spinnerService.getSelectedItem().toString() : "Basic Delivery";
                 String notes = etNotes != null && etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
 
                 btnContinue.setEnabled(false);
+
+                // Determine base price according to selected service if not set
+                double price = selectedPackagePrice;
+                if (service.contains("Express")) price = 249.00;
+                else if (service.contains("Bulk")) price = 399.00;
+                else if (service.contains("Fragile")) price = 299.00;
+                else if (service.contains("Basic")) price = 99.00;
 
                 Intent intent = new Intent(NewBookingDetailsActivity.this, NewBookingLocationActivity.class);
                 intent.putExtra("CUSTOMER_NAME", customerName);
@@ -111,6 +131,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 intent.putExtra("CUSTOMER_LAT", customerLatitude);
                 intent.putExtra("CUSTOMER_LNG", customerLongitude);
                 intent.putExtra("SERVICE", service);
+                intent.putExtra("SELECTED_PRICE", price);
                 intent.putExtra("QUANTITY", quantity);
                 intent.putExtra("DATE", selectedDate.isEmpty() ? "July 19, 2026" : selectedDate);
                 intent.putExtra("TIME", selectedTime.isEmpty() ? "10:00 AM" : selectedTime);

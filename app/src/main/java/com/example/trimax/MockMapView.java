@@ -161,7 +161,7 @@ public class MockMapView extends FrameLayout {
         riderMarker = new Marker(mapView);
         riderMarker.setPosition(RIDER_POINT);
         riderMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        riderMarker.setTitle("🏍 Pickup / Driver (TRI-MAX Hub)");
+        riderMarker.setTitle("🏍 Driver / Agent Location");
         mapView.getOverlays().add(riderMarker);
 
         // Setup Customer Destination Marker

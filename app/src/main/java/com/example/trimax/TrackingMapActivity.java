@@ -1,5 +1,6 @@
 package com.example.trimax;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.LinearLayout;
@@ -11,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.BoundingBox;
@@ -124,10 +128,16 @@ public class TrackingMapActivity extends AppCompatActivity {
                 }
                 marker.setSnippet(snippet.toString());
 
+                marker.setRelatedObject(customer);
                 marker.setOnMarkerClickListener((clicked, map) -> {
-                    Toast.makeText(this, clicked.getTitle() + (clicked.getSnippet() != null && !clicked.getSnippet().isEmpty() ? "\n" + clicked.getSnippet() : ""),
-                            Toast.LENGTH_LONG).show();
-                    clicked.showInfoWindow();
+                    DatabaseHelper.SavedCustomer c = (DatabaseHelper.SavedCustomer) clicked.getRelatedObject();
+                    if (c != null) {
+                        showCustomerDetailDialog(c);
+                    } else {
+                        Toast.makeText(this, clicked.getTitle() + (clicked.getSnippet() != null && !clicked.getSnippet().isEmpty() ? "\n" + clicked.getSnippet() : ""),
+                                Toast.LENGTH_LONG).show();
+                        clicked.showInfoWindow();
+                    }
                     return true;
                 });
                 mapView.getOverlays().add(marker);
@@ -185,6 +195,77 @@ public class TrackingMapActivity extends AppCompatActivity {
     @Override protected void onPause() {
         if (mapView != null) mapView.onPause();
         super.onPause();
+    }
+
+    private void showCustomerDetailDialog(DatabaseHelper.SavedCustomer customer) {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp(20), dp(20), dp(20), dp(24));
+        layout.setBackgroundColor(Color.WHITE);
+
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText(customer.getName() != null && !customer.getName().trim().isEmpty() ? customer.getName() : "Customer Details");
+        tvTitle.setTextColor(Color.rgb(20, 35, 60));
+        tvTitle.setTextSize(18);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        layout.addView(tvTitle);
+
+        if (customer.getPhone() != null && !customer.getPhone().trim().isEmpty()) {
+            TextView tvPhone = new TextView(this);
+            tvPhone.setText("📞 " + customer.getPhone());
+            tvPhone.setTextColor(Color.DKGRAY);
+            tvPhone.setTextSize(14);
+            tvPhone.setPadding(0, dp(8), 0, 0);
+            layout.addView(tvPhone);
+        }
+
+        if (customer.getEmail() != null && !customer.getEmail().trim().isEmpty()) {
+            TextView tvEmail = new TextView(this);
+            tvEmail.setText("✉ " + customer.getEmail());
+            tvEmail.setTextColor(Color.DKGRAY);
+            tvEmail.setTextSize(14);
+            tvEmail.setPadding(0, dp(4), 0, 0);
+            layout.addView(tvEmail);
+        }
+
+        if (customer.getAddress() != null && !customer.getAddress().trim().isEmpty()) {
+            TextView tvAddress = new TextView(this);
+            tvAddress.setText("📍 " + customer.getAddress());
+            tvAddress.setTextColor(Color.DKGRAY);
+            tvAddress.setTextSize(14);
+            tvAddress.setPadding(0, dp(4), 0, 0);
+            layout.addView(tvAddress);
+        }
+
+        TextView tvBookings = new TextView(this);
+        tvBookings.setText("📦 " + customer.getBookingCount() + " booking(s)");
+        tvBookings.setTextColor(Color.rgb(37, 99, 235));
+        tvBookings.setTextSize(14);
+        tvBookings.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvBookings.setPadding(0, dp(8), 0, dp(16));
+        layout.addView(tvBookings);
+
+        MaterialButton btnViewFull = new MaterialButton(this);
+        btnViewFull.setText("View Full Details & History");
+        btnViewFull.setAllCaps(false);
+        btnViewFull.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(37, 99, 235)));
+        btnViewFull.setTextColor(Color.WHITE);
+        btnViewFull.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            Intent intent = new Intent(TrackingMapActivity.this, ClientDetailActivity.class);
+            intent.putExtra("CLIENT_NAME", customer.getName());
+            intent.putExtra("CLIENT_PHONE", customer.getPhone());
+            intent.putExtra("CLIENT_EMAIL", customer.getEmail());
+            intent.putExtra("CLIENT_ADDRESS", customer.getAddress());
+            intent.putExtra("BOOKINGS_COUNT", String.valueOf(customer.getBookingCount()));
+            startActivity(intent);
+        });
+        layout.addView(btnViewFull, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        bottomSheetDialog.setContentView(layout);
+        bottomSheetDialog.show();
     }
 
     @Override protected void onDestroy() {

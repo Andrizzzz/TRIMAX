@@ -39,6 +39,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         String customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
         String service = intent.getStringExtra("SERVICE");
         int quantity = intent.getIntExtra("QUANTITY", 1);
+        double selectedPrice = intent.getDoubleExtra("SELECTED_PRICE", 99.00);
         String date = intent.getStringExtra("DATE");
         String time = intent.getStringExtra("TIME");
         String address = intent.getStringExtra("ADDRESS");
@@ -70,9 +71,8 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         tvDateTime.setText(String.format("Date & Time: %s • %s", (date != null ? date : "July 19, 2026"), (time != null ? time : "10:00 AM")));
         if (address != null) tvAddress.setText(address);
 
-        // Simulated total price calculation
-        double pricePerUnit = 512.00;
-        double total = pricePerUnit * quantity;
+        // Package price calculation
+        double total = selectedPrice * quantity;
         tvTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", total));
 
         btnConfirmBooking.setOnClickListener(v -> {
@@ -81,14 +81,14 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             String generatedBookingId = dbHelper.generateNextBookingId();
             String notes = intent.getStringExtra("NOTES");
             String scheduledTimeStr = (date != null ? date : "July 19, 2026") + " • " + (time != null ? time : "10:00 AM");
-            String packageDetailsStr = (service != null ? service : "Standard Cargo") + " (x" + quantity + ")";
+            String packageDetailsStr = (service != null ? service : "Basic Delivery") + " (x" + quantity + ")";
 
             Delivery newBooking = new Delivery();
             newBooking.setBookingId(generatedBookingId);
             newBooking.setDriverId(session.getUsername() != null && !session.getUsername().isEmpty() ? session.getUsername() : "agent01");
             newBooking.setCustomerName(customerName != null ? customerName : "Guest Customer");
             newBooking.setCustomerPhone(customerPhone != null ? customerPhone : "N/A");
-            newBooking.setPickupLocation("TRI-MAX Hub, San Jose del Monte");
+            newBooking.setPickupLocation(address != null ? address : "Customer Address");
             newBooking.setPickupLatitude(pickupLat);
             newBooking.setPickupLongitude(pickupLng);
             newBooking.setDestination(address != null ? address : "San Jose del Monte, Bulacan");

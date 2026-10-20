@@ -159,10 +159,12 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         // Dashboard tracking opens a client overview map; avoid initializing a hidden map here.
+        View cardTrackingMap = findViewById(R.id.cardLiveTrackingMap);
         View trackingLink = findViewById(R.id.tvTrackLink);
         View trackingFullBtn = findViewById(R.id.btnTrackFullMap);
         View.OnClickListener openTracking = v ->
                 startActivity(new Intent(DashboardActivity.this, TrackingMapActivity.class));
+        if (cardTrackingMap != null) cardTrackingMap.setOnClickListener(openTracking);
         if (trackingLink != null) trackingLink.setOnClickListener(openTracking);
         if (trackingFullBtn != null) trackingFullBtn.setOnClickListener(openTracking);
 
@@ -257,12 +259,15 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         // Dashboard quick actions
+        View cardPendingBookings = findViewById(R.id.cardPendingBookings);
         if (statTotalBookings != null) {
             statTotalBookings.setOnClickListener(v -> openBookingsWithFilter("ALL"));
         }
+        if (cardPendingBookings != null) {
+            cardPendingBookings.setOnClickListener(openTracking);
+        }
         if (statPendingBookings != null) {
-            // Tracking starts with active/confirmed bookings so the user can choose a delivery.
-            statPendingBookings.setOnClickListener(v -> openBookingsWithFilter("CONFIRMED"));
+            statPendingBookings.setOnClickListener(openTracking);
         }
         if (statConfirmedBookings != null) {
             statConfirmedBookings.setOnClickListener(v -> openBookingsWithFilter("COMPLETED"));
@@ -575,6 +580,9 @@ public class DashboardActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.nav_bookings) {
                 startActivity(new Intent(this, BookingsActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_packages) {
+                startActivity(new Intent(this, PackagesActivity.class));
                 return true;
             } else if (itemId == R.id.nav_clients) {
                 startActivity(new Intent(this, ClientsActivity.class));

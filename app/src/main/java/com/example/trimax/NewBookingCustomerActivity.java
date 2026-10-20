@@ -132,6 +132,10 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                     intent.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
                     intent.putExtra("CUSTOMER_LAT", selectedCustomerLatitude);
                     intent.putExtra("CUSTOMER_LNG", selectedCustomerLongitude);
+                    if (getIntent().hasExtra("SELECTED_PACKAGE")) {
+                        intent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
+                        intent.putExtra("SELECTED_PRICE", getIntent().getDoubleExtra("SELECTED_PRICE", 99.00));
+                    }
                     startActivity(intent);
                 }
             });

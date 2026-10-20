@@ -35,6 +35,9 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
     private String currentFilter = "ALL";
     private String currentSearchQuery = "";
 
+    private final android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable searchRunnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +54,12 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         }
 
         dbHelper = new DatabaseHelper(this);
+
+        // Apply incoming Intent filter extra if passed from Dashboard
+        String initialFilter = getIntent().getStringExtra("FILTER");
+        if (initialFilter != null && !initialFilter.isEmpty()) {
+            currentFilter = initialFilter.toUpperCase();
+        }
 
         View btnBack = findViewById(R.id.btnBack);
         if (btnBack != null) {
@@ -99,7 +108,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         if (chipCancelled != null) chipCancelled.setOnClickListener(v -> setFilter("CANCELLED"));
         if (chipCompleted != null) chipCompleted.setOnClickListener(v -> setFilter("COMPLETED"));
 
-        // Search text watcher
+        // Search text watcher with debouncing to prevent UI freeze and ANR
         if (etSearchBookings != null) {
             etSearchBookings.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -108,21 +117,25 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     currentSearchQuery = s != null ? s.toString().trim() : "";
-                    loadBookingsFromDatabase();
+                    if (searchRunnable != null) {
+                        searchHandler.removeCallbacks(searchRunnable);
+                    }
+                    searchRunnable = () -> loadBookingsFromDatabase();
+                    searchHandler.postDelayed(searchRunnable, 250);
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {}
             });
         }
+    }
 
-        // Apply incoming Intent filter extra if passed from Dashboard
-        String initialFilter = getIntent().getStringExtra("FILTER");
-        if (initialFilter != null && !initialFilter.isEmpty()) {
-            currentFilter = initialFilter.toUpperCase();
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (searchHandler != null && searchRunnable != null) {
+            searchHandler.removeCallbacks(searchRunnable);
         }
-
-        setupBottomNavigation(bottomNavigation);
     }
 
     @Override
@@ -138,15 +151,22 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
     }
 
     private void loadBookingsFromDatabase() {
-        List<Delivery> bookings = dbHelper.getBookingsByFilter(currentFilter, currentSearchQuery);
-        bookingAdapter.setBookingList(bookings);
+        if (isFinishing() || isDestroyed()) return;
+        if (dbHelper == null || bookingAdapter == null || rvBookings == null || tvEmptyBookings == null) return;
+        try {
+            List<Delivery> bookings = dbHelper.getBookingsByFilter(currentFilter, currentSearchQuery);
+            if (bookings == null) bookings = new java.util.ArrayList<>();
+            bookingAdapter.setBookingList(bookings);
 
-        if (bookings.isEmpty()) {
-            tvEmptyBookings.setVisibility(View.VISIBLE);
-            rvBookings.setVisibility(View.GONE);
-        } else {
-            tvEmptyBookings.setVisibility(View.GONE);
-            rvBookings.setVisibility(View.VISIBLE);
+            if (bookings.isEmpty()) {
+                tvEmptyBookings.setVisibility(View.VISIBLE);
+                rvBookings.setVisibility(View.GONE);
+            } else {
+                tvEmptyBookings.setVisibility(View.GONE);
+                rvBookings.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         updateChipStyles();

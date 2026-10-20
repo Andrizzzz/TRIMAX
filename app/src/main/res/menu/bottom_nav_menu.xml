@@ -9,6 +9,10 @@
         android:icon="@drawable/ic_bookings"
         android:title="Bookings" />
     <item
+        android:id="@+id/nav_packages"
+        android:icon="@drawable/ic_categories"
+        android:title="Packages" />
+    <item
         android:id="@+id/nav_clients"
         android:icon="@drawable/ic_clients"
         android:title="Clients" />
