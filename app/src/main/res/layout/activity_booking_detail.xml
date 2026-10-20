@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Booking #BK-2026-00123"
+            android:text="Booking Details"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -133,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Juan Dela Cruz"
+                        android:text="Loading customer..."
                         android:textColor="@color/text_primary"
                         android:textSize="17sp"
                         android:textStyle="bold" />
@@ -143,7 +143,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="📞 0917 123 4567"
+                        android:text="No phone provided"
                         android:textColor="@color/primary_blue"
                         android:textSize="14sp" />
 
@@ -167,7 +167,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Service: Standard Cargo Express"
+                        android:text="Loading service details..."
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -177,7 +177,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Schedule: July 19, 2026 • 10:00 AM"
+                        android:text="Not scheduled"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
@@ -219,7 +219,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="San Jose del Monte, Bulacan, Philippines"
+                        android:text="Not specified"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
@@ -327,7 +327,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:text="₱ 1,024.00"
+                            android:text="₱ 0.00"
                             android:textColor="@color/primary_blue"
                             android:textSize="20sp"
                             android:textStyle="bold" />
