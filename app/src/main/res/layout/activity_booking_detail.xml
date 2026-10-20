@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Booking Details"
+            android:text="Booking #BK-2026-00123"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -161,15 +161,11 @@
                         android:layout_marginVertical="14dp"
                         android:background="#3364748B" />
 
-                    <!-- PICKUP LOCATION -->
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="📍 PICKUP LOCATION" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvPickupAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Pickup address" android:textColor="@color/text_primary" android:textSize="14sp" />
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="14dp" android:background="#3364748B" />
                     <!-- LOCATION -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📍 DELIVERY LOCATION"
+                        android:text="DESTINATION LOCATION"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -228,9 +224,6 @@
                         android:layout_marginVertical="14dp"
                         android:background="#3364748B" />
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="14dp" android:background="#3364748B" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BOOKING INFORMATION" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvBookingId" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Booking ID: —" android:textColor="@color/text_primary" android:textSize="14sp" />
                     <TextView android:id="@+id/tvAssignedDriver" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Assigned Driver: Not yet assigned" android:textColor="@color/text_primary" android:textSize="14sp" />
                     <!-- TOTAL -->
                     <RelativeLayout
