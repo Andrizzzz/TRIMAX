@@ -260,7 +260,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         }
 
         // Confirm Location Button
-        btnConfirmLocation.setOnClickListener(v -> {
+        if (btnConfirmLocation != null) btnConfirmLocation.setOnClickListener(v -> {
             GeoPoint pickupPoint = mockMapView != null ? mockMapView.getPickupGeoPoint() : new GeoPoint(14.8115, 121.0453);
             GeoPoint destPoint = mockMapView != null ? mockMapView.getDestinationGeoPoint() : new GeoPoint(14.8150, 121.0500);
 
@@ -292,18 +292,17 @@ public class NewBookingLocationActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        if (mockMapView != null) mockMapView.onPause();
         super.onPause();
-        if (mockMapView != null) {
-            mockMapView.onPause();
-        }
     }
 
     @Override
     protected void onDestroy() {
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        if (nominatimSearchService != null) nominatimSearchService.cancelPendingSearches();
+        if (mockMapView != null) mockMapView.stopLiveDeliveryAnimation();
         super.onDestroy();
-        if (nominatimSearchService != null) {
-            nominatimSearchService.cancelPendingSearches();
-        }
     }
 
     private void checkAndFetchGpsLocation() {
