@@ -59,7 +59,9 @@ public class ProfileActivity extends AppCompatActivity {
         ImageView ivProfilePhoto = findViewById(R.id.ivProfilePhoto);
         if (ivProfilePhoto != null) ivProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
         View cardEditProfile = findViewById(R.id.cardEditProfile);
-        View cardChangePassword = findViewById(R.id.cardChangePassword);
+        View cardSettings = findViewById(R.id.cardSettings);
+        View cardDeliveryHistory = findViewById(R.id.cardDeliveryHistory);
+        View cardHelpSupport = findViewById(R.id.cardHelpSupport);
         View cardReports = findViewById(R.id.cardReports);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
@@ -86,7 +88,9 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         if (cardEditProfile != null) cardEditProfile.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, EditProfileActivity.class)));
-        if (cardChangePassword != null) cardChangePassword.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class)));
+        if (cardSettings != null) cardSettings.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, SettingsActivity.class)));
+        if (cardDeliveryHistory != null) cardDeliveryHistory.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, BookingsActivity.class)));
+        if (cardHelpSupport != null) cardHelpSupport.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, SettingsActivity.class)));
         if (cardReports != null) cardReports.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ReportsActivity.class)));
 
         if (btnLogout != null) btnLogout.setOnClickListener(v -> showLogoutDialog());
