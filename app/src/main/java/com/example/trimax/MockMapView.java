@@ -143,7 +143,7 @@ public class MockMapView extends FrameLayout {
 
         mapView = new MapView(context);
         // Use OpenStreetMap Germany (FOSSGIS e.V.) tile server: high quality, standard OSM tiles, no 403 blocks
-        mapView.setTileSource(OSM_GERMANY);
+        mapView.setTileSource(org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(15.0);
         mapView.getController().setCenter(RIDER_POINT);
@@ -196,9 +196,8 @@ public class MockMapView extends FrameLayout {
         });
         mapView.getOverlays().add(0, eventsOverlay);
 
-        // Perform network status check and tile diagnostic test
+        // Avoid an extra diagnostic HTTP request on every map creation; let osmdroid load/cache tiles normally.
         checkNetworkStatus(context);
-        runTileDiagnosticTest(descriptiveUserAgent);
     }
 
     public void startLiveDeliveryAnimation() {
