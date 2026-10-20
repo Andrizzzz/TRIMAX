@@ -63,7 +63,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         root.addView(subtitle);
 
         mapView = new MapView(this);
-        mapView.setTileSource(TileSourceFactory.MAPNIK);
+        mapView.setTileSource(MockMapView.OSM_GERMANY);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(12.0);
         root.addView(mapView, new LinearLayout.LayoutParams(

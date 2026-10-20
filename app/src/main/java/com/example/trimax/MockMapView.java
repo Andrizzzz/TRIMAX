@@ -17,7 +17,9 @@ import androidx.annotation.Nullable;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.CopyrightOverlay;
@@ -36,6 +38,30 @@ import java.util.concurrent.Executors;
 public class MockMapView extends FrameLayout {
 
     private static final String TAG = "TRIMAX_MAP_TILE";
+
+    // Official OpenStreetMap Germany Tile Server (FOSSGIS e.V. - Standard OSM tiles, 100% permitted open usage, no 403 blocks)
+    public static final OnlineTileSourceBase OSM_GERMANY = new XYTileSource(
+            "OSM-Germany",
+            0, 19, 256, ".png",
+            new String[]{
+                    "https://a.tile.openstreetmap.de/",
+                    "https://b.tile.openstreetmap.de/",
+                    "https://c.tile.openstreetmap.de/"
+            },
+            "© OpenStreetMap contributors"
+    );
+
+    // Official OpenStreetMap France Tile Server (OSM France - Standard OSM tiles fallback)
+    public static final OnlineTileSourceBase OSM_FRANCE = new XYTileSource(
+            "OSM-France",
+            0, 19, 256, ".png",
+            new String[]{
+                    "https://a.tile.openstreetmap.fr/osmfr/",
+                    "https://b.tile.openstreetmap.fr/osmfr/",
+                    "https://c.tile.openstreetmap.fr/osmfr/"
+            },
+            "© OpenStreetMap contributors, OSM France"
+    );
 
     public interface OnLocationChangeListener {
         void onLocationSelected(String address, String distanceText);
@@ -118,7 +144,7 @@ public class MockMapView extends FrameLayout {
 
         mapView = new MapView(context);
         // Use OpenStreetMap Germany (FOSSGIS e.V.) tile server: high quality, standard OSM tiles, no 403 blocks
-        mapView.setTileSource(TileSourceFactory.MAPNIK);
+        mapView.setTileSource(OSM_GERMANY);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(15.0);
         mapView.getController().setCenter(RIDER_POINT);
@@ -237,7 +263,7 @@ public class MockMapView extends FrameLayout {
                     Log.d(TAG, "Fallback OSM France Tile Test -> Code: " + fbCode);
                     if (fbCode == HttpURLConnection.HTTP_OK) {
                         post(() -> {
-                            if (mapView != null) mapView.setTileSource(TileSourceFactory.MAPNIK);
+                            if (mapView != null) mapView.setTileSource(OSM_FRANCE);
                         });
                     }
                 }
