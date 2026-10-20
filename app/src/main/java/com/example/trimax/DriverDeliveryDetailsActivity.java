@@ -225,12 +225,12 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
         if (tvPackageDetails != null) {
             String details = currentDelivery.getPackageDetails();
-            tvPackageDetails.setText(TextUtils.isEmpty(details) ? "Standard Package" : details);
+            tvPackageDetails.setText(TextUtils.isEmpty(details) ? "Package details unavailable" : details);
         }
 
         if (tvSpecialInstructions != null) {
             String instructions = currentDelivery.getSpecialInstructions();
-            tvSpecialInstructions.setText(TextUtils.isEmpty(instructions) ? "Standard delivery procedures apply." : instructions);
+            tvSpecialInstructions.setText(TextUtils.isEmpty(instructions) ? "No special instructions provided." : instructions);
         }
 
         if (tvOriginalAmount != null) {
@@ -244,9 +244,12 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
         List<OrderAdjustment> adjustments = dbHelper.getOrderAdjustments(currentDelivery.getBookingId());
         double totalAdj = 0;
         for (OrderAdjustment adj : adjustments) {
-            if ("ADDITIONAL_CHARGE".equalsIgnoreCase(adj.getType()) || "DAMAGE_CHARGE".equalsIgnoreCase(adj.getType())) {
+            String adjustmentType = adj.getType() != null ? adj.getType().toUpperCase(Locale.US) : "";
+            if ("ADDITIONAL_CHARGE".equals(adjustmentType) || "DAMAGE_CHARGE".equals(adjustmentType)) {
                 totalAdj += adj.getAmount();
-            } else {
+            } else if ("REFUND".equals(adjustmentType)) {
+                totalAdj -= adj.getAmount();
+            } else if ("DEDUCTION".equals(adjustmentType) || "DEPOSIT".equals(adjustmentType)) {
                 totalAdj -= adj.getAmount();
             }
         }
