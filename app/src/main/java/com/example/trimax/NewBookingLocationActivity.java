@@ -37,7 +37,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
     private String service, date, time, notes;
     private int quantity;
     private double selectedPrice = 99.00;
-    private String selectedCustomerAddress = "San Jose del Monte, Bulacan";
+    private String selectedCustomerAddress = "";
 
     private LocationHelper locationHelper;
     private MockMapView mockMapView;
@@ -269,11 +269,21 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         // Confirm Location Button
         if (btnConfirmLocation != null) btnConfirmLocation.setOnClickListener(v -> {
             btnConfirmLocation.setEnabled(false);
-            GeoPoint pickupPoint = new GeoPoint(14.7826996, 121.0475865);
-            GeoPoint destPoint = mockMapView != null ? mockMapView.getDestinationGeoPoint() : new GeoPoint(14.8150, 121.0500);
-
-            // Pickup is always the fixed TRIMAX Hub, never the device GPS position.
-            if (destPoint == null) destPoint = new GeoPoint(14.8150, 121.0500);
+            // Pickup is always the fixed TRIMAX Hub. Never silently use a sample destination.
+            if (mockMapView == null || !mockMapView.hasExplicitDestinationSelection()) {
+                btnConfirmLocation.setEnabled(true);
+                Toast.makeText(this,
+                        "Select the customer's real location by searching an address, using GPS, or tapping the map before continuing.",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+            GeoPoint destPoint = mockMapView.getDestinationGeoPoint();
+            if (destPoint == null || !isValidCoordinate(destPoint.getLatitude(), destPoint.getLongitude())
+                    || selectedCustomerAddress == null || selectedCustomerAddress.trim().isEmpty()) {
+                btnConfirmLocation.setEnabled(true);
+                Toast.makeText(this, "Customer destination is invalid. Please select the location again.", Toast.LENGTH_LONG).show();
+                return;
+            }
 
             Intent detailsIntent = new Intent(NewBookingLocationActivity.this, NewBookingDetailsActivity.class);
             detailsIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
@@ -352,6 +362,12 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             mockMapView.setDestinationLocation(latitude, longitude, "Current Location", selectedCustomerAddress);
         }
         Toast.makeText(this, String.format(Locale.US, "Customer destination set from GPS (%.4f, %.4f)", latitude, longitude), Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean isValidCoordinate(double latitude, double longitude) {
+        return Double.isFinite(latitude) && Double.isFinite(longitude)
+                && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
+                && !(latitude == 0 && longitude == 0);
     }
 
     private void navigateBack() {
