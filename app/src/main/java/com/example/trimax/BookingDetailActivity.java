@@ -33,6 +33,7 @@ public class BookingDetailActivity extends AppCompatActivity {
     private TextView tvLocationAddress;
     private TextView tvSpecialInstructions;
     private TextView tvTotalAmount;
+    private TextView tvPickupAddress, tvBookingId, tvAssignedDriver;
 
     private MaterialButton btnViewLocation;
     private MaterialButton btnConfirmBooking;
@@ -71,6 +72,9 @@ public class BookingDetailActivity extends AppCompatActivity {
         tvLocationAddress = findViewById(R.id.tvLocationAddress);
         tvSpecialInstructions = findViewById(R.id.tvSpecialInstructions);
         tvTotalAmount = findViewById(R.id.tvTotalAmount);
+        tvPickupAddress = findViewById(R.id.tvPickupAddress);
+        tvBookingId = findViewById(R.id.tvBookingId);
+        tvAssignedDriver = findViewById(R.id.tvAssignedDriver);
 
         btnViewLocation = findViewById(R.id.btnViewLocation);
         btnConfirmBooking = findViewById(R.id.btnConfirmBooking);
@@ -150,11 +154,14 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         if (delivery != null) {
             if (tvHeaderTitle != null) tvHeaderTitle.setText(String.format("Booking #%s", delivery.getBookingId()));
-            if (tvCustomerName != null) tvCustomerName.setText(delivery.getCustomerName());
+            if (tvCustomerName != null) tvCustomerName.setText(safeValue(delivery.getCustomerName(), "Customer"));
+            if (tvBookingId != null) tvBookingId.setText("Booking ID: " + safeValue(delivery.getBookingId(), currentBookingId));
+            if (tvPickupAddress != null) tvPickupAddress.setText(safeValue(delivery.getPickupLocation(), "Pickup address not provided"));
+            if (tvAssignedDriver != null) tvAssignedDriver.setText("Assigned Driver: " + safeValue(delivery.getDriverId(), "Not yet assigned"));
             if (tvPhone != null) tvPhone.setText(String.format("📞 %s", delivery.getCustomerPhone()));
             if (tvService != null) tvService.setText(String.format("Service: %s", delivery.getPackageDetails()));
             if (tvScheduleTime != null) tvScheduleTime.setText(String.format("Schedule: %s", delivery.getScheduledTime()));
-            if (tvLocationAddress != null) tvLocationAddress.setText(delivery.getDestination());
+            if (tvLocationAddress != null) tvLocationAddress.setText(safeValue(delivery.getDestination(), "Delivery address not provided"));
 
             if (tvSpecialInstructions != null) {
                 String notes = delivery.getSpecialInstructions();
@@ -183,6 +190,10 @@ public class BookingDetailActivity extends AppCompatActivity {
 
             updateStatusUi(status != null ? status : "PENDING");
         }
+    }
+
+    private String safeValue(String value, String fallback) {
+        return value == null || value.trim().isEmpty() ? fallback : value.trim();
     }
 
     private void updateStatusUi(String status) {
