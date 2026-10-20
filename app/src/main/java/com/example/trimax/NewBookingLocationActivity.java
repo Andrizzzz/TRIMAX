@@ -248,8 +248,9 @@ public class NewBookingLocationActivity extends AppCompatActivity {
 
         if (btnChangeCustomerLocation != null && mockMapView != null) {
             btnChangeCustomerLocation.setOnClickListener(v -> {
-                mockMapView.changeCustomerLocation();
-                Toast.makeText(this, "Customer location pin updated", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Search for the address above, or tap the map to place the customer pin. The pin will stay at your selected location.",
+                        Toast.LENGTH_LONG).show();
             });
         }
 
