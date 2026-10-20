@@ -214,7 +214,9 @@ public class ClientsActivity extends AppCompatActivity {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
-                startActivity(new Intent(this, DashboardActivity.class));
+                Intent dashboardIntent = new Intent(this, DashboardActivity.class);
+                dashboardIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(dashboardIntent);
                 finish();
                 return true;
             } else if (itemId == R.id.nav_bookings) {
