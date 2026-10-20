@@ -82,7 +82,7 @@ public class MockMapView extends FrameLayout {
 
     private int sampleLocationIndex = 0;
 
-    private static final GeoPoint RIDER_POINT = new GeoPoint(14.8115, 121.0453); // SJDM Hub
+    private static final GeoPoint RIDER_POINT = new GeoPoint(14.7826996, 121.0475865); // Fixed TRIMAX Hub
 
     private final GeoPoint[] sampleGeoPoints = {
             new GeoPoint(14.8150, 121.0500), // Tungkong Mangga
@@ -161,7 +161,7 @@ public class MockMapView extends FrameLayout {
         riderMarker = new Marker(mapView);
         riderMarker.setPosition(RIDER_POINT);
         riderMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        riderMarker.setTitle("🏍 Driver / Agent Location");
+        riderMarker.setTitle("TRIMAX Hub — Fixed Pickup Location");
         mapView.getOverlays().add(riderMarker);
 
         // Setup Customer Destination Marker
@@ -464,7 +464,8 @@ public class MockMapView extends FrameLayout {
     }
 
     public GeoPoint getPickupGeoPoint() {
-        return riderMarker != null ? riderMarker.getPosition() : RIDER_POINT;
+        // Never use the movable driver marker as a booking pickup coordinate.
+        return new GeoPoint(14.7826996, 121.0475865);
     }
 
     public GeoPoint getDestinationGeoPoint() {
