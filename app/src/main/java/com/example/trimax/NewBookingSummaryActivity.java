@@ -51,8 +51,8 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         }
         final String address = resolvedAddress;
 
-        double pickupLat = intent.getDoubleExtra("PICKUP_LAT", 14.8115);
-        double pickupLng = intent.getDoubleExtra("PICKUP_LNG", 121.0453);
+        double pickupLat = 14.7826996;
+        double pickupLng = 121.0475865;
         double destLat = intent.getDoubleExtra("DEST_LAT", 14.8150);
         double destLng = intent.getDoubleExtra("DEST_LNG", 121.0500);
 
@@ -99,7 +99,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             newBooking.setDriverId(session.getUsername() != null && !session.getUsername().isEmpty() ? session.getUsername() : "agent01");
             newBooking.setCustomerName(customerName != null ? customerName : "Guest Customer");
             newBooking.setCustomerPhone(customerPhone != null ? customerPhone : "N/A");
-            newBooking.setPickupLocation(address != null ? address : "Customer Address");
+            newBooking.setPickupLocation("TRIMAX Hub (14.782700, 121.047587)");
             newBooking.setPickupLatitude(pickupLat);
             newBooking.setPickupLongitude(pickupLng);
             newBooking.setDestination(address != null ? address : "San Jose del Monte, Bulacan");
