@@ -22,7 +22,7 @@ import java.util.Locale;
 
 public class DriverMapActivity extends AppCompatActivity {
 
-    private DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;\n    private SessionManager session;
     private LocationHelper locationHelper;
     private String deliveryCode;
     private MockMapView mockMapView;
@@ -57,7 +57,7 @@ public class DriverMapActivity extends AppCompatActivity {
         }
 
         if (currentDelivery == null) {
-            currentDelivery = dbHelper.getNextAssignedDelivery("driver01");
+            currentDelivery = dbHelper.getNextAssignedDelivery(session.getUsername());
             if (currentDelivery != null) {
                 deliveryCode = currentDelivery.getBookingId();
             }
