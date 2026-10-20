@@ -587,9 +587,6 @@ public class DashboardActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_clients) {
                 startActivity(new Intent(this, ClientsActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_reports) {
-                startActivity(new Intent(this, ReportsActivity.class));
-                return true;
             } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));
                 return true;
