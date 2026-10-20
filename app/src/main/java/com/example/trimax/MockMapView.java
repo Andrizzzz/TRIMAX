@@ -374,9 +374,10 @@ public class MockMapView extends FrameLayout {
     }
 
     public void setLocationByAddress(String address) {
-        if (address == null) return;
+        if (address == null || address.trim().isEmpty()) return;
         for (int i = 0; i < sampleAddresses.length; i++) {
-            if (sampleAddresses[i].toLowerCase().contains(address.toLowerCase())) {
+            if (sampleAddresses[i].toLowerCase().contains(address.trim().toLowerCase())) {
+                hasExplicitDestinationSelection = true;
                 sampleLocationIndex = i;
                 if (customerMarker != null) {
                     customerMarker.setPosition(sampleGeoPoints[i]);
@@ -389,16 +390,7 @@ public class MockMapView extends FrameLayout {
                 return;
             }
         }
-        // Fallback default
-        sampleLocationIndex = 0;
-        if (customerMarker != null) {
-            customerMarker.setPosition(sampleGeoPoints[0]);
-            calculateRouteAndNotify();
-            if (mapView != null) {
-                mapView.getController().animateTo(sampleGeoPoints[0]);
-                mapView.invalidate();
-            }
-        }
+        // Do not silently replace an unrecognized address with a sample destination.
     }
 
     public void updateDriverLocation(double lat, double lng) {
