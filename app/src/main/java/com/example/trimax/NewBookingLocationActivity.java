@@ -261,19 +261,23 @@ public class NewBookingLocationActivity extends AppCompatActivity {
 
         // Confirm Location Button
         if (btnConfirmLocation != null) btnConfirmLocation.setOnClickListener(v -> {
+            btnConfirmLocation.setEnabled(false);
             GeoPoint pickupPoint = mockMapView != null ? mockMapView.getPickupGeoPoint() : new GeoPoint(14.8115, 121.0453);
             GeoPoint destPoint = mockMapView != null ? mockMapView.getDestinationGeoPoint() : new GeoPoint(14.8150, 121.0500);
 
+            if (pickupPoint == null) pickupPoint = new GeoPoint(14.8115, 121.0453);
+            if (destPoint == null) destPoint = new GeoPoint(14.8150, 121.0500);
+
             Intent summaryIntent = new Intent(NewBookingLocationActivity.this, NewBookingSummaryActivity.class);
-            summaryIntent.putExtra("CUSTOMER_NAME", customerName);
-            summaryIntent.putExtra("CUSTOMER_PHONE", customerPhone);
-            summaryIntent.putExtra("CUSTOMER_EMAIL", customerEmail);
-            summaryIntent.putExtra("SERVICE", service);
-            summaryIntent.putExtra("QUANTITY", quantity);
-            summaryIntent.putExtra("DATE", date);
-            summaryIntent.putExtra("TIME", time);
-            summaryIntent.putExtra("NOTES", notes);
-            summaryIntent.putExtra("ADDRESS", selectedCustomerAddress);
+            summaryIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
+            summaryIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
+            summaryIntent.putExtra("CUSTOMER_EMAIL", customerEmail != null ? customerEmail : "");
+            summaryIntent.putExtra("SERVICE", service != null ? service : "");
+            summaryIntent.putExtra("QUANTITY", quantity > 0 ? quantity : 1);
+            summaryIntent.putExtra("DATE", date != null ? date : "");
+            summaryIntent.putExtra("TIME", time != null ? time : "");
+            summaryIntent.putExtra("NOTES", notes != null ? notes : "");
+            summaryIntent.putExtra("ADDRESS", selectedCustomerAddress != null ? selectedCustomerAddress : "");
             summaryIntent.putExtra("PICKUP_LAT", pickupPoint.getLatitude());
             summaryIntent.putExtra("PICKUP_LNG", pickupPoint.getLongitude());
             summaryIntent.putExtra("DEST_LAT", destPoint.getLatitude());
@@ -288,11 +292,16 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         if (mockMapView != null) {
             mockMapView.onResume();
         }
+        MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
+        if (btnConfirmLocation != null) {
+            btnConfirmLocation.setEnabled(true);
+        }
     }
 
     @Override
     protected void onPause() {
         if (locationHelper != null) locationHelper.stopLocationUpdates();
+        if (nominatimSearchService != null) nominatimSearchService.cancelPendingSearches();
         if (mockMapView != null) mockMapView.onPause();
         super.onPause();
     }

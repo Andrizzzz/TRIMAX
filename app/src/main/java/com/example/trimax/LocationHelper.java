@@ -120,6 +120,7 @@ public class LocationHelper {
             } catch (SecurityException ignored) {}
         }
         isTrackingActive = false;
+        updateListener = null;
     }
 
     public double getLatitude() {

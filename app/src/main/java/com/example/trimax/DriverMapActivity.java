@@ -18,6 +18,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.Locale;
+
 public class DriverMapActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
@@ -43,8 +45,23 @@ public class DriverMapActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         locationHelper = new LocationHelper(this);
+
         deliveryCode = getIntent().getStringExtra("DELIVERY_ID");
-        if (deliveryCode == null || deliveryCode.trim().isEmpty()) deliveryCode = "TRX-1024";
+        if (deliveryCode == null || deliveryCode.trim().isEmpty()) {
+            deliveryCode = getIntent().getStringExtra("BOOKING_ID");
+        }
+        if (deliveryCode != null) deliveryCode = deliveryCode.trim();
+
+        if (deliveryCode != null && !deliveryCode.isEmpty()) {
+            currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
+        }
+
+        if (currentDelivery == null) {
+            currentDelivery = dbHelper.getNextAssignedDelivery("driver01");
+            if (currentDelivery != null) {
+                deliveryCode = currentDelivery.getBookingId();
+            }
+        }
 
         ImageView btnBack = findViewById(R.id.btnBack);
         mockMapView = findViewById(R.id.mockMapView);
@@ -60,8 +77,11 @@ public class DriverMapActivity extends AppCompatActivity {
             @Override public void handleOnBackPressed() { handleBackNavigation(); }
         });
 
-        currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
-        if (currentDelivery != null && tvDestAddress != null) tvDestAddress.setText(currentDelivery.getDestination());
+        if (currentDelivery != null && tvDestAddress != null) {
+            tvDestAddress.setText(currentDelivery.getDestination() != null ? currentDelivery.getDestination() : "No destination specified");
+        } else if (tvDestAddress != null) {
+            tvDestAddress.setText("No active delivery assigned");
+        }
 
         if (mockMapView != null) {
             mockMapView.setOnLocationChangeListener((address, distanceText) -> {
@@ -93,27 +113,41 @@ public class DriverMapActivity extends AppCompatActivity {
     }
 
     private void startTurnByTurnNavigation() {
-        double lat = currentDelivery != null ? currentDelivery.getDestinationLatitude() : 0;
-        double lng = currentDelivery != null ? currentDelivery.getDestinationLongitude() : 0;
-        String destination = currentDelivery != null ? currentDelivery.getDestination() : null;
-
-        if (!isValidCoordinate(lat, lng) && (destination == null || destination.trim().isEmpty())) {
-            Toast.makeText(this, "This delivery has no saved destination. Update its location first.", Toast.LENGTH_LONG).show();
+        if (currentDelivery == null) {
+            Toast.makeText(this, "No assigned delivery found for navigation.", Toast.LENGTH_LONG).show();
             return;
         }
 
-        String query = isValidCoordinate(lat, lng) ? lat + "," + lng : Uri.encode(destination.trim());
+        double lat = currentDelivery.getDestinationLatitude();
+        double lng = currentDelivery.getDestinationLongitude();
+        String destination = currentDelivery.getDestination();
+
+        boolean hasValidCoords = isValidCoordinate(lat, lng);
+        boolean hasValidAddress = destination != null && !destination.trim().isEmpty();
+
+        if (!hasValidCoords && !hasValidAddress) {
+            Toast.makeText(this, "This delivery has no saved destination coordinates or address.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String query;
+        if (hasValidCoords) {
+            query = String.format(Locale.US, "%.6f,%.6f", lat, lng);
+        } else {
+            query = Uri.encode(destination.trim());
+        }
+
         Intent navigationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + query + "&mode=d"));
         navigationIntent.setPackage("com.google.android.apps.maps");
         try {
             startActivity(navigationIntent);
         } catch (ActivityNotFoundException e) {
-            String geoQuery = isValidCoordinate(lat, lng) ? lat + "," + lng : Uri.encode(destination.trim());
+            String geoQuery = hasValidCoords ? String.format(Locale.US, "%.6f,%.6f", lat, lng) : Uri.encode(destination.trim());
             Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + geoQuery));
             try {
                 startActivity(Intent.createChooser(fallbackIntent, "Navigate with"));
             } catch (ActivityNotFoundException ignored) {
-                Toast.makeText(this, "No maps app is installed. Install Google Maps or another navigation app.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "No maps app is installed. Please install Google Maps.", Toast.LENGTH_LONG).show();
             }
         }
     }

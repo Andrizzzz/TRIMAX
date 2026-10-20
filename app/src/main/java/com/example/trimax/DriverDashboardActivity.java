@@ -245,7 +245,18 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
 
         if (cardDriverMap != null) {
-            cardDriverMap.setOnClickListener(v -> startActivity(new Intent(this, DriverMapActivity.class)));
+            cardDriverMap.setOnClickListener(v -> {
+                Intent intent = new Intent(this, DriverMapActivity.class);
+                if (currentHeroDelivery != null) {
+                    intent.putExtra("DELIVERY_ID", currentHeroDelivery.getBookingId());
+                } else {
+                    Delivery next = dbHelper != null ? dbHelper.getNextAssignedDelivery("driver01") : null;
+                    if (next != null) {
+                        intent.putExtra("DELIVERY_ID", next.getBookingId());
+                    }
+                }
+                startActivity(intent);
+            });
         }
 
         if (cardDeliveryHistory != null) {

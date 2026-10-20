@@ -13,7 +13,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import org.osmdroid.config.Configuration;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -25,9 +24,9 @@ import java.util.List;
 
 public class TrackingMapActivity extends AppCompatActivity {
 
-
     private MapView mapView;
     private DatabaseHelper dbHelper;
+    private TextView subtitleTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,12 +54,12 @@ public class TrackingMapActivity extends AppCompatActivity {
         title.setPadding(dp(18), dp(18), dp(18), dp(4));
         root.addView(title);
 
-        TextView subtitle = new TextView(this);
-        subtitle.setText("Customer locations are shown as pins. Tap a pin to view client details.");
-        subtitle.setTextColor(Color.DKGRAY);
-        subtitle.setTextSize(13);
-        subtitle.setPadding(dp(18), 0, dp(18), dp(12));
-        root.addView(subtitle);
+        subtitleTextView = new TextView(this);
+        subtitleTextView.setText("Customer locations are shown as pins. Tap a pin to view client details.");
+        subtitleTextView.setTextColor(Color.DKGRAY);
+        subtitleTextView.setTextSize(13);
+        subtitleTextView.setPadding(dp(18), 0, dp(18), dp(12));
+        root.addView(subtitleTextView);
 
         mapView = new MapView(this);
         mapView.setTileSource(MockMapView.OSM_GERMANY);
@@ -84,34 +83,66 @@ public class TrackingMapActivity extends AppCompatActivity {
             return insets;
         });
 
-        showCustomerPins(subtitle);
+        showCustomerPins(subtitleTextView);
     }
 
     private void showCustomerPins(TextView subtitle) {
-        List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
+        if (mapView == null) return;
+        mapView.getOverlays().clear();
+
+        List<DatabaseHelper.SavedCustomer> customers = dbHelper != null ? dbHelper.getSavedCustomers("") : new ArrayList<>();
         int pinCount = 0;
         List<GeoPoint> validPoints = new ArrayList<>();
-        for (DatabaseHelper.SavedCustomer customer : customers) {
-            double lat = customer.getLatitude();
-            double lng = customer.getLongitude();
-            if (!isValidCoordinate(lat, lng)) continue;
 
-            GeoPoint point = new GeoPoint(lat, lng);
-            validPoints.add(point);
-            Marker marker = new Marker(mapView);
-            marker.setPosition(point);
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-            marker.setTitle(customer.getName() == null ? "Client" : customer.getName());
-            marker.setSnippet((customer.getAddress() == null ? "" : customer.getAddress())
-                    + (customer.getPhone() == null ? "" : "\n" + customer.getPhone()));
-            marker.setOnMarkerClickListener((clicked, map) -> {
-                Toast.makeText(this, clicked.getTitle() + "\n" + clicked.getSnippet(),
-                        Toast.LENGTH_LONG).show();
-                clicked.showInfoWindow();
-                return true;
-            });
-            mapView.getOverlays().add(marker);
-            pinCount++;
+        if (customers != null) {
+            for (DatabaseHelper.SavedCustomer customer : customers) {
+                if (customer == null) continue;
+                double lat = customer.getLatitude();
+                double lng = customer.getLongitude();
+                if (!isValidCoordinate(lat, lng)) continue;
+
+                GeoPoint point = new GeoPoint(lat, lng);
+                validPoints.add(point);
+                Marker marker = new Marker(mapView);
+                marker.setPosition(point);
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                String name = customer.getName() != null && !customer.getName().trim().isEmpty()
+                        ? customer.getName().trim() : "Client";
+                marker.setTitle(name);
+
+                StringBuilder snippet = new StringBuilder();
+                if (customer.getPhone() != null && !customer.getPhone().trim().isEmpty()) {
+                    snippet.append("📞 ").append(customer.getPhone().trim());
+                }
+                if (customer.getAddress() != null && !customer.getAddress().trim().isEmpty()) {
+                    if (snippet.length() > 0) snippet.append("\n");
+                    snippet.append("📍 ").append(customer.getAddress().trim());
+                }
+                if (customer.getBookingCount() > 0) {
+                    if (snippet.length() > 0) snippet.append("\n");
+                    snippet.append("📦 ").append(customer.getBookingCount()).append(" booking(s)");
+                }
+                marker.setSnippet(snippet.toString());
+
+                marker.setOnMarkerClickListener((clicked, map) -> {
+                    Toast.makeText(this, clicked.getTitle() + (clicked.getSnippet() != null && !clicked.getSnippet().isEmpty() ? "\n" + clicked.getSnippet() : ""),
+                            Toast.LENGTH_LONG).show();
+                    clicked.showInfoWindow();
+                    return true;
+                });
+                mapView.getOverlays().add(marker);
+                pinCount++;
+            }
+        }
+
+        if (subtitle != null) {
+            if (!validPoints.isEmpty()) {
+                subtitle.setText(pinCount + " client location pin(s) shown. Tap a pin for details.");
+            } else {
+                subtitle.setText(customers == null || customers.isEmpty()
+                        ? "No saved clients yet. Add customers and save their map locations to see pins here."
+                        : "No client coordinates saved yet. Open a booking, choose the exact location on the map, and save it to show a pin.");
+            }
         }
 
         if (!validPoints.isEmpty()) {
@@ -119,20 +150,25 @@ public class TrackingMapActivity extends AppCompatActivity {
                 mapView.getController().setZoom(15.0);
                 mapView.getController().setCenter(validPoints.get(0));
             } else {
-                mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(validPoints), false, dp(56));
+                final List<GeoPoint> pointsToBound = validPoints;
+                mapView.post(() -> {
+                    try {
+                        mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(pointsToBound), false, dp(56));
+                    } catch (Exception ignored) {
+                        if (!pointsToBound.isEmpty()) {
+                            mapView.getController().setCenter(pointsToBound.get(0));
+                        }
+                    }
+                });
             }
-            subtitle.setText(pinCount + " client location pin(s) shown. Tap a pin for details.");
         } else {
             mapView.getController().setCenter(new GeoPoint(14.8115, 121.0453));
-            subtitle.setText(customers.isEmpty()
-                    ? "No saved clients yet. Add customers and save their map locations to see pins here."
-                    : "No client coordinates saved yet. Open a booking, choose the exact location on the map, and save it to show a pin.");
         }
         mapView.invalidate();
     }
 
     private boolean isValidCoordinate(double lat, double lng) {
-        return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+        return Double.isFinite(lat) && Double.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
                 && !(lat == 0 && lng == 0);
     }
 
@@ -143,6 +179,7 @@ public class TrackingMapActivity extends AppCompatActivity {
     @Override protected void onResume() {
         super.onResume();
         if (mapView != null) mapView.onResume();
+        if (subtitleTextView != null) showCustomerPins(subtitleTextView);
     }
 
     @Override protected void onPause() {

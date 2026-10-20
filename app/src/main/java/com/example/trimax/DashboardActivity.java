@@ -160,10 +160,11 @@ public class DashboardActivity extends AppCompatActivity {
 
         // Dashboard tracking opens a client overview map; avoid initializing a hidden map here.
         View trackingLink = findViewById(R.id.tvTrackLink);
-        if (trackingLink != null) {
-            trackingLink.setOnClickListener(v ->
-                    startActivity(new Intent(DashboardActivity.this, TrackingMapActivity.class)));
-        }
+        View trackingFullBtn = findViewById(R.id.btnTrackFullMap);
+        View.OnClickListener openTracking = v ->
+                startActivity(new Intent(DashboardActivity.this, TrackingMapActivity.class));
+        if (trackingLink != null) trackingLink.setOnClickListener(openTracking);
+        if (trackingFullBtn != null) trackingFullBtn.setOnClickListener(openTracking);
 
         SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefreshDashboard);
         if (swipeRefresh != null) {
