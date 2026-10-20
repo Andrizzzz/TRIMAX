@@ -859,9 +859,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cv.put("customer_id", delivery.getCustomerId() != null ? delivery.getCustomerId() : "CUST-" + (System.currentTimeMillis() % 1000));
         cv.put("customer_name", delivery.getCustomerName());
         cv.put("customer_phone", delivery.getCustomerPhone());
-        cv.put("pickup_location", delivery.getPickupLocation() != null ? delivery.getPickupLocation() : "TRI-MAX Hub, San Jose del Monte");
-        cv.put("pickup_latitude", delivery.getPickupLatitude() != 0 ? delivery.getPickupLatitude() : 14.8115);
-        cv.put("pickup_longitude", delivery.getPickupLongitude() != 0 ? delivery.getPickupLongitude() : 121.0453);
+        cv.put("pickup_location", "TRIMAX Hub (14.782700, 121.047587)");
+        cv.put("pickup_latitude", 14.7826996);
+        cv.put("pickup_longitude", 121.0475865);
         cv.put("destination", delivery.getDestination() != null ? delivery.getDestination() : "San Jose del Monte, Bulacan");
         cv.put("destination_latitude", delivery.getDestinationLatitude() != 0 ? delivery.getDestinationLatitude() : 14.8150);
         cv.put("destination_longitude", delivery.getDestinationLongitude() != 0 ? delivery.getDestinationLongitude() : 121.0500);
