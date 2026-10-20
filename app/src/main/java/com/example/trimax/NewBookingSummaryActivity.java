@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,15 +47,12 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         if (resolvedAddress == null || resolvedAddress.trim().isEmpty()) {
             resolvedAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
         }
-        if (resolvedAddress == null || resolvedAddress.trim().isEmpty()) {
-            resolvedAddress = "San Jose del Monte, Bulacan";
-        }
         final String address = resolvedAddress;
 
         double pickupLat = 14.7826996;
         double pickupLng = 121.0475865;
-        double destLat = intent.getDoubleExtra("DEST_LAT", 14.8150);
-        double destLng = intent.getDoubleExtra("DEST_LNG", 121.0500);
+        double destLat = intent.getDoubleExtra("DEST_LAT", 0);
+        double destLng = intent.getDoubleExtra("DEST_LNG", 0);
 
         ImageView btnBack = findViewById(R.id.btnBack);
         TextView tvCustomerName = findViewById(R.id.tvCustomerName);
@@ -87,6 +85,13 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         tvTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", total));
 
         btnConfirmBooking.setOnClickListener(v -> {
+            if (address == null || address.trim().isEmpty()
+                    || !Double.isFinite(destLat) || !Double.isFinite(destLng)
+                    || destLat < -90 || destLat > 90 || destLng < -180 || destLng > 180
+                    || (destLat == 0 && destLng == 0)) {
+                Toast.makeText(this, "Please select a valid delivery destination before confirming.", Toast.LENGTH_LONG).show();
+                return;
+            }
             SessionManager session = new SessionManager(this);
             DatabaseHelper dbHelper = new DatabaseHelper(this);
             String generatedBookingId = dbHelper.generateNextBookingId();
@@ -115,7 +120,10 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
 
             dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
             newBooking.setCustomerId(dbHelper.getCustomerCodeByPhone(customerPhone));
-            dbHelper.addBooking(newBooking);
+            if (!dbHelper.addBooking(newBooking)) {
+                Toast.makeText(this, "Booking could not be saved. Please try again.", Toast.LENGTH_LONG).show();
+                return;
+            }
             dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + generatedBookingId + " was confirmed for " + (customerName != null ? customerName : "Customer"));
 
             Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
