@@ -159,20 +159,12 @@ public class DashboardActivity extends AppCompatActivity {
             btnAgentStartDuty.setOnClickListener(v -> toggleAgentDutyState());
         }
 
-        // FoodPanda Style Live Map Tracking Views
-        dashboardMapView = findViewById(R.id.dashboardMapView);
-        MaterialButton btnTrackFullMap = findViewById(R.id.btnTrackFullMap);
-
-        if (dashboardMapView != null) {
-            dashboardMapView.startLiveDeliveryAnimation();
-        }
-
-        if (btnTrackFullMap != null) {
-            btnTrackFullMap.setOnClickListener(v -> {
-                Intent intent = new Intent(DashboardActivity.this, DriverMapActivity.class);
-                intent.putExtra("DELIVERY_ID", "BK-2026-00123");
-                startActivity(intent);
-            });
+        // Dashboard tracking opens a client overview map; avoid initializing a hidden map here.
+        dashboardMapView = null;
+        View trackingLink = findViewById(R.id.tvTrackLink);
+        if (trackingLink != null) {
+            trackingLink.setOnClickListener(v ->
+                    startActivity(new Intent(DashboardActivity.this, TrackingMapActivity.class)));
         }
 
         SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefreshDashboard);
@@ -424,10 +416,6 @@ public class DashboardActivity extends AppCompatActivity {
         if (dashboardDrawer != null) {
             dashboardDrawer.setCheckedItem(R.id.drawer_home);
         }
-        if (dashboardMapView != null) {
-            dashboardMapView.onResume();
-            dashboardMapView.startLiveDeliveryAnimation();
-        }
         refreshDashboardContent();
     }
 
@@ -456,9 +444,6 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (dashboardMapView != null) {
-            dashboardMapView.onPause();
-        }
     }
 
     private void loadRecentBookings() {
