@@ -278,14 +278,9 @@
 
             <TextView
                 android:id="@+id/tvPackageDetails"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:padding="12dp"
-                android:background="@color/card_bg"
-                android:text="Package details"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tvSpecialInstructions"
@@ -331,15 +326,9 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPrimaryAction"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="12dp"
-                android:backgroundTint="@color/primary_blue"
-                android:text="Update Delivery Status"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
-                app:cornerRadius="16dp" />
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnReportProblem"
