@@ -121,7 +121,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
             layout.setPadding(dp(18), dp(18), dp(18), dp(18));
 
             TextView tvCode = new TextView(this);
-            tvCode.setText(String.format("Delivery #%s", d.getDeliveryId()));
+            tvCode.setText(String.format("Booking #%s", d.getBookingId()));
             tvCode.setTextColor(getResources().getColor(R.color.text_primary));
             tvCode.setTextSize(16);
             tvCode.setMaxLines(2);
@@ -162,7 +162,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
             card.setOnClickListener(v -> {
                 Intent intent = new Intent(DriverHistoryActivity.this, DriverDeliveryDetailsActivity.class);
-                intent.putExtra("DELIVERY_ID", d.getDeliveryId());
+                intent.putExtra("DELIVERY_ID", d.getBookingId());
                 startActivity(intent);
             });
 
