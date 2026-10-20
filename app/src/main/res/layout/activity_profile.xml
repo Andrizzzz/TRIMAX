@@ -119,6 +119,7 @@
                         android:id="@+id/cardEditProfile"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
 
@@ -157,11 +158,12 @@
                         android:layout_height="1dp"
                         android:background="@color/border_subtle" />
 
-                    <!-- Earnings -->
+                    <!-- Reports -->
                     <RelativeLayout
                         android:id="@+id/cardReports"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
 
@@ -180,7 +182,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginStart="14dp"
                             android:layout_toEndOf="@+id/ic2"
-                            android:text="Earnings"
+                            android:text="Reports"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -202,8 +204,10 @@
 
                     <!-- Delivery History -->
                     <RelativeLayout
+                        android:id="@+id/cardDeliveryHistory"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
 
@@ -244,9 +248,10 @@
 
                     <!-- Settings -->
                     <RelativeLayout
-                        android:id="@+id/cardChangePassword"
+                        android:id="@+id/cardSettings"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
 
@@ -287,8 +292,10 @@
 
                     <!-- Help & Support -->
                     <RelativeLayout
+                        android:id="@+id/cardHelpSupport"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
 
