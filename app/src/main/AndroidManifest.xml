@@ -74,6 +74,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".TrackingMapActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".DriverProofActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
