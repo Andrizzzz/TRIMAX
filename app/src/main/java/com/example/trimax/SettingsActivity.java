@@ -83,13 +83,16 @@ public class SettingsActivity extends AppCompatActivity {
         if (cardPrivacy != null) {
             cardPrivacy.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
-                        .setTitle("Privacy Policy & Data Protection")
-                        .setMessage("TRI-MAX Express Logistics Inc. respects your data privacy:\n\n"
-                                + "• Data Collection: We only collect necessary data (Name, Email, Phone, GPS Location for deliveries).\n"
-                                + "• Security: All customer and agent credentials are encrypted using industry-standard protocols.\n"
-                                + "• Compliance: Fully compliant with Republic Act No. 10173 (Data Privacy Act of 2012).\n"
-                                + "• No Third-Party Sharing: Your data is never sold or shared with unauthorized third parties.")
-                        .setPositiveButton("I Accept & Agree", null)
+                        .setTitle("Logout")
+                        .setMessage("Are you sure you want to logout?")
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("Logout", (dialog, which) -> {
+                            session.logoutUser();
+                            Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        })
                         .show();
             });
         }
@@ -111,12 +114,11 @@ public class SettingsActivity extends AppCompatActivity {
         if (cardRefundPolicy != null) {
             cardRefundPolicy.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
-                        .setTitle("Refund & Cancellation Policy")
-                        .setMessage("Booking Cancellation & Refund Rules:\n\n"
-                                + "• Cancellation before Dispatch: 100% full refund credited within 24 hours.\n"
-                                + "• Cancellation after Driver En Route: Partial fee may apply to cover driver transit costs.\n"
-                                + "• Failed Delivery due to Customer Unavailability: Free re-attempt within 12 hours or return refund.")
-                        .setPositiveButton("Got It", null)
+                        .setTitle("Help & Support")
+                        .setMessage("Need help with TRIMAX?\n\n"
+                                + "For booking, account, or delivery issues, contact your system administrator "
+                                + "or the support contact provided by your organization.")
+                        .setPositiveButton("OK", null)
                         .show();
             });
         }
