@@ -237,7 +237,7 @@ public class MockMapView extends FrameLayout {
                     Log.d(TAG, "Fallback OSM France Tile Test -> Code: " + fbCode);
                     if (fbCode == HttpURLConnection.HTTP_OK) {
                         post(() -> {
-                            if (mapView != null) mapView.setTileSource(OSM_FRANCE);
+                            if (mapView != null) mapView.setTileSource(TileSourceFactory.MAPNIK);
                         });
                     }
                 }
