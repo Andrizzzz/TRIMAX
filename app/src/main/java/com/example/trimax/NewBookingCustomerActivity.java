@@ -73,6 +73,9 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 @Override public void afterTextChanged(Editable s) {}
             });
         }
+        // Populate real saved customers and keep inline selection mutually exclusive.
+        configureInlineCustomerSelection();
+
         MaterialButton btnChooseCustomer = findViewById(R.id.btnChooseCustomer);
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
         MaterialButton btnSaveCustomer = findViewById(R.id.btnSaveCustomer);
@@ -146,6 +149,59 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         MaterialButton btnNext = findViewById(R.id.btnNext);
         if (btnNext != null) {
             btnNext.setEnabled(true);
+        }
+    }
+
+    private void configureInlineCustomerSelection() {
+        int[] cardIds = {R.id.cardCustomer1, R.id.cardCustomer2, R.id.cardCustomer3};
+        int[] nameIds = {R.id.tvCust1Name, R.id.tvCust2Name, R.id.tvCust3Name};
+        int[] phoneIds = {R.id.tvCust1Phone, R.id.tvCust2Phone, R.id.tvCust3Phone};
+        int[] radioIds = {R.id.rbCust1, R.id.rbCust2, R.id.rbCust3};
+        List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
+        View container = findViewById(R.id.containerCustomerList);
+        View cardContainer = container != null ? (View) container.getParent() : null;
+
+        for (int i = 0; i < cardIds.length; i++) {
+            View card = findViewById(cardIds[i]);
+            TextView nameView = findViewById(nameIds[i]);
+            TextView phoneView = findViewById(phoneIds[i]);
+            android.widget.RadioButton radio = findViewById(radioIds[i]);
+            if (card == null || nameView == null || phoneView == null || radio == null) continue;
+
+            if (customers == null || i >= customers.size()) {
+                card.setVisibility(View.GONE);
+                radio.setChecked(false);
+                continue;
+            }
+
+            DatabaseHelper.SavedCustomer customer = customers.get(i);
+            card.setVisibility(View.VISIBLE);
+            nameView.setText(customer.getName());
+            phoneView.setText(customer.getPhone() == null ? "" : customer.getPhone());
+            radio.setChecked(false);
+
+            View.OnClickListener selectCustomer = v -> {
+                for (int radioId : radioIds) {
+                    android.widget.RadioButton other = findViewById(radioId);
+                    if (other != null) other.setChecked(false);
+                }
+                radio.setChecked(true);
+
+                if (etCustomerName != null) etCustomerName.setText(customer.getName());
+                if (etPhone != null) etPhone.setText(customer.getPhone());
+                if (etEmail != null) etEmail.setText(customer.getEmail());
+                selectedCustomerAddress = customer.getAddress() == null ? "" : customer.getAddress();
+                selectedCustomerLatitude = customer.getLatitude();
+                selectedCustomerLongitude = customer.getLongitude();
+                if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
+                Toast.makeText(this, "Selected customer: " + customer.getName(), Toast.LENGTH_SHORT).show();
+            };
+            card.setOnClickListener(selectCustomer);
+            radio.setOnClickListener(selectCustomer);
+        }
+
+        if (cardContainer != null) {
+            cardContainer.setVisibility(customers == null || customers.isEmpty() ? View.GONE : View.VISIBLE);
         }
     }
 
