@@ -132,25 +132,33 @@ public class DriverMapActivity extends AppCompatActivity {
             return;
         }
 
-        String query;
-        if (hasValidCoords) {
-            query = String.format(Locale.US, "%.6f,%.6f", lat, lng);
-        } else {
-            query = Uri.encode(destination.trim());
-        }
+        String destinationQuery = hasValidCoords
+                ? String.format(Locale.US, "%.6f,%.6f", lat, lng)
+                : destination.trim();
 
-        Intent navigationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + query + "&mode=d"));
+        // Prefer the installed Google Maps app for full turn-by-turn navigation.
+        Uri navigationUri = Uri.parse("google.navigation:q=" + Uri.encode(destinationQuery) + "&mode=d");
+        Intent navigationIntent = new Intent(Intent.ACTION_VIEW, navigationUri);
         navigationIntent.setPackage("com.google.android.apps.maps");
         try {
             startActivity(navigationIntent);
+            return;
+        } catch (ActivityNotFoundException ignored) {
+            // Fall back to Google Maps Directions on the web. Coordinates are used
+            // whenever available so the route targets the saved booking pin.
+        }
+
+        String encodedDestination = Uri.encode(destinationQuery);
+        Uri directionsUri = Uri.parse(
+                "https://www.google.com/maps/dir/?api=1&destination="
+                        + encodedDestination + "&travelmode=driving");
+        Intent directionsIntent = new Intent(Intent.ACTION_VIEW, directionsUri);
+        try {
+            startActivity(directionsIntent);
         } catch (ActivityNotFoundException e) {
-            String geoQuery = hasValidCoords ? String.format(Locale.US, "%.6f,%.6f", lat, lng) : Uri.encode(destination.trim());
-            Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + geoQuery));
-            try {
-                startActivity(Intent.createChooser(fallbackIntent, "Navigate with"));
-            } catch (ActivityNotFoundException ignored) {
-                Toast.makeText(this, "No maps app is installed. Please install Google Maps.", Toast.LENGTH_LONG).show();
-            }
+            Toast.makeText(this,
+                    "Unable to open navigation. Please install Google Maps or a browser.",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
