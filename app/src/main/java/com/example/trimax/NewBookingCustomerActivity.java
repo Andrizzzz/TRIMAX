@@ -87,15 +87,24 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
         if (btnChooseCustomer != null) btnChooseCustomer.setOnClickListener(v -> showSavedCustomers());
         if (btnAddCustomer != null) btnAddCustomer.setOnClickListener(v -> {
-            etCustomerName.setText("");
-            etPhone.setText("");
-            etEmail.setText("");
+            LinearLayout llForm = findViewById(R.id.llNewCustomerForm);
+            if (llForm != null) llForm.setVisibility(View.VISIBLE);
+            int[] radioIds = {R.id.rbCust1, R.id.rbCust2, R.id.rbCust3};
+            for (int rId : radioIds) {
+                android.widget.RadioButton rb = findViewById(rId);
+                if (rb != null) rb.setChecked(false);
+            }
+            if (etCustomerName != null) {
+                etCustomerName.setText("");
+                etCustomerName.requestFocus();
+            }
+            if (etPhone != null) etPhone.setText("");
+            if (etEmail != null) etEmail.setText("");
             if (etCustomerAddress != null) etCustomerAddress.setText("");
             selectedCustomerAddress = "";
             selectedCustomerLatitude = 0;
             selectedCustomerLongitude = 0;
-            etCustomerName.requestFocus();
-            Toast.makeText(this, "Enter the new customer's information.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Enter new customer details below.", Toast.LENGTH_SHORT).show();
         });
         if (btnSaveCustomer != null) btnSaveCustomer.setOnClickListener(v -> saveCustomerFromForm());
 

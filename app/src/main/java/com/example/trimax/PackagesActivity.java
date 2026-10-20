@@ -71,7 +71,18 @@ public class PackagesActivity extends AppCompatActivity {
                 Arrays.asList("Safe and secure delivery", "Real-time tracking", "Delivery confirmation"),
                 "Up to 3 kg",
                 "30 x 20 x 15 cm",
-                "1 day (same-day / next-day)"
+                "1 day"
+        ));
+        list.add(new ServicePackage(
+                "pkg_standard",
+                "Standard Delivery",
+                "For medium-sized packages.",
+                149.00,
+                R.drawable.ic_delivery_van,
+                Arrays.asList("Safe and secure delivery", "Real-time tracking", "Delivery confirmation"),
+                "Up to 5 kg",
+                "50 x 40 x 30 cm",
+                "1 – 2 days"
         ));
         list.add(new ServicePackage(
                 "pkg_express",
