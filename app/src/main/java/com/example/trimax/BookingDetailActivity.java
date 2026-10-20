@@ -238,7 +238,7 @@ public class BookingDetailActivity extends AppCompatActivity {
         hideErrorState();
 
         if (tvHeaderTitle != null) {
-            tvHeaderTitle.setText("Booking Details");
+            tvHeaderTitle.setText("Booking #" + currentDelivery.getBookingId());
         }
 
         if (tvBookingIdValue != null) {
