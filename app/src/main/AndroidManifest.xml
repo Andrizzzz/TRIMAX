@@ -184,7 +184,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="@string/facebook_app_id" />
+                <data android:scheme="@string/facebook_app_id" tools:ignore="AppLinkUrlError" />
             </intent-filter>
         </activity>
 
