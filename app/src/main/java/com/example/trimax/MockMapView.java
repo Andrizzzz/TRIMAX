@@ -332,6 +332,7 @@ public class MockMapView extends FrameLayout {
     }
 
     public void useCurrentLocation() {
+        hasExplicitDestinationSelection = true;
         sampleLocationIndex = 4; // Graceville / Near Rider Hub
         if (customerMarker != null) {
             customerMarker.setPosition(sampleGeoPoints[4]);
@@ -341,6 +342,7 @@ public class MockMapView extends FrameLayout {
     }
 
     public void changeCustomerLocation() {
+        hasExplicitDestinationSelection = true;
         sampleLocationIndex = (sampleLocationIndex + 1) % sampleAddresses.length;
         if (customerMarker != null) {
             customerMarker.setPosition(sampleGeoPoints[sampleLocationIndex]);
