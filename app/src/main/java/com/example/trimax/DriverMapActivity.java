@@ -22,7 +22,8 @@ import java.util.Locale;
 
 public class DriverMapActivity extends AppCompatActivity {
 
-    private DatabaseHelper dbHelper;\n    private SessionManager session;
+    private DatabaseHelper dbHelper;
+    private SessionManager session;
     private LocationHelper locationHelper;
     private String deliveryCode;
     private MockMapView mockMapView;
@@ -44,6 +45,7 @@ public class DriverMapActivity extends AppCompatActivity {
         }
 
         dbHelper = new DatabaseHelper(this);
+        session = new SessionManager(this);
         locationHelper = new LocationHelper(this);
 
         deliveryCode = getIntent().getStringExtra("DELIVERY_ID");
