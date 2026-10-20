@@ -248,8 +248,13 @@ public class NewBookingLocationActivity extends AppCompatActivity {
 
         if (btnChangeCustomerLocation != null && mockMapView != null) {
             btnChangeCustomerLocation.setOnClickListener(v -> {
+                if (actvSmartLocationSearch != null) {
+                    actvSmartLocationSearch.requestFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) imm.showSoftInput(actvSmartLocationSearch, InputMethodManager.SHOW_IMPLICIT);
+                }
                 Toast.makeText(this,
-                        "Search for the address above, or tap the map to place the customer pin. The pin will stay at your selected location.",
+                        "Search and select an address, or tap the map to place the pin. The map will not jump to sample locations.",
                         Toast.LENGTH_LONG).show();
             });
         }
