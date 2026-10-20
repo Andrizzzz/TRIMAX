@@ -893,23 +893,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public List<Delivery> getBookingsForCustomer(String customerPhone) {
-        List<Delivery> list = new ArrayList<>();
-        if (customerPhone == null || customerPhone.trim().isEmpty()) return list;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_DELIVERIES
-                + " WHERE customer_phone=? ORDER BY id DESC",
-                new String[]{customerPhone.trim()});
-        try {
-            while (cursor != null && cursor.moveToNext()) {
-                list.add(extractDeliveryFromCursor(cursor));
-            }
-        } finally {
-            if (cursor != null) cursor.close();
-        }
-        return list;
-    }
-
     public List<Delivery> getAllBookings() {
         return getBookingsByFilter("ALL", null);
     }

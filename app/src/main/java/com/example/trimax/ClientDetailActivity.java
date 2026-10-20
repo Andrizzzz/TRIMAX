@@ -5,21 +5,32 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.List;
+import java.util.Locale;
+
 public class ClientDetailActivity extends AppCompatActivity {
+
+    private DatabaseHelper dbHelper;
+    private LinearLayout clientBookingHistoryContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_client_detail);
+
+        dbHelper = new DatabaseHelper(this);
 
         // Keep screen content clear of the status and navigation bars.
         View root = findViewById(android.R.id.content);
@@ -40,9 +51,7 @@ public class ClientDetailActivity extends AppCompatActivity {
         TextView tvPhone = findViewById(R.id.tvPhone);
         TextView tvEmail = findViewById(R.id.tvEmail);
         TextView tvAddress = findViewById(R.id.tvAddress);
-
-        View cardHistory1 = findViewById(R.id.tvHist1Id) != null ? (View) findViewById(R.id.tvHist1Id).getParent().getParent() : null;
-        View cardHistory2 = findViewById(R.id.tvHist2Id) != null ? (View) findViewById(R.id.tvHist2Id).getParent().getParent() : null;
+        clientBookingHistoryContainer = findViewById(R.id.clientBookingHistoryContainer);
 
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> navigateBack());
@@ -72,14 +81,72 @@ public class ClientDetailActivity extends AppCompatActivity {
             });
         }
 
-        // Booking History item clicks opening Booking Details
-        if (cardHistory1 != null) {
-            cardHistory1.setOnClickListener(v -> openBookingDetail("BK-2026-00123", name != null ? name : "Juan Dela Cruz", "PENDING", "₱ 1,024.00"));
+        loadBookingHistory(phone);
+    }
+
+    private void loadBookingHistory(String phone) {
+        if (clientBookingHistoryContainer == null) return;
+        clientBookingHistoryContainer.removeAllViews();
+
+        List<Delivery> bookings = dbHelper.getBookingsForCustomer(phone);
+        if (bookings == null || bookings.isEmpty()) {
+            TextView tvEmpty = new TextView(this);
+            tvEmpty.setText("No booking history found for this client.");
+            tvEmpty.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            tvEmpty.setTextSize(14);
+            tvEmpty.setPadding(dp(4), dp(12), dp(4), dp(12));
+            clientBookingHistoryContainer.addView(tvEmpty);
+            return;
         }
 
-        if (cardHistory2 != null) {
-            cardHistory2.setOnClickListener(v -> openBookingDetail("BK-2026-00110", name != null ? name : "Juan Dela Cruz", "COMPLETED", "₱ 3,150.00"));
+        for (Delivery d : bookings) {
+            CardView card = new CardView(this);
+            CardView.LayoutParams cardParams = new CardView.LayoutParams(
+                    CardView.LayoutParams.MATCH_PARENT, CardView.LayoutParams.WRAP_CONTENT);
+            cardParams.setMargins(0, 0, 0, dp(12));
+            card.setLayoutParams(cardParams);
+            card.setRadius(16);
+            card.setCardBackgroundColor(ContextCompat.getColor(this, R.color.card_bg));
+            card.setCardElevation(2);
+            card.setClickable(true);
+            card.setFocusable(true);
+
+            LinearLayout layout = new LinearLayout(this);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+            TextView tvCode = new TextView(this);
+            tvCode.setText(String.format("Booking #%s", d.getBookingId()));
+            tvCode.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            tvCode.setTextSize(15);
+            tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            TextView tvDest = new TextView(this);
+            tvDest.setText(String.format("Destination: %s", d.getDestination()));
+            tvDest.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            tvDest.setTextSize(13);
+            tvDest.setPadding(0, dp(4), 0, 0);
+
+            TextView tvStatus = new TextView(this);
+            tvStatus.setText(String.format("Status: %s • ₱ %.2f", d.getStatus(), d.getCurrentTotal()));
+            tvStatus.setTextColor(ContextCompat.getColor(this, "DELIVERED".equalsIgnoreCase(d.getStatus()) || "COMPLETED".equalsIgnoreCase(d.getStatus()) ? R.color.status_delivered : R.color.primary_blue));
+            tvStatus.setTextSize(13);
+            tvStatus.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvStatus.setPadding(0, dp(6), 0, 0);
+
+            layout.addView(tvCode);
+            layout.addView(tvDest);
+            layout.addView(tvStatus);
+            card.addView(layout);
+
+            card.setOnClickListener(v -> openBookingDetail(d.getBookingId(), d.getCustomerName(), d.getStatus(), String.format(Locale.US, "₱ %.2f", d.getCurrentTotal())));
+
+            clientBookingHistoryContainer.addView(card);
         }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void openBookingDetail(String id, String customer, String status, String amount) {
