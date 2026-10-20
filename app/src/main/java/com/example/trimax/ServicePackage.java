@@ -13,6 +13,7 @@ public class ServicePackage implements Serializable {
     private String maxWeight;
     private String maxDimensions;
     private String estimatedTime;
+    private int quantity = 0;
 
     public ServicePackage(String id, String name, String description, double startingPrice, int imageResId,
                           List<String> includedServices, String maxWeight, String maxDimensions, String estimatedTime) {
@@ -36,4 +37,6 @@ public class ServicePackage implements Serializable {
     public String getMaxWeight() { return maxWeight; }
     public String getMaxDimensions() { return maxDimensions; }
     public String getEstimatedTime() { return estimatedTime; }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
 }

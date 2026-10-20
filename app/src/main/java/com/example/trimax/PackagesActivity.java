@@ -63,59 +63,59 @@ public class PackagesActivity extends AppCompatActivity {
     private List<ServicePackage> getServicePackages() {
         List<ServicePackage> list = new ArrayList<>();
         list.add(new ServicePackage(
-                "pkg_basic",
-                "Basic Delivery",
-                "For small parcels and documents.",
-                99.00,
-                R.drawable.ic_delivery_scooter,
-                Arrays.asList("Safe and secure delivery", "Real-time tracking", "Delivery confirmation"),
-                "Up to 3 kg",
-                "30 x 20 x 15 cm",
-                "1 day"
+                "pkg_coke",
+                "Coke Case (24 Bottles)",
+                "Wholesale Coca-Cola beverage case.",
+                180.00,
+                R.drawable.ic_delivery_van,
+                Arrays.asList("24 bottles per case", "Original Coca-Cola taste", "Wholesale price"),
+                "15 kg",
+                "40 x 30 x 30 cm",
+                "In stock"
+        ));
+        list.add(new ServicePackage(
+                "pkg_sprite",
+                "Sprite Case (24 Bottles)",
+                "Wholesale Sprite lemon-lime beverage case.",
+                180.00,
+                R.drawable.ic_delivery_van,
+                Arrays.asList("24 bottles per case", "Refreshing lemon-lime", "Wholesale price"),
+                "15 kg",
+                "40 x 30 x 30 cm",
+                "In stock"
+        ));
+        list.add(new ServicePackage(
+                "pkg_royal",
+                "Royal Case (24 Bottles)",
+                "Wholesale Royal orange soda beverage case.",
+                175.00,
+                R.drawable.ic_delivery_van,
+                Arrays.asList("24 bottles per case", "Sweet orange flavor", "Wholesale price"),
+                "15 kg",
+                "40 x 30 x 30 cm",
+                "In stock"
         ));
         list.add(new ServicePackage(
                 "pkg_standard",
-                "Standard Delivery",
-                "For medium-sized packages.",
-                149.00,
-                R.drawable.ic_delivery_van,
-                Arrays.asList("Safe and secure delivery", "Real-time tracking", "Delivery confirmation"),
+                "Standard Item Parcel",
+                "General merchandise or standard box item.",
+                99.00,
+                R.drawable.ic_delivery_scooter,
+                Arrays.asList("General merchandise", "Standard handling", "Secure transit"),
                 "Up to 5 kg",
                 "50 x 40 x 30 cm",
-                "1 – 2 days"
-        ));
-        list.add(new ServicePackage(
-                "pkg_express",
-                "Express Delivery",
-                "For urgent deliveries (available in select areas).",
-                249.00,
-                R.drawable.ic_delivery_van,
-                Arrays.asList("Priority dispatch", "Safe and secure delivery", "Real-time tracking", "Delivery confirmation"),
-                "Up to 5 kg",
-                "40 x 30 x 20 cm",
-                "2 - 4 hours"
-        ));
-        list.add(new ServicePackage(
-                "pkg_bulk",
-                "Bulk Delivery",
-                "For multiple parcels or large items.",
-                399.00,
-                R.drawable.ic_delivery_van,
-                Arrays.asList("Multi-item handling", "Secure cargo loading", "Real-time tracking", "Delivery confirmation"),
-                "Up to 25 kg",
-                "80 x 60 x 50 cm",
-                "1 - 2 days"
+                "Available"
         ));
         list.add(new ServicePackage(
                 "pkg_fragile",
-                "Fragile Delivery",
-                "For delicate and high-value items.",
+                "Fragile Item Box",
+                "Delicate items requiring careful handling.",
                 499.00,
                 R.drawable.ic_delivery_scooter,
-                Arrays.asList("Extra padding & care", "Hand-to-hand transfer", "Real-time tracking", "Delivery confirmation"),
+                Arrays.asList("Extra bubble wrap", "Fragile handling", "Priority delivery"),
                 "Up to 10 kg",
                 "50 x 40 x 30 cm",
-                "1 day"
+                "Available"
         ));
         return list;
     }
@@ -172,7 +172,7 @@ public class PackagesActivity extends AppCompatActivity {
             ServicePackage pkg = packages.get(position);
             holder.tvName.setText(pkg.getName());
             holder.tvDesc.setText(pkg.getDescription());
-            holder.tvPrice.setText(String.format(Locale.US, "from ₱%.0f", pkg.getStartingPrice()));
+            holder.tvPrice.setText(String.format(Locale.US, "₱%.2f", pkg.getStartingPrice()));
             holder.ivImage.setImageResource(pkg.getImageResId());
 
             holder.itemView.setOnClickListener(v -> listener.onPackageClick(pkg));

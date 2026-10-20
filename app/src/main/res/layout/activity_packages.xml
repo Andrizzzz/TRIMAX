@@ -71,7 +71,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Service Packages"
+            android:text="Item Price List"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -81,7 +81,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Choose the best package for your delivery needs."
+            android:text="Wholesale item catalog &amp; delivery price list."
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
     </LinearLayout>

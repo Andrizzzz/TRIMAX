@@ -97,7 +97,7 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
 
         MaterialButton btnUseCurrentLocation = findViewById(R.id.btnUseCurrentLocation);
-        MaterialButton btnChangeCustomerLocation = findViewById(R.id.btnChangeCustomerLocation);
+        TextView btnChangeCustomerLocation = findViewById(R.id.btnChangeCustomerLocation);
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
 
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
@@ -279,7 +279,9 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             detailsIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
             detailsIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
             detailsIntent.putExtra("CUSTOMER_EMAIL", customerEmail != null ? customerEmail : "");
-            detailsIntent.putExtra("ADDRESS", selectedCustomerAddress != null ? selectedCustomerAddress : "");
+            String finalAddress = selectedCustomerAddress != null ? selectedCustomerAddress : "";
+            detailsIntent.putExtra("ADDRESS", finalAddress);
+            detailsIntent.putExtra("CUSTOMER_ADDRESS", finalAddress);
             detailsIntent.putExtra("SELECTED_PRICE", selectedPrice);
             if (getIntent().hasExtra("SELECTED_PACKAGE")) {
                 detailsIntent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));

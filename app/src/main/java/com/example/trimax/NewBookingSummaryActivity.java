@@ -42,7 +42,14 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         double selectedPrice = intent.getDoubleExtra("SELECTED_PRICE", 99.00);
         String date = intent.getStringExtra("DATE");
         String time = intent.getStringExtra("TIME");
-        String address = intent.getStringExtra("ADDRESS");
+        String resolvedAddress = intent.getStringExtra("ADDRESS");
+        if (resolvedAddress == null || resolvedAddress.trim().isEmpty()) {
+            resolvedAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
+        }
+        if (resolvedAddress == null || resolvedAddress.trim().isEmpty()) {
+            resolvedAddress = "San Jose del Monte, Bulacan";
+        }
+        final String address = resolvedAddress;
 
         double pickupLat = intent.getDoubleExtra("PICKUP_LAT", 14.8115);
         double pickupLng = intent.getDoubleExtra("PICKUP_LNG", 121.0453);

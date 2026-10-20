@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -15,22 +16,22 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class NewBookingDetailsActivity extends AppCompatActivity {
 
-    private TextInputEditText etParcelDescription, etNotes;
-    private TextView tvQuantity;
+    private TextInputEditText etNotes;
     private MaterialButton btnContinue, btnBackStep;
-
-    private int quantity = 1;
+    private LinearLayout containerPackageCards;
 
     private String customerName, customerPhone, customerEmail;
     private String customerAddress;
     private double customerLatitude, customerLongitude;
     private double pickupLat, pickupLng, destLat, destLng;
-    private String selectedPackageName = "";
-    private double selectedPackagePrice = 99.00;
+
+    private List<ServicePackage> servicePackages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,12 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
         customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
         customerAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
+        if (customerAddress == null || customerAddress.trim().isEmpty()) {
+            customerAddress = intent.getStringExtra("ADDRESS");
+        }
+        if (customerAddress == null || customerAddress.trim().isEmpty()) {
+            customerAddress = "San Jose del Monte, Bulacan";
+        }
         customerLatitude = intent.getDoubleExtra("CUSTOMER_LAT", 0);
         customerLongitude = intent.getDoubleExtra("CUSTOMER_LNG", 0);
 
@@ -60,54 +67,44 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         destLat = intent.getDoubleExtra("DEST_LAT", 14.8150);
         destLng = intent.getDoubleExtra("DEST_LNG", 121.0500);
 
-        selectedPackageName = intent.getStringExtra("SELECTED_PACKAGE");
-        if (selectedPackageName == null || selectedPackageName.isEmpty()) {
-            selectedPackageName = "Standard Delivery";
-        }
-        selectedPackagePrice = intent.getDoubleExtra("SELECTED_PRICE", 149.00);
-
         ImageView btnBack = findViewById(R.id.btnBack);
-        etParcelDescription = findViewById(R.id.etParcelDescription);
-        tvQuantity = findViewById(R.id.tvQuantity);
-        MaterialButton btnMinus = findViewById(R.id.btnMinus);
-        MaterialButton btnPlus = findViewById(R.id.btnPlus);
+        containerPackageCards = findViewById(R.id.containerPackageCards);
         etNotes = findViewById(R.id.etNotes);
         btnContinue = findViewById(R.id.btnContinue);
         btnBackStep = findViewById(R.id.btnBackStep);
 
-        if (etParcelDescription != null) {
-            etParcelDescription.setText(selectedPackageName + " (with accessories)");
-        }
+        initServicePackages();
+        populatePackageCards();
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
         if (btnBackStep != null) btnBackStep.setOnClickListener(v -> finish());
 
-        if (btnMinus != null) {
-            btnMinus.setOnClickListener(v -> {
-                if (quantity > 1) {
-                    quantity--;
-                    if (tvQuantity != null) tvQuantity.setText(String.valueOf(quantity));
-                }
-            });
-        }
-
-        if (btnPlus != null) {
-            btnPlus.setOnClickListener(v -> {
-                quantity++;
-                if (tvQuantity != null) tvQuantity.setText(String.valueOf(quantity));
-            });
-        }
-
         if (btnContinue != null) {
             btnContinue.setOnClickListener(v -> {
-                String parcelDesc = etParcelDescription != null && etParcelDescription.getText() != null
-                        ? etParcelDescription.getText().toString().trim() : "Laptop (with accessories)";
-                String notes = etNotes != null && etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
+                StringBuilder serviceBuilder = new StringBuilder();
+                double totalPrice = 0;
+                int totalQuantity = 0;
 
-                if (parcelDesc.isEmpty()) {
-                    parcelDesc = "Standard Parcel";
+                for (ServicePackage pkg : servicePackages) {
+                    if (pkg.getQuantity() > 0) {
+                        if (serviceBuilder.length() > 0) {
+                            serviceBuilder.append(", ");
+                        }
+                        serviceBuilder.append(pkg.getName()).append(" (x").append(pkg.getQuantity()).append(")");
+                        totalPrice += pkg.getStartingPrice() * pkg.getQuantity();
+                        totalQuantity += pkg.getQuantity();
+                    }
                 }
 
+                if (serviceBuilder.length() == 0) {
+                    ServicePackage std = servicePackages.get(3); // standard delivery
+                    std.setQuantity(1);
+                    serviceBuilder.append(std.getName()).append(" (x1)");
+                    totalPrice = std.getStartingPrice();
+                    totalQuantity = 1;
+                }
+
+                String notes = etNotes != null && etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
                 btnContinue.setEnabled(false);
 
                 Intent summaryIntent = new Intent(NewBookingDetailsActivity.this, NewBookingSummaryActivity.class);
@@ -115,9 +112,10 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 summaryIntent.putExtra("CUSTOMER_PHONE", customerPhone);
                 summaryIntent.putExtra("CUSTOMER_EMAIL", customerEmail);
                 summaryIntent.putExtra("ADDRESS", customerAddress);
-                summaryIntent.putExtra("SERVICE", parcelDesc);
-                summaryIntent.putExtra("SELECTED_PRICE", selectedPackagePrice);
-                summaryIntent.putExtra("QUANTITY", quantity);
+                summaryIntent.putExtra("CUSTOMER_ADDRESS", customerAddress);
+                summaryIntent.putExtra("SERVICE", serviceBuilder.toString());
+                summaryIntent.putExtra("SELECTED_PRICE", totalPrice / Math.max(1, totalQuantity));
+                summaryIntent.putExtra("QUANTITY", totalQuantity);
                 summaryIntent.putExtra("DATE", "July 19, 2026");
                 summaryIntent.putExtra("TIME", "10:00 AM");
                 summaryIntent.putExtra("NOTES", notes);
@@ -127,6 +125,58 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 summaryIntent.putExtra("DEST_LNG", destLng);
                 startActivity(summaryIntent);
             });
+        }
+    }
+
+    private void initServicePackages() {
+        servicePackages = new ArrayList<>();
+        servicePackages.add(new ServicePackage("pkg_coke", "Coke Case (24 Bottles)", "Wholesale delivery of Coca-Cola cases.", 180.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_sprite", "Sprite Case (24 Bottles)", "Wholesale delivery of Sprite cases.", 180.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_royal", "Royal Case (24 Bottles)", "Wholesale delivery of Royal orange soda cases.", 175.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_standard", "Standard Delivery", "For medium-sized packages.", 99.00, R.drawable.ic_delivery_scooter, null, "Up to 5 kg", "50x40x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_fragile", "Fragile Delivery", "For delicate and high-value items.", 499.00, R.drawable.ic_delivery_scooter, null, "Up to 10 kg", "50x40x30 cm", "1 day"));
+        if (servicePackages.get(3).getQuantity() == 0 && servicePackages.get(0).getQuantity() == 0) {
+            servicePackages.get(3).setQuantity(1); // Standard delivery default 1
+        }
+    }
+
+    private void populatePackageCards() {
+        if (containerPackageCards == null) return;
+        containerPackageCards.removeAllViews();
+
+        for (ServicePackage pkg : servicePackages) {
+            View cardView = getLayoutInflater().inflate(R.layout.item_booking_package, containerPackageCards, false);
+            ImageView ivImage = cardView.findViewById(R.id.ivPackageImage);
+            TextView tvName = cardView.findViewById(R.id.tvPackageName);
+            TextView tvDesc = cardView.findViewById(R.id.tvPackageDescription);
+            TextView tvPrice = cardView.findViewById(R.id.tvPackagePrice);
+            TextView tvItemQuantity = cardView.findViewById(R.id.tvItemQuantity);
+            MaterialButton btnMinus = cardView.findViewById(R.id.btnMinus);
+            MaterialButton btnPlus = cardView.findViewById(R.id.btnPlus);
+
+            if (ivImage != null) ivImage.setImageResource(pkg.getImageResId());
+            if (tvName != null) tvName.setText(pkg.getName());
+            if (tvDesc != null) tvDesc.setText(pkg.getDescription());
+            if (tvPrice != null) tvPrice.setText(String.format(Locale.US, "₱ %.2f", pkg.getStartingPrice()));
+            if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
+
+            if (btnMinus != null) {
+                btnMinus.setOnClickListener(v -> {
+                    if (pkg.getQuantity() > 0) {
+                        pkg.setQuantity(pkg.getQuantity() - 1);
+                        if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
+                    }
+                });
+            }
+
+            if (btnPlus != null) {
+                btnPlus.setOnClickListener(v -> {
+                    pkg.setQuantity(pkg.getQuantity() + 1);
+                    if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
+                });
+            }
+
+            containerPackageCards.addView(cardView);
         }
     }
 

@@ -202,113 +202,23 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <!-- Parcel Description Input -->
+            <!-- Select Service Package -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Parcel Description"
+                android:text="Select Package"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <!-- Container for Package CardViews -->
+            <LinearLayout
+                android:id="@+id/containerPackageCards"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                app:boxCornerRadiusBottomEnd="14dp"
-                app:boxCornerRadiusBottomStart="14dp"
-                app:boxCornerRadiusTopEnd="14dp"
-                app:boxCornerRadiusTopStart="14dp"
-                app:boxStrokeColor="@color/primary_blue">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etParcelDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Laptop (with accessories)"
-                    android:inputType="text"
-                    android:paddingVertical="14dp"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Quantity Selector Row -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Quantity"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                app:cardBackgroundColor="@color/card_bg"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="14dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnMinus"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:insetLeft="0dp"
-                            android:insetTop="0dp"
-                            android:insetRight="0dp"
-                            android:insetBottom="0dp"
-                            android:padding="0dp"
-                            android:text="-"
-                            android:textColor="@color/text_primary"
-                            android:textSize="18sp"
-                            app:cornerRadius="12dp"
-                            app:strokeColor="#CBD5E1" />
-
-                        <TextView
-                            android:id="@+id/tvQuantity"
-                            android:layout_width="48dp"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="1"
-                            android:textColor="@color/text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnPlus"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:insetLeft="0dp"
-                            android:insetTop="0dp"
-                            android:insetRight="0dp"
-                            android:insetBottom="0dp"
-                            android:padding="0dp"
-                            android:text="+"
-                            android:textColor="@color/text_primary"
-                            android:textSize="18sp"
-                            app:cornerRadius="12dp"
-                            app:strokeColor="#CBD5E1" />
-                    </LinearLayout>
-                </RelativeLayout>
-            </androidx.cardview.widget.CardView>
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
 
             <!-- Special Instructions -->
             <TextView
