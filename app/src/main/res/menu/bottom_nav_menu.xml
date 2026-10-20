@@ -17,10 +17,6 @@
         android:icon="@drawable/ic_clients"
         android:title="Clients" />
     <item
-        android:id="@+id/nav_reports"
-        android:icon="@drawable/calendar"
-        android:title="Reports" />
-    <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_account"
         android:title="Profile" />
