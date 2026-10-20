@@ -192,8 +192,8 @@ public class BookingDetailActivity extends AppCompatActivity {
             btnCancelBooking.setOnClickListener(v -> {
                 if (currentDelivery == null) return;
                 String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
-                if ("COMPLETED".equals(currentStatus) || "DELIVERED".equals(currentStatus) || "CANCELLED".equals(currentStatus)) {
-                    Toast.makeText(this, "Cannot cancel a booking that is already " + currentStatus, Toast.LENGTH_SHORT).show();
+                if (!"PENDING".equals(currentStatus) && !"CONFIRMED".equals(currentStatus)) {
+                    Toast.makeText(this, "Only pending or confirmed bookings can be cancelled", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -256,7 +256,7 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         if (tvService != null) {
             String details = currentDelivery.getPackageDetails();
-            tvService.setText(TextUtils.isEmpty(details) ? "Standard Package Delivery" : details);
+            tvService.setText(TextUtils.isEmpty(details) ? "Package details unavailable" : details);
         }
 
         if (tvPickupAddress != null) {
@@ -271,7 +271,7 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         if (tvParcelDetails != null) {
             String details = currentDelivery.getPackageDetails();
-            tvParcelDetails.setText(TextUtils.isEmpty(details) ? "Standard Cargo Parcel • Qty: 1" : details);
+            tvParcelDetails.setText(TextUtils.isEmpty(details) ? "No parcel details provided" : details);
         }
 
         if (tvScheduleTime != null) {
@@ -279,7 +279,7 @@ public class BookingDetailActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(sched)) {
                 sched = currentDelivery.getCreatedAt();
             }
-            tvScheduleTime.setText(TextUtils.isEmpty(sched) ? "Standard Schedule" : sched);
+            tvScheduleTime.setText(TextUtils.isEmpty(sched) ? "Not scheduled" : sched);
         }
 
         if (tvSpecialInstructions != null) {
@@ -290,6 +290,8 @@ public class BookingDetailActivity extends AppCompatActivity {
                 if (dividerNotes != null) dividerNotes.setVisibility(View.VISIBLE);
             } else {
                 tvSpecialInstructions.setText("None");
+                if (llNotesSection != null) llNotesSection.setVisibility(View.GONE);
+                if (dividerNotes != null) dividerNotes.setVisibility(View.GONE);
             }
         }
 
@@ -297,10 +299,10 @@ public class BookingDetailActivity extends AppCompatActivity {
             String driver = currentDelivery.getDriverId();
             if (TextUtils.isEmpty(driver) || "Unassigned".equalsIgnoreCase(driver)) {
                 tvAssignedDriverValue.setText("Not yet assigned");
-                tvAssignedDriverValue.setTextColor(0xFF64748B);
+                tvAssignedDriverValue.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary));
             } else {
                 tvAssignedDriverValue.setText(driver);
-                tvAssignedDriverValue.setTextColor(0xFF0F172A);
+                tvAssignedDriverValue.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_primary));
             }
         }
 
@@ -314,39 +316,42 @@ public class BookingDetailActivity extends AppCompatActivity {
     private void updateStatusUi(String status) {
         if (tvStatusBadge == null) return;
 
-        String upperStatus = status != null ? status.toUpperCase(Locale.US) : "PENDING";
+        String upperStatus = status != null ? status.trim().toUpperCase(Locale.US) : "PENDING";
 
-        if ("CONFIRMED".equals(upperStatus)) {
-            tvStatusBadge.setText("CONFIRMED");
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-
-            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
-            if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.VISIBLE);
-
-        } else if ("CANCELLED".equals(upperStatus)) {
-            tvStatusBadge.setText("CANCELLED");
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_cancelled);
-            tvStatusBadge.setTextColor(0xFFEF4444);
-
-            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
-            if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.GONE);
-
-        } else if ("COMPLETED".equals(upperStatus) || "DELIVERED".equals(upperStatus)) {
-            tvStatusBadge.setText("COMPLETED");
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_completed);
-            tvStatusBadge.setTextColor(0xFF2563EB);
-
-            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
-            if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.GONE);
-
-        } else { // PENDING or default
+        if ("PENDING".equals(upperStatus) || upperStatus.isEmpty()) {
             tvStatusBadge.setText("PENDING");
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
             tvStatusBadge.setTextColor(0xFFD97706);
-
             if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.VISIBLE);
             if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        if ("CANCELLED".equals(upperStatus)) {
+            tvStatusBadge.setText("CANCELLED");
+            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_cancelled);
+            tvStatusBadge.setTextColor(0xFFEF4444);
+            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
+            if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.GONE);
+            return;
+        }
+
+        if ("COMPLETED".equals(upperStatus) || "DELIVERED".equals(upperStatus)) {
+            tvStatusBadge.setText("COMPLETED");
+            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_completed);
+            tvStatusBadge.setTextColor(0xFF2563EB);
+            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
+            if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.GONE);
+            return;
+        }
+
+        // Confirmed or in-progress deliveries must never be displayed as PENDING.
+        tvStatusBadge.setText(upperStatus.replace('_', ' '));
+        tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
+        tvStatusBadge.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.primary_blue));
+        if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
+        if (btnCancelBooking != null) {
+            btnCancelBooking.setVisibility("CONFIRMED".equals(upperStatus) ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -366,9 +371,12 @@ public class BookingDetailActivity extends AppCompatActivity {
     }
 
     private void navigateBackToDashboard() {
-        Intent intent = new Intent(BookingDetailActivity.this, DashboardActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(intent);
+        // Preserve the screen that opened Booking Details (e.g. Bookings list).
+        if (isTaskRoot()) {
+            Intent intent = new Intent(BookingDetailActivity.this, DashboardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
         finish();
     }
 }
