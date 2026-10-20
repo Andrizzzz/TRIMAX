@@ -59,6 +59,7 @@
         app:layout_constraintTop_toBottomOf="@+id/topBar">
 
         <LinearLayout
+            android:id="@+id/llMainContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -84,6 +85,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="3dp">
 
@@ -92,6 +94,30 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BOOKING ID"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvBookingIdValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="—"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="14dp"
+                        android:background="#3364748B" />
 
                     <!-- CUSTOMER -->
                     <TextView
@@ -161,6 +187,24 @@
                         android:layout_marginVertical="14dp"
                         android:background="#3364748B" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="PICKUP LOCATION"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvPickupAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Not specified"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp" />
+
                     <!-- LOCATION -->
                     <TextView
                         android:layout_width="wrap_content"
@@ -192,6 +236,24 @@
                         app:cornerRadius="10dp"
                         app:strokeColor="#2563EB" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="PARCEL DETAILS"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvParcelDetails"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="No parcel details provided"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp" />
+
                     <!-- SPECIAL INSTRUCTIONS -->
                     <View
                         android:id="@+id/dividerNotes"
@@ -200,23 +262,30 @@
                         android:layout_marginVertical="14dp"
                         android:background="#3364748B" />
 
-                    <TextView
-                        android:id="@+id/lblNotes"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:id="@+id/llNotesSection"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="SPECIAL INSTRUCTIONS"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvSpecialInstructions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="None"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/lblNotes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SPECIAL INSTRUCTIONS"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSpecialInstructions"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="None"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
@@ -224,7 +293,22 @@
                         android:layout_marginVertical="14dp"
                         android:background="#3364748B" />
 
-                    <TextView android:id="@+id/tvAssignedDriver" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Assigned Driver: Not yet assigned" android:textColor="@color/text_primary" android:textSize="14sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ASSIGNED DRIVER"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAssignedDriverValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Not yet assigned"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp" />
                     <!-- TOTAL -->
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -281,5 +365,46 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/llErrorState"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="28dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar">
+
+        <TextView
+            android:id="@+id/tvErrorTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Booking Not Found"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvErrorMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="The requested booking could not be found."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnErrorBack"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:text="Back"
+            android:textAllCaps="false"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
