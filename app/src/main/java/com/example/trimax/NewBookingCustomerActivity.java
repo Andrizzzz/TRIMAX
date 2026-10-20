@@ -1,23 +1,34 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Patterns;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+
+import java.util.List;
 
 public class NewBookingCustomerActivity extends AppCompatActivity {
 
@@ -66,7 +77,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
         MaterialButton btnSaveCustomer = findViewById(R.id.btnSaveCustomer);
         MaterialButton btnNext = findViewById(R.id.btnNext);
-        android.widget.TextView tvStepTitle = findViewById(R.id.tvStepTitle);
+        TextView tvStepTitle = findViewById(R.id.tvStepTitle);
         if (directoryOnly) {
             if (tvStepTitle != null) tvStepTitle.setText("Add Customer");
             if (btnNext != null) btnNext.setVisibility(View.GONE);
@@ -137,31 +148,152 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     }
 
     private void showSavedCustomers() {
-        java.util.List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
-        if (customers.isEmpty()) {
-            new AlertDialog.Builder(this).setTitle("Saved Customers")
-                    .setMessage("No saved customers yet. Enter the details and tap Save Customer to Directory.")
-                    .setPositiveButton("OK", null).show();
+        List<DatabaseHelper.SavedCustomer> allCustomers = dbHelper.getSavedCustomers("");
+        if (allCustomers.isEmpty()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Saved Customers")
+                    .setMessage("No saved customers yet. Enter details below and tap 'Save Customer to Directory'.")
+                    .setPositiveButton("OK", null)
+                    .show();
             return;
         }
-        String[] labels = new String[customers.size()];
-        for (int i = 0; i < customers.size(); i++) {
-            DatabaseHelper.SavedCustomer customer = customers.get(i);
-            labels[i] = customer.getName() + "  •  " + customer.getPhone()
-                    + (customer.getAddress() == null || customer.getAddress().trim().isEmpty()
-                    ? "" : "\n" + customer.getAddress());
+
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_saved_customer, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        ImageView btnCloseDialog = dialogView.findViewById(R.id.btnCloseDialog);
+        TextInputEditText etSearchCustomer = dialogView.findViewById(R.id.etSearchCustomer);
+        LinearLayout containerSavedCustomers = dialogView.findViewById(R.id.containerSavedCustomers);
+
+        if (btnCloseDialog != null) {
+            btnCloseDialog.setOnClickListener(v -> bottomSheetDialog.dismiss());
         }
-        new AlertDialog.Builder(this).setTitle("Select Saved Customer").setItems(labels, (dialog, which) -> {
-            DatabaseHelper.SavedCustomer customer = customers.get(which);
-            etCustomerName.setText(customer.getName());
-            etPhone.setText(customer.getPhone());
-            etEmail.setText(customer.getEmail());
-            selectedCustomerAddress = customer.getAddress() != null ? customer.getAddress() : "";
-            selectedCustomerLatitude = customer.getLatitude();
-            selectedCustomerLongitude = customer.getLongitude();
-            if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
-            Toast.makeText(this, "Customer information loaded.", Toast.LENGTH_SHORT).show();
-        }).setNegativeButton("Cancel", null).show();
+
+        populateSavedCustomerList(containerSavedCustomers, allCustomers, bottomSheetDialog);
+
+        if (etSearchCustomer != null) {
+            etSearchCustomer.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String query = s != null ? s.toString().trim() : "";
+                    List<DatabaseHelper.SavedCustomer> filtered = dbHelper.getSavedCustomers(query);
+                    populateSavedCustomerList(containerSavedCustomers, filtered, bottomSheetDialog);
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        bottomSheetDialog.show();
+    }
+
+    private void populateSavedCustomerList(LinearLayout container, List<DatabaseHelper.SavedCustomer> customers, BottomSheetDialog dialog) {
+        if (container == null) return;
+        container.removeAllViews();
+
+        if (customers == null || customers.isEmpty()) {
+            TextView tvEmpty = new TextView(this);
+            tvEmpty.setText("No matching saved customers found.");
+            tvEmpty.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            tvEmpty.setTextSize(14);
+            tvEmpty.setPadding(dp(8), dp(24), dp(8), dp(24));
+            tvEmpty.setGravity(Gravity.CENTER);
+            container.addView(tvEmpty);
+            return;
+        }
+
+        for (DatabaseHelper.SavedCustomer customer : customers) {
+            CardView card = new CardView(this);
+            LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            cardParams.setMargins(0, 0, 0, dp(12));
+            card.setLayoutParams(cardParams);
+            card.setRadius(dp(16));
+            card.setCardBackgroundColor(ContextCompat.getColor(this, R.color.card_bg));
+            card.setCardElevation(dp(2));
+            card.setClickable(true);
+            card.setFocusable(true);
+
+            LinearLayout layout = new LinearLayout(this);
+            layout.setOrientation(LinearLayout.HORIZONTAL);
+            layout.setGravity(Gravity.CENTER_VERTICAL);
+            layout.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+            // Avatar Icon Badge
+            ImageView avatar = new ImageView(this);
+            LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(44), dp(44));
+            avatarParams.setMarginEnd(dp(14));
+            avatar.setLayoutParams(avatarParams);
+            avatar.setImageResource(R.drawable.ic_user);
+            avatar.setBackgroundResource(R.drawable.bg_icon_badge);
+            avatar.setPadding(dp(10), dp(10), dp(10), dp(10));
+            avatar.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.primary_blue)));
+
+            // Text Info Container
+            LinearLayout textContainer = new LinearLayout(this);
+            textContainer.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+            textContainer.setLayoutParams(textParams);
+
+            TextView tvName = new TextView(this);
+            tvName.setText(customer.getName());
+            tvName.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            tvName.setTextSize(16);
+            tvName.setTypeface(null, Typeface.BOLD);
+
+            TextView tvPhone = new TextView(this);
+            tvPhone.setText("📞 " + customer.getPhone());
+            tvPhone.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+            tvPhone.setTextSize(13);
+            tvPhone.setPadding(0, dp(2), 0, 0);
+
+            textContainer.addView(tvName);
+            textContainer.addView(tvPhone);
+
+            if (customer.getAddress() != null && !customer.getAddress().trim().isEmpty()) {
+                TextView tvAddr = new TextView(this);
+                tvAddr.setText("📍 " + customer.getAddress());
+                tvAddr.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+                tvAddr.setTextSize(12);
+                tvAddr.setMaxLines(2);
+                tvAddr.setEllipsize(TextUtils.TruncateAt.END);
+                tvAddr.setPadding(0, dp(2), 0, 0);
+                textContainer.addView(tvAddr);
+            }
+
+            // Booking Count Chip
+            TextView tvBadge = new TextView(this);
+            tvBadge.setText(customer.getBookingCount() + " booking" + (customer.getBookingCount() == 1 ? "" : "s"));
+            tvBadge.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+            tvBadge.setTextSize(11);
+            tvBadge.setTypeface(null, Typeface.BOLD);
+            tvBadge.setBackgroundResource(R.drawable.bg_pill_selected);
+            tvBadge.setPadding(dp(8), dp(4), dp(8), dp(4));
+
+            layout.addView(avatar);
+            layout.addView(textContainer);
+            layout.addView(tvBadge);
+            card.addView(layout);
+
+            card.setOnClickListener(v -> {
+                if (etCustomerName != null) etCustomerName.setText(customer.getName());
+                if (etPhone != null) etPhone.setText(customer.getPhone());
+                if (etEmail != null) etEmail.setText(customer.getEmail());
+                selectedCustomerAddress = customer.getAddress() != null ? customer.getAddress() : "";
+                selectedCustomerLatitude = customer.getLatitude();
+                selectedCustomerLongitude = customer.getLongitude();
+                if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
+                Toast.makeText(this, "Selected customer: " + customer.getName(), Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+
+            container.addView(card);
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void saveCustomerFromForm() {
