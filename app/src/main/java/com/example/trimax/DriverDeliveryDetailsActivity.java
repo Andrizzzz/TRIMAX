@@ -151,7 +151,10 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
         tvCustomerName.setText(currentDelivery.getCustomerName());
         tvPickupAddress.setText(currentDelivery.getPickupLocation());
         tvDestinationAddress.setText(currentDelivery.getDestination());
-        tvPackageDetails.setText(String.format("%s • %s", currentDelivery.getPackageDetails(), currentDelivery.getScheduledTime()));
+        String packageName = currentDelivery.getPackageDetails();
+        if (packageName == null || packageName.trim().isEmpty()) packageName = "Delivery Package";
+        String scheduled = currentDelivery.getScheduledTime();
+        tvPackageDetails.setText("📦 " + packageName + (scheduled != null && !scheduled.trim().isEmpty() ? " • " + scheduled : ""));
 
         String instructions = currentDelivery.getSpecialInstructions();
         if (TextUtils.isEmpty(instructions)) {
@@ -181,7 +184,9 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
     }
 
     private void updateStatusAndButtons(String status) {
-        tvStatusBadge.setText(status);
+        tvStatusBadge.setText(status != null && !status.trim().isEmpty() ? status : "PENDING");
+        btnPrimaryAction.setVisibility(View.VISIBLE);
+        btnPrimaryAction.setEnabled(true);
 
         if ("ASSIGNED".equalsIgnoreCase(status)) {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
