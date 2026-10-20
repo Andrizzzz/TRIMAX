@@ -89,10 +89,9 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (btnAddCustomer != null) btnAddCustomer.setOnClickListener(v -> {
             LinearLayout llForm = findViewById(R.id.llNewCustomerForm);
             if (llForm != null) llForm.setVisibility(View.VISIBLE);
-            int[] radioIds = {R.id.rbCust1, R.id.rbCust2, R.id.rbCust3};
-            for (int rId : radioIds) {
-                android.widget.RadioButton rb = findViewById(rId);
-                if (rb != null) rb.setChecked(false);
+            LinearLayout customerContainer = findViewById(R.id.containerCustomerList);
+            if (customerContainer != null) {
+                clearRadioSelections(customerContainer);
             }
             if (etCustomerName != null) {
                 etCustomerName.setText("");
@@ -239,6 +238,17 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                         LinearLayout.LayoutParams.MATCH_PARENT, dp(1)));
                 divider.setBackgroundColor(0x1A64748B);
                 container.addView(divider);
+            }
+        }
+    }
+
+    private void clearRadioSelections(LinearLayout parent) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            if (child instanceof android.widget.RadioButton) {
+                ((android.widget.RadioButton) child).setChecked(false);
+            } else if (child instanceof android.view.ViewGroup) {
+                clearRadioSelections((android.view.ViewGroup) child);
             }
         }
     }
