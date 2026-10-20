@@ -102,8 +102,12 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
         if (btnTrackFullMap != null) {
             btnTrackFullMap.setOnClickListener(v -> {
+                if (currentHeroDelivery == null) {
+                    Toast.makeText(this, "No active delivery assigned yet.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent(this, DriverMapActivity.class);
-                intent.putExtra("DELIVERY_ID", currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "TRX-1024");
+                intent.putExtra("DELIVERY_ID", currentHeroDelivery.getBookingId());
                 startActivity(intent);
             });
         }
@@ -253,15 +257,15 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
         if (cardDriverMap != null) {
             cardDriverMap.setOnClickListener(v -> {
-                Intent intent = new Intent(this, DriverMapActivity.class);
-                if (currentHeroDelivery != null) {
-                    intent.putExtra("DELIVERY_ID", currentHeroDelivery.getBookingId());
-                } else {
-                    Delivery next = dbHelper != null ? dbHelper.getNextAssignedDelivery("driver01") : null;
-                    if (next != null) {
-                        intent.putExtra("DELIVERY_ID", next.getBookingId());
-                    }
+                Delivery next = currentHeroDelivery != null
+                        ? currentHeroDelivery
+                        : (dbHelper != null ? dbHelper.getNextAssignedDelivery(session.getUsername()) : null);
+                if (next == null) {
+                    Toast.makeText(this, "No active delivery assigned yet.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                Intent intent = new Intent(this, DriverMapActivity.class);
+                intent.putExtra("DELIVERY_ID", next.getBookingId());
                 startActivity(intent);
             });
         }
