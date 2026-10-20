@@ -13,8 +13,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import org.osmdroid.config.Configuration;
-import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
-import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
@@ -24,16 +23,7 @@ import java.util.List;
 
 public class TrackingMapActivity extends AppCompatActivity {
 
-    public static final OnlineTileSourceBase OSM_GERMANY = new XYTileSource(
-            "OSM-Germany",
-            0, 19, 256, ".png",
-            new String[]{
-                    "https://a.tile.openstreetmap.de/",
-                    "https://b.tile.openstreetmap.de/",
-                    "https://c.tile.openstreetmap.de/"
-            },
-            "© OpenStreetMap contributors"
-    );
+
     private MapView mapView;
     private DatabaseHelper dbHelper;
 
@@ -71,7 +61,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         root.addView(subtitle);
 
         mapView = new MapView(this);
-        mapView.setTileSource(OSM_GERMANY);
+        mapView.setTileSource(TileSourceFactory.MAPNIK);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(12.0);
         root.addView(mapView, new LinearLayout.LayoutParams(
