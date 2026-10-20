@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 8; // Saved customer addresses and coordinates
+    private static final int DATABASE_VERSION = 9; // Fixed TRIMAX pickup hub and destination validation
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -489,6 +489,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             try { db.execSQL("ALTER TABLE " + TABLE_CUSTOMERS + " ADD COLUMN longitude REAL DEFAULT 0"); } catch (Exception ignored) {}
         }
         if (oldVersion < 8) syncCustomersFromBookings(db);
+        if (oldVersion < 9) {
+            ContentValues pickupValues = new ContentValues();
+            pickupValues.put("pickup_location", "TRIMAX Hub (14.782700, 121.047587)");
+            pickupValues.put("pickup_latitude", 14.7826996);
+            pickupValues.put("pickup_longitude", 121.0475865);
+            db.update(TABLE_DELIVERIES, pickupValues, null, null);
+        }
     }
 
     // Authenticate User with Secure Password Verification & Legacy Plaintext Upgrade
@@ -852,6 +859,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean addBooking(Delivery delivery) {
+        if (delivery == null || delivery.getDestination() == null || delivery.getDestination().trim().isEmpty()) {
+            return false;
+        }
+        double destinationLatitude = delivery.getDestinationLatitude();
+        double destinationLongitude = delivery.getDestinationLongitude();
+        if (!Double.isFinite(destinationLatitude) || !Double.isFinite(destinationLongitude)
+                || destinationLatitude < -90 || destinationLatitude > 90
+                || destinationLongitude < -180 || destinationLongitude > 180
+                || (destinationLatitude == 0 && destinationLongitude == 0)) {
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("booking_id", delivery.getBookingId());
@@ -862,9 +880,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cv.put("pickup_location", "TRIMAX Hub (14.782700, 121.047587)");
         cv.put("pickup_latitude", 14.7826996);
         cv.put("pickup_longitude", 121.0475865);
-        cv.put("destination", delivery.getDestination() != null ? delivery.getDestination() : "San Jose del Monte, Bulacan");
-        cv.put("destination_latitude", delivery.getDestinationLatitude() != 0 ? delivery.getDestinationLatitude() : 14.8150);
-        cv.put("destination_longitude", delivery.getDestinationLongitude() != 0 ? delivery.getDestinationLongitude() : 121.0500);
+        cv.put("destination", delivery.getDestination().trim());
+        cv.put("destination_latitude", destinationLatitude);
+        cv.put("destination_longitude", destinationLongitude);
         cv.put("special_instructions", delivery.getSpecialInstructions());
         cv.put("package_details", delivery.getPackageDetails());
         cv.put("original_amount", delivery.getOriginalAmount());
