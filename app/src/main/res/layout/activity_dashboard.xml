@@ -523,12 +523,6 @@
                 </LinearLayout>
 
                 <!-- Hidden Map View & Full Map button for Java compatibility -->
-                <View
-                    android:id="@+id/dashboardMapView"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"
-                    android:visibility="gone" />
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnTrackFullMap"
                     android:layout_width="0dp"
