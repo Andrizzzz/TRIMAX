@@ -14,11 +14,13 @@ import androidx.core.view.WindowInsetsCompat;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TrackingMapActivity extends AppCompatActivity {
@@ -34,7 +36,7 @@ public class TrackingMapActivity extends AppCompatActivity {
 
         Configuration.getInstance().load(this,
                 android.preference.PreferenceManager.getDefaultSharedPreferences(this));
-        Configuration.getInstance().setUserAgentValue(getPackageName());
+        Configuration.getInstance().setUserAgentValue("TRIMAX-DeliveryApp/1.0 (Android; com.example.trimax)");
         File base = new File(getCacheDir(), "osmdroid");
         Configuration.getInstance().setOsmdroidBasePath(base);
         Configuration.getInstance().setOsmdroidTileCache(new File(base, "tiles"));
@@ -88,14 +90,14 @@ public class TrackingMapActivity extends AppCompatActivity {
     private void showCustomerPins(TextView subtitle) {
         List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
         int pinCount = 0;
-        GeoPoint firstPoint = null;
+        List<GeoPoint> validPoints = new ArrayList<>();
         for (DatabaseHelper.SavedCustomer customer : customers) {
             double lat = customer.getLatitude();
             double lng = customer.getLongitude();
             if (!isValidCoordinate(lat, lng)) continue;
 
             GeoPoint point = new GeoPoint(lat, lng);
-            if (firstPoint == null) firstPoint = point;
+            validPoints.add(point);
             Marker marker = new Marker(mapView);
             marker.setPosition(point);
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
@@ -112,9 +114,13 @@ public class TrackingMapActivity extends AppCompatActivity {
             pinCount++;
         }
 
-        if (firstPoint != null) {
-            mapView.getController().setZoom(pinCount == 1 ? 15.0 : 12.0);
-            mapView.getController().setCenter(firstPoint);
+        if (!validPoints.isEmpty()) {
+            if (validPoints.size() == 1) {
+                mapView.getController().setZoom(15.0);
+                mapView.getController().setCenter(validPoints.get(0));
+            } else {
+                mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(validPoints), false, dp(56));
+            }
             subtitle.setText(pinCount + " client location pin(s) shown. Tap a pin for details.");
         } else {
             mapView.getController().setCenter(new GeoPoint(14.8115, 121.0453));
