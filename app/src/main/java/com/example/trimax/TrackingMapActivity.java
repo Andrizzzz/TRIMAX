@@ -228,7 +228,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         marker.setTitle(TextUtils.isEmpty(delivery.getCustomerName()) ? "Customer Destination" : delivery.getCustomerName());
         marker.setSnippet((TextUtils.isEmpty(address) ? "Saved booking destination" : address)
-                + "\\nBooking #" + bookingId);
+                + "\nBooking #" + bookingId);
         mapView.getOverlays().add(marker);
         mapView.getController().setZoom(16.0);
         mapView.getController().setCenter(point);
