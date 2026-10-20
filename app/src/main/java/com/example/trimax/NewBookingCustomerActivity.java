@@ -135,7 +135,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                             ? etCustomerAddress.getText().toString().trim() : selectedCustomerAddress;
                     dbHelper.saveCustomer(name, phone, email, selectedCustomerAddress, selectedCustomerLatitude, selectedCustomerLongitude);
 
-                    Intent intent = new Intent(NewBookingCustomerActivity.this, NewBookingDetailsActivity.class);
+                    Intent intent = new Intent(NewBookingCustomerActivity.this, NewBookingLocationActivity.class);
                     intent.putExtra("CUSTOMER_NAME", name);
                     intent.putExtra("CUSTOMER_PHONE", phone);
                     intent.putExtra("CUSTOMER_EMAIL", email);

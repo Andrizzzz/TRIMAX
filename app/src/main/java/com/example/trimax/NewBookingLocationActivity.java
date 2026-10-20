@@ -275,22 +275,20 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             if (pickupPoint == null) pickupPoint = new GeoPoint(14.8115, 121.0453);
             if (destPoint == null) destPoint = new GeoPoint(14.8150, 121.0500);
 
-            Intent summaryIntent = new Intent(NewBookingLocationActivity.this, NewBookingSummaryActivity.class);
-            summaryIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
-            summaryIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
-            summaryIntent.putExtra("CUSTOMER_EMAIL", customerEmail != null ? customerEmail : "");
-            summaryIntent.putExtra("SERVICE", service != null ? service : "");
-            summaryIntent.putExtra("QUANTITY", quantity > 0 ? quantity : 1);
-            summaryIntent.putExtra("DATE", date != null ? date : "");
-            summaryIntent.putExtra("TIME", time != null ? time : "");
-            summaryIntent.putExtra("NOTES", notes != null ? notes : "");
-            summaryIntent.putExtra("ADDRESS", selectedCustomerAddress != null ? selectedCustomerAddress : "");
-            summaryIntent.putExtra("SELECTED_PRICE", selectedPrice);
-            summaryIntent.putExtra("PICKUP_LAT", pickupPoint.getLatitude());
-            summaryIntent.putExtra("PICKUP_LNG", pickupPoint.getLongitude());
-            summaryIntent.putExtra("DEST_LAT", destPoint.getLatitude());
-            summaryIntent.putExtra("DEST_LNG", destPoint.getLongitude());
-            startActivity(summaryIntent);
+            Intent detailsIntent = new Intent(NewBookingLocationActivity.this, NewBookingDetailsActivity.class);
+            detailsIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
+            detailsIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
+            detailsIntent.putExtra("CUSTOMER_EMAIL", customerEmail != null ? customerEmail : "");
+            detailsIntent.putExtra("ADDRESS", selectedCustomerAddress != null ? selectedCustomerAddress : "");
+            detailsIntent.putExtra("SELECTED_PRICE", selectedPrice);
+            if (getIntent().hasExtra("SELECTED_PACKAGE")) {
+                detailsIntent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
+            }
+            detailsIntent.putExtra("PICKUP_LAT", pickupPoint.getLatitude());
+            detailsIntent.putExtra("PICKUP_LNG", pickupPoint.getLongitude());
+            detailsIntent.putExtra("DEST_LAT", destPoint.getLatitude());
+            detailsIntent.putExtra("DEST_LNG", destPoint.getLongitude());
+            startActivity(detailsIntent);
         });
     }
 
