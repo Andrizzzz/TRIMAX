@@ -335,17 +335,23 @@ public class NewBookingLocationActivity extends AppCompatActivity {
     }
 
     private void fetchAndApplyGpsLocation() {
+        // In booking creation, the device's current location is a possible customer
+        // destination only. It must never move or replace the fixed TRIMAX Hub pickup.
         locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
             if (mockMapView != null) {
-                mockMapView.updateDriverLocation(latitude, longitude);
+                mockMapView.setDestinationLocation(latitude, longitude, "Current Location",
+                        String.format(Locale.US, "Current Location (%.6f, %.6f)", latitude, longitude));
+                selectedCustomerAddress = String.format(Locale.US, "Current Location (%.6f, %.6f)", latitude, longitude);
             }
         });
 
-        if (mockMapView != null) {
-            mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-            mockMapView.recenter();
+        double latitude = locationHelper.getLatitude();
+        double longitude = locationHelper.getLongitude();
+        if (mockMapView != null && latitude != 0 && longitude != 0) {
+            selectedCustomerAddress = String.format(Locale.US, "Current Location (%.6f, %.6f)", latitude, longitude);
+            mockMapView.setDestinationLocation(latitude, longitude, "Current Location", selectedCustomerAddress);
         }
-        Toast.makeText(this, String.format(Locale.US, "Map centered on device GPS coordinates (%.4f, %.4f)", locationHelper.getLatitude(), locationHelper.getLongitude()), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, String.format(Locale.US, "Customer destination set from GPS (%.4f, %.4f)", latitude, longitude), Toast.LENGTH_SHORT).show();
     }
 
     private void navigateBack() {
