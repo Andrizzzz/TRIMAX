@@ -42,6 +42,7 @@ public class SettingsActivity extends AppCompatActivity {
         tvCurrentThemeSubtitle = findViewById(R.id.tvCurrentThemeSubtitle);
 
         View cardNotificationSettings = findViewById(R.id.cardNotificationSettings);
+        View cardChangePassword = findViewById(R.id.cardChangePassword);
         View cardAccountSettings = findViewById(R.id.cardAccountSettings);
         View cardPrivacy = findViewById(R.id.cardPrivacy);
         View cardTerms = findViewById(R.id.cardTerms);
@@ -58,6 +59,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (cardThemeSettings != null) {
             cardThemeSettings.setOnClickListener(v -> showThemePickerDialog());
+        }
+
+        if (cardChangePassword != null) {
+            cardChangePassword.setOnClickListener(v -> startActivity(new Intent(SettingsActivity.this, ChangePasswordActivity.class)));
         }
 
         if (cardNotificationSettings != null) {
