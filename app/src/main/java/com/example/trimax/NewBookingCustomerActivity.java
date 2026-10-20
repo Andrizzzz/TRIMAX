@@ -162,39 +162,60 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     }
 
     private void configureInlineCustomerSelection() {
-        int[] cardIds = {R.id.cardCustomer1, R.id.cardCustomer2, R.id.cardCustomer3};
-        int[] nameIds = {R.id.tvCust1Name, R.id.tvCust2Name, R.id.tvCust3Name};
-        int[] phoneIds = {R.id.tvCust1Phone, R.id.tvCust2Phone, R.id.tvCust3Phone};
-        int[] radioIds = {R.id.rbCust1, R.id.rbCust2, R.id.rbCust3};
+        LinearLayout container = findViewById(R.id.containerCustomerList);
+        if (container == null) return;
+
+        // Replace static sample rows with every saved customer.
+        container.removeAllViews();
         List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
-        View container = findViewById(R.id.containerCustomerList);
-        View cardContainer = container != null ? (View) container.getParent() : null;
+        if (customers == null || customers.isEmpty()) {
+            TextView empty = new TextView(this);
+            empty.setText("No saved customers yet. Tap + Add New Customer to create one.");
+            empty.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            empty.setTextSize(14);
+            empty.setPadding(dp(16), dp(18), dp(16), dp(18));
+            container.addView(empty);
+            return;
+        }
 
-        for (int i = 0; i < cardIds.length; i++) {
-            View card = findViewById(cardIds[i]);
-            TextView nameView = findViewById(nameIds[i]);
-            TextView phoneView = findViewById(phoneIds[i]);
-            android.widget.RadioButton radio = findViewById(radioIds[i]);
-            if (card == null || nameView == null || phoneView == null || radio == null) continue;
-
-            if (customers == null || i >= customers.size()) {
-                card.setVisibility(View.GONE);
-                radio.setChecked(false);
-                continue;
-            }
-
+        final android.widget.RadioButton[] selectedRadio = new android.widget.RadioButton[1];
+        for (int i = 0; i < customers.size(); i++) {
             DatabaseHelper.SavedCustomer customer = customers.get(i);
-            card.setVisibility(View.VISIBLE);
-            nameView.setText(customer.getName());
-            phoneView.setText(customer.getPhone() == null ? "" : customer.getPhone());
-            radio.setChecked(false);
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(12), dp(12), dp(8), dp(12));
+            row.setClickable(true);
+            row.setFocusable(true);
+            row.setBackgroundResource(android.R.drawable.list_selector_background);
 
-            View.OnClickListener selectCustomer = v -> {
-                for (int radioId : radioIds) {
-                    android.widget.RadioButton other = findViewById(radioId);
-                    if (other != null) other.setChecked(false);
-                }
+            LinearLayout info = new LinearLayout(this);
+            info.setOrientation(LinearLayout.VERTICAL);
+            info.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            TextView name = new TextView(this);
+            name.setText(customer.getName() == null ? "Unnamed customer" : customer.getName());
+            name.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            name.setTextSize(15);
+            name.setTypeface(null, Typeface.BOLD);
+
+            TextView phone = new TextView(this);
+            phone.setText(customer.getPhone() == null ? "" : customer.getPhone());
+            phone.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            phone.setTextSize(13);
+            phone.setPadding(0, dp(3), 0, 0);
+            info.addView(name);
+            info.addView(phone);
+
+            android.widget.RadioButton radio = new android.widget.RadioButton(this);
+            radio.setButtonTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.primary_blue)));
+            row.addView(info);
+            row.addView(radio);
+
+            View.OnClickListener select = v -> {
+                if (selectedRadio[0] != null) selectedRadio[0].setChecked(false);
                 radio.setChecked(true);
+                selectedRadio[0] = radio;
 
                 if (etCustomerName != null) etCustomerName.setText(customer.getName());
                 if (etPhone != null) etPhone.setText(customer.getPhone());
@@ -203,14 +224,22 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 selectedCustomerLatitude = customer.getLatitude();
                 selectedCustomerLongitude = customer.getLongitude();
                 if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
+
+                LinearLayout form = findViewById(R.id.llNewCustomerForm);
+                if (form != null) form.setVisibility(View.VISIBLE);
                 Toast.makeText(this, "Selected customer: " + customer.getName(), Toast.LENGTH_SHORT).show();
             };
-            card.setOnClickListener(selectCustomer);
-            radio.setOnClickListener(selectCustomer);
-        }
+            row.setOnClickListener(select);
+            radio.setOnClickListener(select);
+            container.addView(row);
 
-        if (cardContainer != null) {
-            cardContainer.setVisibility(customers == null || customers.isEmpty() ? View.GONE : View.VISIBLE);
+            if (i < customers.size() - 1) {
+                View divider = new View(this);
+                divider.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, dp(1)));
+                divider.setBackgroundColor(0x1A64748B);
+                container.addView(divider);
+            }
         }
     }
 
