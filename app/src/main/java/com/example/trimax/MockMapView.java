@@ -81,6 +81,7 @@ public class MockMapView extends FrameLayout {
     private int animationStep = 0;
 
     private int sampleLocationIndex = 0;
+    private boolean hasExplicitDestinationSelection = false;
 
     private static final GeoPoint RIDER_POINT = new GeoPoint(14.7826996, 121.0475865); // Fixed TRIMAX Hub
 
@@ -303,7 +304,7 @@ public class MockMapView extends FrameLayout {
     }
 
     private void notifyListener() {
-        if (locationChangeListener != null) {
+        if (locationChangeListener != null && hasExplicitDestinationSelection) {
             locationChangeListener.onLocationSelected(
                     sampleAddresses[sampleLocationIndex],
                     sampleDistances[sampleLocationIndex]
@@ -352,6 +353,8 @@ public class MockMapView extends FrameLayout {
     }
 
     public void setDestinationLocation(double lat, double lng, String name, String fullAddress) {
+        if (!isValidCoordinate(lat, lng)) return;
+        hasExplicitDestinationSelection = true;
         GeoPoint destPoint = new GeoPoint(lat, lng);
         if (customerMarker != null) {
             customerMarker.setPosition(destPoint);
@@ -409,6 +412,8 @@ public class MockMapView extends FrameLayout {
     }
 
     private void updateCustomerPosition(GeoPoint point, String address) {
+        if (point == null || !isValidCoordinate(point.getLatitude(), point.getLongitude())) return;
+        hasExplicitDestinationSelection = true;
         if (customerMarker != null) {
             customerMarker.setPosition(point);
             customerMarker.setTitle("📍 " + address);
@@ -469,7 +474,17 @@ public class MockMapView extends FrameLayout {
     }
 
     public GeoPoint getDestinationGeoPoint() {
-        return customerMarker != null ? customerMarker.getPosition() : sampleGeoPoints[0];
+        return hasExplicitDestinationSelection && customerMarker != null ? customerMarker.getPosition() : null;
+    }
+
+    public boolean hasExplicitDestinationSelection() {
+        return hasExplicitDestinationSelection;
+    }
+
+    private boolean isValidCoordinate(double latitude, double longitude) {
+        return Double.isFinite(latitude) && Double.isFinite(longitude)
+                && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
+                && !(latitude == 0 && longitude == 0);
     }
 
     public String getSelectedAddress() {
