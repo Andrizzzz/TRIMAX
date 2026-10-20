@@ -41,7 +41,6 @@ import java.util.Locale;
 public class DashboardActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
-    private MockMapView dashboardMapView;
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
@@ -160,7 +159,6 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         // Dashboard tracking opens a client overview map; avoid initializing a hidden map here.
-        dashboardMapView = null;
         View trackingLink = findViewById(R.id.tvTrackLink);
         if (trackingLink != null) {
             trackingLink.setOnClickListener(v ->
