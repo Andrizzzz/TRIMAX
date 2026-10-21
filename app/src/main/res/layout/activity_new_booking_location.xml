@@ -199,11 +199,11 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardMapContainer"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
+                android:layout_height="260dp"
                 android:layout_marginTop="14dp"
                 app:cardBackgroundColor="@color/card_bg"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -223,6 +223,48 @@
                         android:src="@drawable/ic_location"
                         app:tint="@color/primary_blue" />
 
+                    <!-- Map Side Controls (Zoom In, Zoom Out, Map Centered GPS) -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="12dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                            android:id="@+id/btnZoomIn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:contentDescription="Zoom In"
+                            android:src="@drawable/ic_add"
+                            app:backgroundTint="@color/card_bg"
+                            app:fabCustomSize="42dp"
+                            app:tint="@color/text_primary" />
+
+                        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                            android:id="@+id/btnZoomOut"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:contentDescription="Zoom Out"
+                            android:src="@drawable/ic_minus"
+                            app:backgroundTint="@color/card_bg"
+                            app:fabCustomSize="42dp"
+                            app:tint="@color/text_primary" />
+
+                        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                            android:id="@+id/btnMyLocation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="Map Centered Location"
+                            android:src="@drawable/ic_gps_fixed"
+                            app:backgroundTint="@color/primary_blue"
+                            app:fabCustomSize="44dp"
+                            app:tint="@android:color/white" />
+                    </LinearLayout>
 
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
@@ -432,11 +474,7 @@
                 android:layout_height="0dp"
                 android:visibility="gone" />
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnMyLocation"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
+
 
         </LinearLayout>
     </ScrollView>

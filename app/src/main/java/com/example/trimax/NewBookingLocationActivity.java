@@ -120,6 +120,26 @@ public class NewBookingLocationActivity extends AppCompatActivity {
 
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
+        ActivityResultLauncher<Intent> fullMapPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Intent data = result.getData();
+                        String newAddr = data.getStringExtra("SELECTED_ADDRESS");
+                        double newLat = data.getDoubleExtra("SELECTED_LAT", 0);
+                        double newLng = data.getDoubleExtra("SELECTED_LNG", 0);
+                        if (newAddr != null && !newAddr.trim().isEmpty()) {
+                            selectedCustomerAddress = newAddr.trim();
+                            if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
+                        }
+                        if (newLat != 0 && newLng != 0 && mockMapView != null) {
+                            mockMapView.setDestinationLocation(newLat, newLng, "Selected Location", selectedCustomerAddress);
+                            mockMapView.recenter();
+                        }
+                    }
+                }
+        );
+
         // Permission Launcher Setup
         locationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
@@ -266,29 +286,16 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             btnUseCurrentLocation.setOnClickListener(v -> checkAndFetchGpsLocation());
         }
 
-        androidx.cardview.widget.CardView cardMapContainer = findViewById(R.id.cardMapContainer);
         if (btnChangeCustomerLocation != null) {
             btnChangeCustomerLocation.setOnClickListener(v -> {
-                if (cardMapContainer != null) {
-                    android.view.ViewGroup.LayoutParams params = cardMapContainer.getLayoutParams();
-                    int expandedHeight = dp(380);
-                    int normalHeight = dp(180);
-                    boolean isExpanded = params.height == expandedHeight;
-                    params.height = isExpanded ? normalHeight : expandedHeight;
-                    cardMapContainer.setLayoutParams(params);
-                    if (btnChangeCustomerLocation != null) {
-                        btnChangeCustomerLocation.setText(isExpanded ? "Minimize Map" : "Change");
-                    }
+                Intent intentMap = new Intent(this, FullMapPickerActivity.class);
+                intentMap.putExtra("INITIAL_ADDRESS", selectedCustomerAddress);
+                if (mockMapView != null && mockMapView.getDestinationGeoPoint() != null) {
+                    GeoPoint dest = mockMapView.getDestinationGeoPoint();
+                    intentMap.putExtra("INITIAL_LAT", dest.getLatitude());
+                    intentMap.putExtra("INITIAL_LNG", dest.getLongitude());
                 }
-                if (actvSmartLocationSearch != null) {
-                    actvSmartLocationSearch.requestFocus();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (imm != null) imm.showSoftInput(actvSmartLocationSearch, InputMethodManager.SHOW_IMPLICIT);
-                }
-                if (mockMapView != null) {
-                    mockMapView.recenter();
-                }
-                Toast.makeText(this, "Search an address or tap anywhere on the enlarged map to pin location.", Toast.LENGTH_SHORT).show();
+                fullMapPickerLauncher.launch(intentMap);
             });
         }
 

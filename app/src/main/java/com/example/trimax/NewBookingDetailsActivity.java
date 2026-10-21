@@ -104,11 +104,9 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 }
 
                 if (serviceBuilder.length() == 0) {
-                    ServicePackage std = servicePackages.get(3); // standard delivery
-                    std.setQuantity(1);
-                    serviceBuilder.append(std.getName()).append(" (x1)");
-                    totalPrice = std.getStartingPrice();
-                    totalQuantity = 1;
+                    btnContinue.setEnabled(true);
+                    android.widget.Toast.makeText(this, "Please select at least 1 package item before continuing.", android.widget.Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
                 String notes = etNotes != null && etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
@@ -142,9 +140,6 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         servicePackages.add(new ServicePackage("pkg_royal", "Royal Case (24 Bottles)", "Wholesale delivery of Royal orange soda cases.", 175.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
         servicePackages.add(new ServicePackage("pkg_standard", "Standard Delivery", "For medium-sized packages.", 99.00, R.drawable.ic_delivery_scooter, null, "Up to 5 kg", "50x40x30 cm", "1 day"));
         servicePackages.add(new ServicePackage("pkg_fragile", "Fragile Delivery", "For delicate and high-value items.", 499.00, R.drawable.ic_delivery_scooter, null, "Up to 10 kg", "50x40x30 cm", "1 day"));
-        if (servicePackages.get(3).getQuantity() == 0 && servicePackages.get(0).getQuantity() == 0) {
-            servicePackages.get(3).setQuantity(1); // Standard delivery default 1
-        }
     }
 
     private void populatePackageCards() {

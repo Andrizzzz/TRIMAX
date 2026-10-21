@@ -116,6 +116,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".FullMapPickerActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".NewBookingSummaryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
