@@ -104,8 +104,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/card_bg"
+        app:elevation="8dp"
         app:itemIconTint="@color/primary_blue"
+        app:itemRippleColor="#3B82F6"
         app:itemTextColor="@color/primary_blue"
+        app:labelVisibilityMode="selected"
+        app:itemHorizontalTranslationEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 

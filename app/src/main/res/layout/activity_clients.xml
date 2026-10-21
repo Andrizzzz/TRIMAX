@@ -224,6 +224,8 @@
         app:itemIconTint="@color/text_secondary"
         app:itemRippleColor="#3B82F6"
         app:itemTextColor="@color/text_secondary"
+        app:labelVisibilityMode="selected"
+        app:itemHorizontalTranslationEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 
