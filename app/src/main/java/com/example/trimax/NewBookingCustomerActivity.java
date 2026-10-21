@@ -16,6 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -37,6 +39,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     private String selectedCustomerAddress = "";
     private double selectedCustomerLatitude = 0, selectedCustomerLongitude = 0;
     private boolean directoryOnly = false;
+    private ActivityResultLauncher<Intent> addCustomerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +48,27 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new_booking_customer);
         dbHelper = new DatabaseHelper(this);
         directoryOnly = getIntent().getBooleanExtra("CUSTOMER_DIRECTORY_ONLY", false);
+
+        addCustomerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() != RESULT_OK || result.getData() == null) return;
+                    Intent data = result.getData();
+                    configureInlineCustomerSelection();
+                    String name = data.getStringExtra("CUSTOMER_NAME");
+                    String phone = data.getStringExtra("CUSTOMER_PHONE");
+                    String email = data.getStringExtra("CUSTOMER_EMAIL");
+                    selectedCustomerAddress = data.getStringExtra("CUSTOMER_ADDRESS");
+                    if (selectedCustomerAddress == null) selectedCustomerAddress = "";
+                    selectedCustomerLatitude = data.getDoubleExtra("CUSTOMER_LAT", 0);
+                    selectedCustomerLongitude = data.getDoubleExtra("CUSTOMER_LNG", 0);
+                    if (etCustomerName != null) etCustomerName.setText(name);
+                    if (etPhone != null) etPhone.setText(phone);
+                    if (etEmail != null) etEmail.setText(email);
+                    if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
+                    LinearLayout form = findViewById(R.id.llNewCustomerForm);
+                    if (form != null) form.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, "Customer saved and selected.", Toast.LENGTH_SHORT).show();
+                });
 
         View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
         if (root != null) {
@@ -87,23 +111,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
         if (btnChooseCustomer != null) btnChooseCustomer.setOnClickListener(v -> showSavedCustomers());
         if (btnAddCustomer != null) btnAddCustomer.setOnClickListener(v -> {
-            LinearLayout llForm = findViewById(R.id.llNewCustomerForm);
-            if (llForm != null) llForm.setVisibility(View.VISIBLE);
-            LinearLayout customerContainer = findViewById(R.id.containerCustomerList);
-            if (customerContainer != null) {
-                clearRadioSelections(customerContainer);
-            }
-            if (etCustomerName != null) {
-                etCustomerName.setText("");
-                etCustomerName.requestFocus();
-            }
-            if (etPhone != null) etPhone.setText("");
-            if (etEmail != null) etEmail.setText("");
-            if (etCustomerAddress != null) etCustomerAddress.setText("");
-            selectedCustomerAddress = "";
-            selectedCustomerLatitude = 0;
-            selectedCustomerLongitude = 0;
-            Toast.makeText(this, "Enter new customer details below.", Toast.LENGTH_SHORT).show();
+            Intent addIntent = new Intent(NewBookingCustomerActivity.this, AddCustomerActivity.class);
+            addCustomerLauncher.launch(addIntent);
         });
         if (btnSaveCustomer != null) btnSaveCustomer.setOnClickListener(v -> saveCustomerFromForm());
 
