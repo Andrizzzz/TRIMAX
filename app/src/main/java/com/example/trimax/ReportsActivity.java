@@ -68,7 +68,10 @@ public class ReportsActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_packages);
+            bottomNavigation.getMenu().setGroupCheckable(0, true, false);
+            for (int i = 0; i < bottomNavigation.getMenu().size(); i++) {
+                bottomNavigation.getMenu().getItem(i).setChecked(false);
+            }
             setupBottomNavigation(bottomNavigation);
         }
 
