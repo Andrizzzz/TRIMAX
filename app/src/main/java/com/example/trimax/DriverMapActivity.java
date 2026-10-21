@@ -97,6 +97,15 @@ public class DriverMapActivity extends AppCompatActivity {
             } else if (currentDelivery != null && currentDelivery.getDestination() != null && tvDestAddress != null) {
                 tvDestAddress.setText(currentDelivery.getDestination());
             }
+
+            // Automatically start live GPS tracking and center map on driver location
+            locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                if (mockMapView != null) {
+                    mockMapView.updateDriverLocation(latitude, longitude);
+                }
+            });
+            mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+            mockMapView.recenter();
         }
 
         if (btnZoomIn != null && mockMapView != null) btnZoomIn.setOnClickListener(v -> mockMapView.zoomIn());
@@ -196,7 +205,16 @@ public class DriverMapActivity extends AppCompatActivity {
 
     @Override protected void onResume() {
         super.onResume();
-        if (mockMapView != null) mockMapView.onResume();
+        if (mockMapView != null) {
+            mockMapView.onResume();
+            if (locationHelper != null) {
+                locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                    mockMapView.updateDriverLocation(latitude, longitude);
+                });
+                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+                mockMapView.recenter();
+            }
+        }
     }
 
     @Override protected void onDestroy() {

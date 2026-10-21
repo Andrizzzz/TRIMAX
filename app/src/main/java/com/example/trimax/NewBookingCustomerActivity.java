@@ -113,12 +113,13 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 String phone = etPhone != null && etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
                 String email = etEmail != null && etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
 
+                String cleanPhone = phone.replaceAll("[^0-9]", "");
                 if (name.isEmpty()) {
                     if (etCustomerName != null) {
                         etCustomerName.setError("Customer name is required");
                         etCustomerName.requestFocus();
                     }
-                } else if (phone.isEmpty() || !Patterns.PHONE.matcher(phone).matches() || phone.length() < 7) {
+                } else if (phone.isEmpty() || cleanPhone.length() < 7) {
                     if (etPhone != null) {
                         etPhone.setError("Valid phone number is required");
                         etPhone.requestFocus();
@@ -409,7 +410,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         String address = etCustomerAddress != null && etCustomerAddress.getText() != null
                 ? etCustomerAddress.getText().toString().trim() : "";
         if (name.isEmpty()) { etCustomerName.setError("Customer name is required"); etCustomerName.requestFocus(); return; }
-        if (phone.isEmpty() || !Patterns.PHONE.matcher(phone).matches() || phone.length() < 7) {
+        String cleanPhone = phone.replaceAll("[^0-9]", "");
+        if (phone.isEmpty() || cleanPhone.length() < 7) {
             etPhone.setError("Valid phone number is required"); etPhone.requestFocus(); return;
         }
         if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
