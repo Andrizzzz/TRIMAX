@@ -83,6 +83,7 @@ public class MockMapView extends FrameLayout {
 
     private int sampleLocationIndex = 0;
     private boolean hasExplicitDestinationSelection = false;
+    private boolean isProgrammaticMove = false;
 
     private static final GeoPoint RIDER_POINT = new GeoPoint(14.7826996, 121.0475865); // Fixed TRIMAX Hub
 
@@ -148,6 +149,8 @@ public class MockMapView extends FrameLayout {
         // Use OpenStreetMap Germany (FOSSGIS e.V.) tile server: high quality, standard OSM tiles, no 403 blocks
         mapView.setTileSource(OSM_GERMANY);
         mapView.setMultiTouchControls(true);
+        mapView.setBuiltInZoomControls(false);
+        mapView.getZoomController().setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER);
         mapView.getController().setZoom(15.0);
         mapView.getController().setCenter(RIDER_POINT);
 
@@ -166,11 +169,12 @@ public class MockMapView extends FrameLayout {
         hubMarker.setTitle("TRIMAX Hub — Fixed Pickup Location");
         mapView.getOverlays().add(hubMarker);
 
-        // Setup Live Driver / GPS Marker
+        // Setup Live Driver / GPS Marker (Hidden by default on booking maps)
         riderMarker = new Marker(mapView);
         riderMarker.setPosition(RIDER_POINT);
         riderMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         riderMarker.setTitle("🛵 Driver Location");
+        riderMarker.setVisible(false);
         mapView.getOverlays().add(riderMarker);
 
         // Setup Customer Destination Marker
@@ -188,23 +192,43 @@ public class MockMapView extends FrameLayout {
 
         calculateRouteAndNotify();
 
-        // Setup Map Touch Overlay to allow tapping map to place customer pin
+        // Setup Map Touch Overlay to center map on tapped position
         MapEventsOverlay eventsOverlay = new MapEventsOverlay(new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
-                String locName = String.format(Locale.US, "Pinned Location (%.4f, %.4f)", p.getLatitude(), p.getLongitude());
-                updateCustomerPosition(p, locName);
+                if (mapView != null && p != null) {
+                    mapView.getController().animateTo(p);
+                }
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                String locName = String.format(Locale.US, "Custom Pin (%.4f, %.4f)", p.getLatitude(), p.getLongitude());
-                updateCustomerPosition(p, locName);
+                if (mapView != null && p != null) {
+                    mapView.getController().animateTo(p);
+                }
                 return true;
             }
         });
         mapView.getOverlays().add(0, eventsOverlay);
+
+        // Listen for user map scroll/drag/pan to automatically update pin location at map center
+        mapView.addMapListener(new org.osmdroid.events.MapListener() {
+            @Override
+            public boolean onScroll(org.osmdroid.events.ScrollEvent event) {
+                onMapMoved();
+                return false;
+            }
+
+            @Override
+            public boolean onZoom(org.osmdroid.events.ZoomEvent event) {
+                onMapMoved();
+                return false;
+            }
+        });
+
+        // Apply Dark/Light theme map filter
+        applyMapTheme(context);
 
         // Avoid an extra diagnostic HTTP request on every map creation; let osmdroid load/cache tiles normally.
         checkNetworkStatus(context);
@@ -235,6 +259,13 @@ public class MockMapView extends FrameLayout {
             }
         };
         liveAnimationHandler.postDelayed(liveAnimationRunnable, 1000);
+    }
+
+    public void setDriverMarkerVisible(boolean visible) {
+        if (riderMarker != null) {
+            riderMarker.setVisible(visible);
+            if (mapView != null) mapView.invalidate();
+        }
     }
 
     public void stopLiveDeliveryAnimation() {
@@ -294,9 +325,33 @@ public class MockMapView extends FrameLayout {
     }
 
     public void onResume() {
+        applyMapTheme(getContext());
         if (mapView != null) {
             mapView.onResume();
         }
+    }
+
+    private void applyMapTheme(Context context) {
+        if (mapView == null || context == null) return;
+        try {
+            int nightModeFlags = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            boolean isDark = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+
+            if (mapView.getOverlayManager() != null && mapView.getOverlayManager().getTilesOverlay() != null) {
+                if (isDark) {
+                    android.graphics.ColorMatrix matrix = new android.graphics.ColorMatrix(new float[]{
+                        -0.75f,  0.00f,  0.00f, 0.00f, 220.0f,
+                         0.00f, -0.75f,  0.00f, 0.00f, 225.0f,
+                         0.00f,  0.00f, -0.70f, 0.00f, 235.0f,
+                         0.00f,  0.00f,  0.00f, 1.00f,   0.0f
+                    });
+                    android.graphics.ColorMatrixColorFilter filter = new android.graphics.ColorMatrixColorFilter(matrix);
+                    mapView.getOverlayManager().getTilesOverlay().setColorFilter(filter);
+                } else {
+                    mapView.getOverlayManager().getTilesOverlay().setColorFilter(null);
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     public void onPause() {
@@ -362,6 +417,25 @@ public class MockMapView extends FrameLayout {
         }
     }
 
+    private void onMapMoved() {
+        if (isProgrammaticMove || mapView == null) return;
+        org.osmdroid.api.IGeoPoint center = mapView.getMapCenter();
+        if (center != null) {
+            GeoPoint centerPoint = new GeoPoint(center.getLatitude(), center.getLongitude());
+            if (isValidCoordinate(centerPoint.getLatitude(), centerPoint.getLongitude())) {
+                hasExplicitDestinationSelection = true;
+                if (customerMarker != null) {
+                    customerMarker.setPosition(centerPoint);
+                    customerMarker.setTitle("📍 Pin Location");
+                }
+                String locName = String.format(Locale.US, "Pinned Location (%.4f, %.4f)", centerPoint.getLatitude(), centerPoint.getLongitude());
+                if (locationChangeListener != null) {
+                    locationChangeListener.onLocationSelected(locName, "Map Center Pin");
+                }
+            }
+        }
+    }
+
     public void setDestinationLocation(double lat, double lng, String name, String fullAddress) {
         if (!isValidCoordinate(lat, lng)) return;
         hasExplicitDestinationSelection = true;
@@ -374,8 +448,10 @@ public class MockMapView extends FrameLayout {
             sampleAddresses[sampleLocationIndex] = fullAddress != null ? fullAddress : (name != null ? name : "Selected Location");
         }
         if (mapView != null) {
+            isProgrammaticMove = true;
             mapView.getController().setZoom(16.0);
             mapView.getController().animateTo(destPoint);
+            mapView.postDelayed(() -> isProgrammaticMove = false, 600);
             mapView.invalidate();
         }
         calculateRouteAndNotify();
@@ -437,9 +513,11 @@ public class MockMapView extends FrameLayout {
         routingService.calculateRoute(start, end, new RoutingService.RouteCallback() {
             @Override
             public void onRouteCalculated(List<GeoPoint> routePoints, double distanceKm, double durationMinutes, boolean isRealRoute) {
-                if (routePolyline != null) {
-                    routePolyline.setPoints(routePoints);
-                    if (mapView != null) mapView.invalidate();
+                if (routePolyline != null && routePoints != null && !routePoints.isEmpty()) {
+                    try {
+                        routePolyline.setPoints(routePoints);
+                        if (mapView != null) mapView.invalidate();
+                    } catch (Exception ignored) {}
                 }
 
                 String routeTypeLabel = isRealRoute ? "OSM Route" : "Est.";
@@ -450,8 +528,9 @@ public class MockMapView extends FrameLayout {
                 }
 
                 if (locationChangeListener != null) {
-                    String addr = sampleAddresses != null && sampleLocationIndex < sampleAddresses.length ?
-                            sampleAddresses[sampleLocationIndex] : "Selected Location";
+                    String addr = (customerMarker != null && customerMarker.getTitle() != null && !customerMarker.getTitle().isEmpty())
+                            ? customerMarker.getTitle().replace("📍 ", "")
+                            : (sampleAddresses != null && sampleLocationIndex < sampleAddresses.length ? sampleAddresses[sampleLocationIndex] : "Selected Location");
                     locationChangeListener.onLocationSelected(addr, distText);
                 }
             }
@@ -462,8 +541,10 @@ public class MockMapView extends FrameLayout {
                 pts.add(start);
                 pts.add(end);
                 if (routePolyline != null) {
-                    routePolyline.setPoints(pts);
-                    if (mapView != null) mapView.invalidate();
+                    try {
+                        routePolyline.setPoints(pts);
+                        if (mapView != null) mapView.invalidate();
+                    } catch (Exception ignored) {}
                 }
                 notifyListener();
             }

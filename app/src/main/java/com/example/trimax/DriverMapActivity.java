@@ -86,6 +86,7 @@ public class DriverMapActivity extends AppCompatActivity {
         }
 
         if (mockMapView != null) {
+            mockMapView.setDriverMarkerVisible(true);
             mockMapView.setOnLocationChangeListener((address, distanceText) -> {
                 if (tvDestAddress != null) tvDestAddress.setText(address);
                 if (tvEstTime != null) tvEstTime.setText(distanceText);
@@ -129,17 +130,13 @@ public class DriverMapActivity extends AppCompatActivity {
             return;
         }
 
-        // Before pickup, navigate to the fixed TRIMAX Hub. After pickup, navigate to the customer.
-        String status = currentDelivery.getStatus() != null
-                ? currentDelivery.getStatus().trim().toUpperCase(Locale.ROOT) : "";
-        boolean navigateToHub = !(status.equals("PICKED UP") || status.equals("ON THE WAY")
-                || status.equals("ARRIVED AT DESTINATION") || status.equals("DELIVERED")
-                || status.equals("COMPLETED"));
-
-        double lat = navigateToHub ? 14.7826996 : currentDelivery.getDestinationLatitude();
-        double lng = navigateToHub ? 121.0475865 : currentDelivery.getDestinationLongitude();
-        String destination = navigateToHub
-                ? "TRIMAX Hub (14.782700, 121.047587)" : currentDelivery.getDestination();
+        // Always target the pinned customer destination coordinates chosen during booking creation
+        double lat = isValidCoordinate(currentDelivery.getDestinationLatitude(), currentDelivery.getDestinationLongitude())
+                ? currentDelivery.getDestinationLatitude() : 14.7826996;
+        double lng = isValidCoordinate(currentDelivery.getDestinationLatitude(), currentDelivery.getDestinationLongitude())
+                ? currentDelivery.getDestinationLongitude() : 121.0475865;
+        String destination = currentDelivery.getDestination() != null && !currentDelivery.getDestination().trim().isEmpty()
+                ? currentDelivery.getDestination() : "Customer Destination";
 
         boolean hasValidCoords = isValidCoordinate(lat, lng);
         boolean hasValidAddress = destination != null && !destination.trim().isEmpty();
@@ -153,7 +150,7 @@ public class DriverMapActivity extends AppCompatActivity {
                 ? String.format(Locale.US, "%.6f,%.6f", lat, lng)
                 : destination.trim();
 
-        Toast.makeText(this, navigateToHub ? "Navigation to TRIMAX Hub" : "Navigation to customer",
+        Toast.makeText(this, "Navigating to pinned customer destination: " + destination,
                 Toast.LENGTH_SHORT).show();
 
         // Prefer the installed Google Maps app for full turn-by-turn navigation.

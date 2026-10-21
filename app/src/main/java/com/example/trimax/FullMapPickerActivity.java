@@ -221,12 +221,6 @@ public class FullMapPickerActivity extends AppCompatActivity {
     }
 
     private void fetchAndApplyGpsLocation() {
-        locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-            if (mockMapView != null) {
-                mockMapView.updateDriverLocation(latitude, longitude);
-            }
-        });
-
         double lat = locationHelper.getLatitude();
         double lng = locationHelper.getLongitude();
         if (lat != 0 && lng != 0) {
@@ -235,7 +229,6 @@ public class FullMapPickerActivity extends AppCompatActivity {
             selectedAddress = String.format(Locale.US, "GPS Location (%.6f, %.6f)", lat, lng);
             if (tvSelectedAddress != null) tvSelectedAddress.setText(selectedAddress);
             if (mockMapView != null) {
-                mockMapView.updateDriverLocation(lat, lng);
                 mockMapView.setDestinationLocation(lat, lng, "Current GPS Location", selectedAddress);
                 mockMapView.recenter();
             }
