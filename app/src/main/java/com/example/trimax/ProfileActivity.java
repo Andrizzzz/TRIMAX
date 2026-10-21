@@ -93,7 +93,7 @@ public class ProfileActivity extends AppCompatActivity {
         if (cardHelpSupport != null) {
             cardHelpSupport.setOnClickListener(v -> new AlertDialog.Builder(ProfileActivity.this)
                     .setTitle("Help & Support")
-                    .setMessage("Need help with TRIMAX?\\n\\n"
+                    .setMessage("Need help with TRIMAX?\n\n"
                             + "For booking, account, or delivery issues, contact your system administrator "
                             + "or the support contact provided by your organization.")
                     .setPositiveButton("OK", null)
