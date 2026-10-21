@@ -478,12 +478,15 @@ public class MockMapView extends FrameLayout {
     }
 
     public void updateDriverLocation(double lat, double lng) {
+        if (!isValidCoordinate(lat, lng)) return;
+
+        // Live GPS updates may move only the driver marker.
+        // Never recenter the map or recalculate the customer destination from GPS:
+        // manual pin selection is based on the map center and must remain independent.
         GeoPoint point = new GeoPoint(lat, lng);
         if (riderMarker != null) {
             riderMarker.setPosition(point);
-            calculateRouteAndNotify();
             if (mapView != null) {
-                mapView.getController().animateTo(point);
                 mapView.invalidate();
             }
         }
