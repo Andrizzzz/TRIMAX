@@ -135,7 +135,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
         String driverName = session.getFullName();
         if (tvDriverGreeting != null) {
-            tvDriverGreeting.setText(String.format("Good morning, %s 👋", driverName));
+            tvDriverGreeting.setText(String.format("%s, %s 👋", getTimeBasedGreeting(), driverName));
         }
 
         // Navigation Drawer
@@ -351,12 +351,19 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
     }
 
+    private String getTimeBasedGreeting() {
+        int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    }
+
     private void refreshDriverDashboard() {
         updateDutyUI();
         loadAssignedHeroDelivery();
         TextView tvDriverGreeting = findViewById(R.id.tvDriverGreeting);
         if (tvDriverGreeting != null && session != null) {
-            tvDriverGreeting.setText(String.format("Good morning, %s 👋", session.getFullName()));
+            tvDriverGreeting.setText(String.format("%s, %s 👋", getTimeBasedGreeting(), session.getFullName()));
         }
     }
 
