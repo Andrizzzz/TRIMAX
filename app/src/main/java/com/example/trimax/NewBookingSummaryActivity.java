@@ -74,7 +74,12 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         if (customerPhone != null) tvCustomerPhone.setText(customerPhone);
         if (service != null) tvService.setText(service);
         if (tvQuantity != null) tvQuantity.setText(String.format(Locale.US, "%s • Qty: %d", (service != null ? service : "Parcel"), quantity));
-        if (tvDateTime != null) tvDateTime.setText(String.format("Date & Time: %s • %s", (date != null ? date : "July 19, 2026"), (time != null ? time : "10:00 AM")));
+        String resolvedDate = date != null && !date.trim().isEmpty() ? date.trim() : "ASAP";
+        String resolvedTime = time != null ? time.trim() : "";
+        String dateTimeLabel = resolvedTime.isEmpty()
+                ? "Date & Time: " + resolvedDate
+                : "Date & Time: " + resolvedDate + " • " + resolvedTime;
+        if (tvDateTime != null) tvDateTime.setText(dateTimeLabel);
         if (address != null) {
             if (tvAddress != null) tvAddress.setText(address);
             if (tvDeliveryAddress != null) tvDeliveryAddress.setText(address);
@@ -92,11 +97,15 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please select a valid delivery destination before confirming.", Toast.LENGTH_LONG).show();
                 return;
             }
+            // Disable immediately after validation to prevent duplicate bookings from rapid taps.
+            btnConfirmBooking.setEnabled(false);
             SessionManager session = new SessionManager(this);
             DatabaseHelper dbHelper = new DatabaseHelper(this);
             String generatedBookingId = dbHelper.generateNextBookingId();
             String notes = intent.getStringExtra("NOTES");
-            String scheduledTimeStr = (date != null ? date : "July 19, 2026") + " • " + (time != null ? time : "10:00 AM");
+            String scheduledTimeStr = resolvedTime.isEmpty()
+                    ? resolvedDate
+                    : resolvedDate + " • " + resolvedTime;
             String packageDetailsStr = (service != null ? service : "Basic Delivery") + " (x" + quantity + ")";
 
             Delivery newBooking = new Delivery();
@@ -121,6 +130,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
             newBooking.setCustomerId(dbHelper.getCustomerCodeByPhone(customerPhone));
             if (!dbHelper.addBooking(newBooking)) {
+                btnConfirmBooking.setEnabled(true);
                 Toast.makeText(this, "Booking could not be saved. Please try again.", Toast.LENGTH_LONG).show();
                 return;
             }
