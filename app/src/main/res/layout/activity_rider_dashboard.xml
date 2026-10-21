@@ -584,6 +584,7 @@
             app:itemTextColor="#64748B"
             app:labelVisibilityMode="labeled"
             app:itemHorizontalTranslationEnabled="false"
+            app:itemActiveIndicatorEnabled="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:menu="@menu/bottom_nav_menu" />
 
