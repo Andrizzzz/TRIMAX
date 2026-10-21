@@ -3,7 +3,9 @@ package com.example.trimax;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationsActivity extends AppCompatActivity {
@@ -27,6 +30,9 @@ public class NotificationsActivity extends AppCompatActivity {
     private TextView tvNotif1Title, tvNotif1Message;
     private TextView tvNotif2Title, tvNotif2Message;
     private TextView tvNotif1Time, tvNotif2Time;
+    private final List<CardView> extraNotificationCards = new ArrayList<>();
+    private LinearLayout notificationContainer;
+    private View.OnClickListener notificationClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,7 @@ public class NotificationsActivity extends AppCompatActivity {
         tvNotif2Message = findViewById(R.id.tvNotif2Message);
         tvNotif1Time = findViewById(R.id.tvNotif1Time);
         tvNotif2Time = findViewById(R.id.tvNotif2Time);
+        if (cardNotif1 != null && cardNotif1.getParent() instanceof LinearLayout) notificationContainer = (LinearLayout) cardNotif1.getParent();
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
@@ -98,6 +105,7 @@ public class NotificationsActivity extends AppCompatActivity {
         };
         if (cardNotif1 != null) cardNotif1.setOnClickListener(notificationClick);
         if (cardNotif2 != null) cardNotif2.setOnClickListener(notificationClick);
+        notificationClickListener = notificationClick;
 
         loadNotifications();
     }
@@ -114,7 +122,64 @@ public class NotificationsActivity extends AppCompatActivity {
 
         bindNotification(0, notifications != null && notifications.size() > 0 ? notifications.get(0) : null);
         bindNotification(1, notifications != null && notifications.size() > 1 ? notifications.get(1) : null);
+        clearExtraNotificationCards();
+        if (notificationContainer != null && notifications != null) {
+            int insertIndex = notificationContainer.indexOfChild(cardNotif2) + 1;
+            for (int i = 2; i < notifications.size(); i++) {
+                CardView card = createNotificationCard(notifications.get(i));
+                notificationContainer.addView(card, insertIndex++);
+                extraNotificationCards.add(card);
+            }
+        }
     }
+
+    private void clearExtraNotificationCards() {
+        if (notificationContainer != null) for (CardView card : extraNotificationCards) notificationContainer.removeView(card);
+        extraNotificationCards.clear();
+    }
+
+    private CardView createNotificationCard(DatabaseHelper.NotificationItem notification) {
+        CardView card = new CardView(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.bottomMargin = dp(12);
+        card.setLayoutParams(params);
+        card.setRadius(dp(16));
+        card.setCardElevation(dp(2));
+        card.setCardBackgroundColor(getColor(R.color.card_bg));
+        card.setClickable(true);
+        card.setFocusable(true);
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(16), dp(16), dp(16), dp(16));
+        TextView title = new TextView(this);
+        title.setText((notification.isRead() ? "⚪ " : "🔴 ") + (notification.getTitle() == null ? "" : notification.getTitle()));
+        title.setTextColor(getColor(R.color.text_primary));
+        title.setTextSize(15);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setMaxLines(2);
+        title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        TextView time = new TextView(this);
+        time.setText(notification.getTimestamp() == null ? "" : notification.getTimestamp());
+        time.setTextColor(getColor(R.color.text_secondary));
+        time.setTextSize(11);
+        time.setPadding(0, dp(4), 0, 0);
+        TextView message = new TextView(this);
+        message.setText(notification.getMessage() == null ? "" : notification.getMessage());
+        message.setTextColor(getColor(R.color.text_secondary));
+        message.setTextSize(13);
+        message.setPadding(0, dp(4), 0, 0);
+        content.addView(title);
+        content.addView(time);
+        content.addView(message);
+        card.addView(content);
+        String searchable = (notification.getTitle() == null ? "" : notification.getTitle()) + " " + (notification.getMessage() == null ? "" : notification.getMessage());
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(searchable);
+        card.setTag(matcher.find() ? matcher.group() : null);
+        if (notificationClickListener != null) card.setOnClickListener(notificationClickListener);
+        return card;
+    }
+
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 
     private void bindNotification(int index, DatabaseHelper.NotificationItem notification) {
         CardView card = index == 0 ? cardNotif1 : cardNotif2;
