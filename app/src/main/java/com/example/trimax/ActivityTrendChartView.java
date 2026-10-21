@@ -82,22 +82,6 @@ public class ActivityTrendChartView extends View {
         for (Integer value : values) if (value != null) maxValue = Math.max(maxValue, value);
         float scaleMax = Math.max(1, maxValue);
 
-        paint.setStrokeWidth(1f * density);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(gridColor);
-        for (int i = 0; i <= 3; i++) {
-            float y = top + chartHeight * i / 3f;
-            canvas.drawLine(left, y, right, y, paint);
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(textColor);
-            paint.setTextSize(10f * density);
-            paint.setTextAlign(Paint.Align.RIGHT);
-            int tick = Math.round(scaleMax * (3 - i) / 3f);
-            canvas.drawText(String.valueOf(tick), left - 8f * density, y + 3.5f * density, paint);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setColor(gridColor);
-        }
-
         float stepX = labels.size() == 1 ? 0 : chartWidth / (labels.size() - 1f);
         Path line = new Path();
         Path fill = new Path();
@@ -115,9 +99,27 @@ public class ActivityTrendChartView extends View {
         }
         fill.lineTo(left + (values.size() - 1) * stepX, bottom);
         fill.close();
+
+        // Draw the filled area first so it cannot cover the gridlines or axis labels.
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(surfaceColor);
         canvas.drawPath(fill, paint);
+
+        paint.setStrokeWidth(1f * density);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(gridColor);
+        for (int i = 0; i <= 3; i++) {
+            float y = top + chartHeight * i / 3f;
+            canvas.drawLine(left, y, right, y, paint);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(textColor);
+            paint.setTextSize(10f * density);
+            paint.setTextAlign(Paint.Align.RIGHT);
+            int tick = Math.round(scaleMax * (3 - i) / 3f);
+            canvas.drawText(String.valueOf(tick), left - 8f * density, y + 3.5f * density, paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(gridColor);
+        }
 
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(2.5f * density);
