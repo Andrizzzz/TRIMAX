@@ -289,6 +289,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             detailsIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
             detailsIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
             detailsIntent.putExtra("CUSTOMER_EMAIL", customerEmail != null ? customerEmail : "");
+            detailsIntent.putExtra("DATE", getIntent().getStringExtra("DATE"));
+            detailsIntent.putExtra("TIME", getIntent().getStringExtra("TIME"));
             String finalAddress = selectedCustomerAddress != null ? selectedCustomerAddress : "";
             detailsIntent.putExtra("ADDRESS", finalAddress);
             detailsIntent.putExtra("CUSTOMER_ADDRESS", finalAddress);
