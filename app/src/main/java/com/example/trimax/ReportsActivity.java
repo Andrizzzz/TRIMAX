@@ -1,6 +1,8 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.app.Activity;
+import android.net.Uri;
 import android.os.Bundle;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -8,7 +10,8 @@ import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
 import android.os.Environment;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -40,6 +43,10 @@ public class ReportsActivity extends AppCompatActivity {
     private TextView tvReportPendingCount;
     private TextView tvReportCancelledCount;
     private int selectedDateRange = -1; // -1 means all time
+    private static final int REQUEST_SAVE_PDF = 7101;
+    private static final int REQUEST_SAVE_CSV = 7102;
+    private byte[] pendingExportBytes;
+    private String pendingExportMime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -284,14 +291,6 @@ public class ReportsActivity extends AppCompatActivity {
         return -1;
     }
 
-    private File getReportDirectory() throws Exception {
-        File base = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        if (base == null) throw new Exception("App documents folder is unavailable.");
-        File dir = new File(base, "TRIMAX-Reports");
-        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Could not create report folder.");
-        return dir;
-    }
-
     private String reportTimestamp() {
         return new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
     }
@@ -301,11 +300,26 @@ public class ReportsActivity extends AppCompatActivity {
         return "\"" + safe.replace("\"", "\"\"") + "\"";
     }
 
+    private void requestSaveReport(byte[] bytes, String mimeType, String suggestedName, int requestCode) {
+        pendingExportBytes = bytes;
+        pendingExportMime = mimeType;
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(mimeType);
+        intent.putExtra(Intent.EXTRA_TITLE, suggestedName);
+        try {
+            startActivityForResult(intent, requestCode);
+        } catch (Exception e) {
+            pendingExportBytes = null;
+            pendingExportMime = null;
+            Toast.makeText(this, "Unable to open Save dialog: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void exportCsv() {
         try {
             List<Delivery> bookings = getFilteredBookings();
-            File file = new File(getReportDirectory(), "trimax_report_" + reportTimestamp() + ".csv");
-            StringBuilder csv = new StringBuilder("Booking ID,Customer,Driver,Status,Pickup,Destination,Scheduled Time,Created At,Amount\n");
+            StringBuilder csv = new StringBuilder("Booking ID,Customer,Driver,Status,Pickup,Destination,Scheduled Time,Created At,Amount\\n");
             for (Delivery d : bookings) {
                 csv.append(csvCell(d.getBookingId())).append(',')
                     .append(csvCell(d.getCustomerName())).append(',')
@@ -315,10 +329,10 @@ public class ReportsActivity extends AppCompatActivity {
                     .append(csvCell(d.getDestination())).append(',')
                     .append(csvCell(d.getScheduledTime())).append(',')
                     .append(csvCell(d.getCreatedAt())).append(',')
-                    .append(d.getCurrentTotal()).append('\n');
+                    .append(d.getCurrentTotal()).append('\\n');
             }
-            try (FileOutputStream out = new FileOutputStream(file)) { out.write(csv.toString().getBytes(StandardCharsets.UTF_8)); }
-            Toast.makeText(this, "CSV report saved in app Documents/TRIMAX-Reports", Toast.LENGTH_LONG).show();
+            requestSaveReport(csv.toString().getBytes(StandardCharsets.UTF_8),
+                    "text/csv", "trimax_report_" + reportTimestamp() + ".csv", REQUEST_SAVE_CSV);
         } catch (Exception e) {
             Toast.makeText(this, "CSV export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -332,7 +346,8 @@ public class ReportsActivity extends AppCompatActivity {
     private void exportPdf() {
         PdfDocument document = new PdfDocument();
         try {
-            List<Delivery> bookings = dbHelper.getAllBookings();
+            // Apply the same selected date range to PDF and CSV exports.
+            List<Delivery> bookings = getFilteredBookings();
             final int pageWidth = 595, pageHeight = 842, margin = 36, lineHeight = 18;
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
             PdfDocument.Page page = null;
@@ -347,12 +362,14 @@ public class ReportsActivity extends AppCompatActivity {
                     canvas.drawText("TRIMAX Reports & Analytics", margin, y, paint); y += 24;
                     paint.setColor(Color.DKGRAY); paint.setTextSize(10); paint.setFakeBoldText(false);
                     canvas.drawText("Generated: " + new Date().toString(), margin, y, paint); y += 20;
+                    canvas.drawText("Date range: " + getSelectedRangeLabel(), margin, y, paint); y += 16;
                     canvas.drawText("Total bookings: " + bookings.size(), margin, y, paint); y += 22;
                     paint.setFakeBoldText(true); canvas.drawText("Booking ID | Customer | Status | Driver | Amount", margin, y, paint); y += lineHeight;
                     paint.setFakeBoldText(false);
                 }
-                if (bookings.isEmpty()) { canvas.drawText("No booking records available.", margin, y, paint); }
-                else {
+                if (bookings.isEmpty()) {
+                    canvas.drawText("No booking records available for this date range.", margin, y, paint);
+                } else {
                     Delivery d = bookings.get(i);
                     String line = safePdf(d.getBookingId(), 14) + " | " + safePdf(d.getCustomerName(), 17) + " | " + safePdf(d.getStatus(), 12) + " | " + safePdf(d.getDriverId(), 10) + " | " + String.format(Locale.US, "%.2f", d.getCurrentTotal());
                     canvas.drawText(line, margin, y, paint);
@@ -360,12 +377,53 @@ public class ReportsActivity extends AppCompatActivity {
                 y += lineHeight;
             }
             if (page != null) document.finishPage(page);
-            File file = new File(getReportDirectory(), "trimax_report_" + reportTimestamp() + ".pdf");
-            try (FileOutputStream out = new FileOutputStream(file)) { document.writeTo(out); }
-            Toast.makeText(this, "PDF report saved in app Documents/TRIMAX-Reports", Toast.LENGTH_LONG).show();
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.writeTo(output);
+            requestSaveReport(output.toByteArray(), "application/pdf",
+                    "trimax_report_" + reportTimestamp() + ".pdf", REQUEST_SAVE_PDF);
         } catch (Exception e) {
             Toast.makeText(this, "PDF export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        } finally { document.close(); }
+        } finally {
+            document.close();
+        }
+    }
+
+    private String getSelectedRangeLabel() {
+        String[] options = {"All Time", "This Month", "Last Month", "Last 30 Days", "This Quarter", "Year to Date"};
+        return selectedDateRange >= 0 && selectedDateRange < options.length ? options[selectedDateRange] : options[0];
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_SAVE_PDF && requestCode != REQUEST_SAVE_CSV) return;
+
+        if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+            pendingExportBytes = null;
+            pendingExportMime = null;
+            Toast.makeText(this, "Export cancelled.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Uri destination = data.getData();
+        byte[] bytes = pendingExportBytes;
+        String mime = pendingExportMime;
+        pendingExportBytes = null;
+        pendingExportMime = null;
+        if (bytes == null) {
+            Toast.makeText(this, "Export failed: report data was not ready. Please try again.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try (OutputStream output = getContentResolver().openOutputStream(destination, "w")) {
+            if (output == null) throw new Exception("Could not open the selected destination.");
+            output.write(bytes);
+            output.flush();
+            String format = "application/pdf".equals(mime) ? "PDF" : "CSV";
+            Toast.makeText(this, format + " report saved successfully.", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not save report: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void showDateRangePicker() {
