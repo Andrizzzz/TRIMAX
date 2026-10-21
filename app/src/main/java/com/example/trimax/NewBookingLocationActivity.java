@@ -285,6 +285,16 @@ public class NewBookingLocationActivity extends AppCompatActivity {
                 return;
             }
 
+            if (getIntent().getBooleanExtra("CUSTOMER_LOCATION_PICKER_ONLY", false)) {
+                Intent result = new Intent();
+                result.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
+                result.putExtra("CUSTOMER_LAT", destPoint.getLatitude());
+                result.putExtra("CUSTOMER_LNG", destPoint.getLongitude());
+                setResult(RESULT_OK, result);
+                finish();
+                return;
+            }
+
             Intent detailsIntent = new Intent(NewBookingLocationActivity.this, NewBookingDetailsActivity.class);
             detailsIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
             detailsIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
