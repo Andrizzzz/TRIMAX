@@ -582,9 +582,8 @@
             app:itemIconTint="#64748B"
             app:itemRippleColor="#3B82F6"
             app:itemTextColor="#64748B"
-            app:labelVisibilityMode="labeled"
+            app:labelVisibilityMode="selected"
             app:itemHorizontalTranslationEnabled="false"
-            app:itemActiveIndicatorEnabled="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:menu="@menu/bottom_nav_menu" />
 

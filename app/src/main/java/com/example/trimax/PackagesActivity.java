@@ -62,9 +62,8 @@ public class PackagesActivity extends AppCompatActivity {
                 v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
                 return insets;
             });
-            bottomNavigation.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_LABELED);
+            bottomNavigation.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_SELECTED);
             bottomNavigation.setItemHorizontalTranslationEnabled(false);
-            bottomNavigation.setItemActiveIndicatorEnabled(false);
             bottomNavigation.setSelectedItemId(R.id.nav_packages);
             setupBottomNavigation(bottomNavigation);
         }

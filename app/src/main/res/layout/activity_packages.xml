@@ -106,9 +106,8 @@
         android:background="@color/card_bg"
         app:itemIconTint="@color/primary_blue"
         app:itemTextColor="@color/primary_blue"
-        app:labelVisibilityMode="labeled"
+        app:labelVisibilityMode="selected"
         app:itemHorizontalTranslationEnabled="false"
-        app:itemActiveIndicatorEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 

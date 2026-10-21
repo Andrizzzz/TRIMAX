@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.cardview.widget.CardView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 public class DriverProfileActivity extends AppCompatActivity {
@@ -33,7 +34,7 @@ public class DriverProfileActivity extends AppCompatActivity {
         View root = findViewById(android.R.id.content);
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
 
@@ -53,24 +54,31 @@ public class DriverProfileActivity extends AppCompatActivity {
                     }
                 });
 
-        ImageView btnBack = findViewById(R.id.btnBack);
         ImageView ivDriverProfilePhoto = findViewById(R.id.ivDriverProfilePhoto);
         if (ivDriverProfilePhoto != null) ivDriverProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
-        TextView tvDriverName = findViewById(R.id.tvDriverName);
-        TextView tvDriverEmail = findViewById(R.id.tvDriverEmail);
 
         CardView cardEditProfile = findViewById(R.id.cardEditProfile);
         CardView cardChangePassword = findViewById(R.id.cardChangePassword);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> handleBackNavigation());
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+            bottomNavigation.setSelectedItemId(R.id.nav_profile);
+            setupBottomNavigation(bottomNavigation);
         }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                handleBackNavigation();
+                Intent intent = new Intent(DriverProfileActivity.this, DriverDashboardActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
             }
         });
 
@@ -87,6 +95,44 @@ public class DriverProfileActivity extends AppCompatActivity {
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutDialog());
         }
+    }
+
+    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+        if (bottomNavigation.getMenu().findItem(R.id.nav_bookings) != null) {
+            bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
+        }
+        if (bottomNavigation.getMenu().findItem(R.id.nav_clients) != null) {
+            bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
+        }
+        if (bottomNavigation.getMenu().findItem(R.id.nav_packages) != null) {
+            bottomNavigation.getMenu().findItem(R.id.nav_packages).setTitle("Delivery History");
+        }
+
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                Intent intent = new Intent(this, DriverDashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_bookings) {
+                startActivity(new Intent(this, DriverDeliveriesActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_packages) {
+                startActivity(new Intent(this, DriverHistoryActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_clients) {
+                startActivity(new Intent(this, DriverNotificationsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                return true;
+            }
+            return false;
+        });
     }
 
     private void updateProfileHeader() {
@@ -116,15 +162,6 @@ public class DriverProfileActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateProfileHeader();
-    }
-
-    private void handleBackNavigation() {
-        if (isTaskRoot()) {
-            Intent intent = new Intent(this, DriverDashboardActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-        }
-        finish();
     }
 
     private void showLogoutDialog() {
