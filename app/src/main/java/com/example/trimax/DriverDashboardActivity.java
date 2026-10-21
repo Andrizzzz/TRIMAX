@@ -167,6 +167,9 @@ public class DriverDashboardActivity extends AppCompatActivity {
             if (bottomNavigation.getMenu().findItem(R.id.nav_clients) != null) {
                 bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
             }
+            if (bottomNavigation.getMenu().findItem(R.id.nav_packages) != null) {
+                bottomNavigation.getMenu().findItem(R.id.nav_packages).setTitle("Delivery History");
+            }
 
             bottomNavigation.setSelectedItemId(R.id.nav_home);
             setupBottomNavigation(bottomNavigation);
