@@ -3,6 +3,7 @@ package com.example.trimax;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +45,18 @@ public class NotificationsActivity extends AppCompatActivity {
                 return insets;
             });
         }
+
+        ImageView btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> handleBackNavigation());
+        }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         TextView tvMarkAllRead = findViewById(R.id.tvMarkAllRead);
         cardNotif1 = findViewById(R.id.cardNotif1);
@@ -126,6 +139,15 @@ public class NotificationsActivity extends AppCompatActivity {
                 .compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE)
                 .matcher(searchableText);
         card.setTag(matcher.find() ? matcher.group() : null);
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 
     private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
