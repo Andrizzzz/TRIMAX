@@ -222,7 +222,7 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     private void handleNotificationClick(DatabaseHelper.NotificationItem notification) {
         dbHelper.markNotificationAsRead(notification.getId());
         String searchable = (notification.getTitle() == null ? "" : notification.getTitle()) + " " + (notification.getMessage() == null ? "" : notification.getMessage());
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(searchable);
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\b(?:BK-[A-Za-z0-9-]+|TRX-[A-Za-z0-9-]+)\\b", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(searchable);
         if (matcher.find()) {
             Intent intent = new Intent(this, DriverDeliveryDetailsActivity.class);
             intent.putExtra("BOOKING_ID", matcher.group());
