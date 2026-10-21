@@ -11,7 +11,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="120dp"
-        android:contentDescription="City Skyline"
+        android:contentDescription="@string/cd_city_skyline"
         android:scaleType="fitXY"
         android:src="@drawable/ic_city_skyline"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -38,14 +38,14 @@
                 android:id="@+id/ivLogo"
                 android:layout_width="64dp"
                 android:layout_height="54dp"
-                android:contentDescription="TRI-MAX Logo"
+                android:contentDescription="@string/cd_trimax_logo"
                 android:src="@drawable/ic_trimax_logo" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="TRIMAX"
+                android:text="@string/app_name"
                 android:textColor="@color/primary_blue"
                 android:textSize="28sp"
                 android:textStyle="bold" />
@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:gravity="center"
-                android:text="Smarter Deliveries.\nBetter Connections."
+                android:text="@string/login_subtitle"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:textStyle="normal" />
@@ -65,7 +65,7 @@
                 android:layout_width="180dp"
                 android:layout_height="100dp"
                 android:layout_marginTop="16dp"
-                android:contentDescription="Delivery Vehicle Illustration"
+                android:contentDescription="@string/cd_delivery_vehicle"
                 android:src="@drawable/ic_delivery_van" />
 
             <!-- Input Fields Box -->
@@ -74,7 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:hint="Username"
+                android:hint="@string/hint_username"
                 app:boxBackgroundColor="@color/card_bg"
                 app:boxCornerRadiusBottomEnd="16dp"
                 app:boxCornerRadiusBottomStart="16dp"
@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:hint="Password"
+                android:hint="@string/hint_password"
                 app:boxBackgroundColor="@color/card_bg"
                 app:boxCornerRadiusBottomEnd="16dp"
                 app:boxCornerRadiusBottomStart="16dp"
@@ -132,7 +132,7 @@
                 android:layout_height="54dp"
                 android:layout_marginTop="24dp"
                 android:backgroundTint="@color/primary_blue"
-                android:text="Login"
+                android:text="@string/btn_login"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
@@ -148,7 +148,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="6dp"
-                android:text="Forgot Password?"
+                android:text="@string/forgot_password"
                 android:textColor="@color/primary_blue"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -162,7 +162,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="6dp"
-                android:text="Create Account"
+                android:text="@string/create_account"
                 android:textColor="@color/primary_blue"
                 android:textSize="14sp"
                 android:textStyle="bold" />

@@ -1,10 +1,11 @@
 package com.example.trimax;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -17,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.BoundingBox;
@@ -48,48 +50,39 @@ public class TrackingMapActivity extends AppCompatActivity {
         Configuration.getInstance().setOsmdroidTileCache(new File(base, "tiles"));
 
         dbHelper = new DatabaseHelper(this);
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.WHITE);
-        root.setFitsSystemWindows(true);
+        setContentView(R.layout.activity_tracking_map);
 
-        TextView title = new TextView(this);
-        title.setText("Client Tracking Map");
-        title.setTextColor(Color.rgb(20, 35, 60));
-        title.setTextSize(20);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setPadding(dp(18), dp(18), dp(18), dp(4));
-        root.addView(title);
+        View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
+        if (root != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), bars.top, v.getPaddingRight(), bars.bottom);
+                return insets;
+            });
+        }
 
-        subtitleTextView = new TextView(this);
-        subtitleTextView.setText("All customer pin locations are shown below. Tap any pin to view client details.");
-        subtitleTextView.setTextColor(Color.DKGRAY);
-        subtitleTextView.setTextSize(13);
-        subtitleTextView.setPadding(dp(18), 0, dp(18), dp(12));
-        root.addView(subtitleTextView);
+        ImageView btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
-        mapView = new MapView(this);
-        mapView.setTileSource(MockMapView.OSM_GERMANY);
-        mapView.setMultiTouchControls(true);
-        mapView.getController().setZoom(12.0);
-        root.addView(mapView, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        subtitleTextView = findViewById(R.id.subtitleTextView);
+        mapView = findViewById(R.id.mapView);
+        if (mapView != null) {
+            mapView.setTileSource(MockMapView.OSM_GERMANY);
+            mapView.setMultiTouchControls(true);
+            mapView.setBuiltInZoomControls(false);
+            mapView.getController().setZoom(12.0);
+        }
 
-        TextView back = new TextView(this);
-        back.setText("‹  Back to Dashboard");
-        back.setTextColor(Color.rgb(37, 99, 235));
-        back.setTextSize(15);
-        back.setTypeface(null, android.graphics.Typeface.BOLD);
-        back.setPadding(dp(18), dp(14), dp(18), dp(18));
-        back.setOnClickListener(v -> finish());
-        root.addView(back);
-
-        setContentView(root);
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), bars.top, v.getPaddingRight(), bars.bottom);
-            return insets;
-        });
+        FloatingActionButton btnZoomIn = findViewById(R.id.btnZoomIn);
+        FloatingActionButton btnZoomOut = findViewById(R.id.btnZoomOut);
+        if (btnZoomIn != null && mapView != null) {
+            btnZoomIn.setOnClickListener(v -> mapView.getController().zoomIn());
+        }
+        if (btnZoomOut != null && mapView != null) {
+            btnZoomOut.setOnClickListener(v -> mapView.getController().zoomOut());
+        }
 
         showCustomerPins(subtitleTextView);
     }
@@ -244,7 +237,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(dp(20), dp(20), dp(20), dp(24));
-        layout.setBackgroundColor(Color.WHITE);
+        layout.setBackgroundColor(getColor(R.color.card_bg));
 
         // Header Row with Initials Avatar & Name
         LinearLayout headerRow = new LinearLayout(this);
@@ -254,7 +247,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         TextView avatar = new TextView(this);
         String nameStr = customer.getName() != null && !customer.getName().trim().isEmpty() ? customer.getName().trim() : "Client";
         avatar.setText(nameStr.substring(0, 1).toUpperCase());
-        avatar.setTextColor(Color.rgb(37, 99, 235));
+        avatar.setTextColor(getColor(R.color.primary_blue));
         avatar.setTextSize(20);
         avatar.setTypeface(null, android.graphics.Typeface.BOLD);
         avatar.setGravity(android.view.Gravity.CENTER);
@@ -268,14 +261,14 @@ public class TrackingMapActivity extends AppCompatActivity {
 
         TextView tvTitle = new TextView(this);
         tvTitle.setText(nameStr);
-        tvTitle.setTextColor(Color.rgb(20, 35, 60));
+        tvTitle.setTextColor(getColor(R.color.text_primary));
         tvTitle.setTextSize(18);
         tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
         nameContainer.addView(tvTitle);
 
         TextView tvSubtitle = new TextView(this);
         tvSubtitle.setText("Customer Profile");
-        tvSubtitle.setTextColor(Color.GRAY);
+        tvSubtitle.setTextColor(getColor(R.color.text_secondary));
         tvSubtitle.setTextSize(12);
         nameContainer.addView(tvSubtitle);
 
@@ -291,7 +284,7 @@ public class TrackingMapActivity extends AppCompatActivity {
 
             TextView tvPhone = new TextView(this);
             tvPhone.setText("📞 Phone: " + customer.getPhone());
-            tvPhone.setTextColor(Color.DKGRAY);
+            tvPhone.setTextColor(getColor(R.color.text_secondary));
             tvPhone.setTextSize(14);
             phoneRow.addView(tvPhone, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
@@ -299,7 +292,7 @@ public class TrackingMapActivity extends AppCompatActivity {
             btnCall.setText("Call");
             btnCall.setAllCaps(false);
             btnCall.setTextSize(12);
-            btnCall.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(37, 99, 235)));
+            btnCall.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.primary_blue)));
             btnCall.setOnClickListener(v -> {
                 String clean = customer.getPhone().replaceAll("[^0-9]", "");
                 startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + clean)));
@@ -312,7 +305,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         if (customer.getEmail() != null && !customer.getEmail().trim().isEmpty()) {
             TextView tvEmail = new TextView(this);
             tvEmail.setText("✉ Email: " + customer.getEmail());
-            tvEmail.setTextColor(Color.DKGRAY);
+            tvEmail.setTextColor(getColor(R.color.text_secondary));
             tvEmail.setTextSize(14);
             tvEmail.setPadding(0, dp(6), 0, 0);
             layout.addView(tvEmail);
@@ -322,7 +315,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         if (customer.getAddress() != null && !customer.getAddress().trim().isEmpty()) {
             TextView tvAddress = new TextView(this);
             tvAddress.setText("📍 Address: " + customer.getAddress());
-            tvAddress.setTextColor(Color.DKGRAY);
+            tvAddress.setTextColor(getColor(R.color.text_secondary));
             tvAddress.setTextSize(14);
             tvAddress.setPadding(0, dp(6), 0, 0);
             layout.addView(tvAddress);
@@ -332,7 +325,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         List<Delivery> bookings = dbHelper != null ? dbHelper.getBookingsForCustomer(customer.getPhone(), customer.getName()) : new ArrayList<>();
         TextView tvBookingsHeader = new TextView(this);
         tvBookingsHeader.setText("📦 Bookings: " + (bookings != null ? bookings.size() : customer.getBookingCount()) + " order(s)");
-        tvBookingsHeader.setTextColor(Color.rgb(37, 99, 235));
+        tvBookingsHeader.setTextColor(getColor(R.color.primary_blue));
         tvBookingsHeader.setTextSize(14);
         tvBookingsHeader.setTypeface(null, android.graphics.Typeface.BOLD);
         tvBookingsHeader.setPadding(0, dp(12), 0, dp(8));
@@ -341,7 +334,7 @@ public class TrackingMapActivity extends AppCompatActivity {
         if (bookings != null && !bookings.isEmpty()) {
             Delivery topDelivery = bookings.get(0);
             CardView bookingCard = new CardView(this);
-            bookingCard.setCardBackgroundColor(Color.rgb(245, 247, 250));
+            bookingCard.setCardBackgroundColor(getColor(R.color.surface_alt));
             bookingCard.setRadius(dp(12));
             bookingCard.setCardElevation(0);
             LinearLayout bookingLayout = new LinearLayout(this);
@@ -350,13 +343,13 @@ public class TrackingMapActivity extends AppCompatActivity {
 
             TextView tvBkId = new TextView(this);
             tvBkId.setText(String.format(Locale.US, "Latest: #%s • %s", topDelivery.getBookingId(), topDelivery.getStatus()));
-            tvBkId.setTextColor(Color.rgb(20, 35, 60));
+            tvBkId.setTextColor(getColor(R.color.text_primary));
             tvBkId.setTextSize(13);
             tvBkId.setTypeface(null, android.graphics.Typeface.BOLD);
 
             TextView tvBkDest = new TextView(this);
             tvBkDest.setText(String.format(Locale.US, "To: %s (₱ %.2f)", topDelivery.getDestination(), topDelivery.getCurrentTotal()));
-            tvBkDest.setTextColor(Color.GRAY);
+            tvBkDest.setTextColor(getColor(R.color.text_secondary));
             tvBkDest.setTextSize(12);
 
             bookingLayout.addView(tvBkId);
@@ -373,8 +366,8 @@ public class TrackingMapActivity extends AppCompatActivity {
         MaterialButton btnViewFull = new MaterialButton(this);
         btnViewFull.setText("View All Details & Booking History");
         btnViewFull.setAllCaps(false);
-        btnViewFull.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(37, 99, 235)));
-        btnViewFull.setTextColor(Color.WHITE);
+        btnViewFull.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.primary_blue)));
+        btnViewFull.setTextColor(getColor(R.color.text_on_primary));
         btnViewFull.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
             Intent intent = new Intent(TrackingMapActivity.this, ClientDetailActivity.class);

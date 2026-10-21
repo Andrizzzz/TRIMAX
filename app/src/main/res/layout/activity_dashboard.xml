@@ -50,7 +50,7 @@
                         android:layout_alignParentTop="true"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:clickable="true"
-                        android:contentDescription="Menu"
+                        android:contentDescription="@string/cd_menu"
                         android:focusable="true"
                         android:padding="6dp"
                         android:src="@drawable/ic_menu"
@@ -71,7 +71,7 @@
                             android:layout_marginEnd="8dp"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:clickable="true"
-                            android:contentDescription="Toggle Theme"
+                            android:contentDescription="@string/cd_toggle_theme"
                             android:focusable="true"
                             android:padding="6dp"
                             android:src="@drawable/ic_user"
@@ -87,7 +87,7 @@
                                 android:layout_height="match_parent"
                                 android:background="?attr/selectableItemBackgroundBorderless"
                                 android:clickable="true"
-                                android:contentDescription="Notifications"
+                                android:contentDescription="@string/cd_notifications"
                                 android:focusable="true"
                                 android:padding="6dp"
                                 android:src="@drawable/baseline_notifications_none_24"
@@ -112,7 +112,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/btnMenu"
                         android:layout_marginTop="16dp"
-                        android:text="Hello,"
+                        android:text="@string/greeting_hello"
                         android:textColor="#D1E2FF"
                         android:textSize="15sp" />
 
@@ -122,7 +122,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/btnMenu"
                         android:layout_marginTop="34dp"
-                        android:text="Juan Dela Cruz 👋"
+                        android:text="@string/dashboard_user_name"
                         android:textColor="@android:color/white"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -133,7 +133,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvWelcomeAgent"
                         android:layout_marginTop="4dp"
-                        android:text="Book, track and manage your deliveries."
+                        android:text="@string/dashboard_subtitle"
                         android:textColor="#E0E7FF"
                         android:textSize="13sp" />
 
@@ -145,7 +145,7 @@
                         android:layout_below="@+id/tvGreetingSubtitle"
                         android:layout_marginTop="20dp"
                         android:backgroundTint="@color/primary_blue"
-                        android:text="Book a Delivery"
+                        android:text="@string/btn_book_delivery"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textSize="16sp"
@@ -202,7 +202,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="My Bookings"
+                                    android:text="@string/nav_my_bookings"
                                     android:textColor="@color/text_primary"
                                     android:textSize="13sp"
                                     android:textStyle="bold" />
@@ -211,7 +211,7 @@
                                     android:id="@+id/tvStatTotalCount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="0 active"
+                                    android:text="@string/label_active_count"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -257,7 +257,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Tracking"
+                                    android:text="@string/nav_tracking"
                                     android:textColor="@color/text_primary"
                                     android:textSize="13sp"
                                     android:textStyle="bold" />
@@ -266,7 +266,7 @@
                                     android:id="@+id/tvStatPendingCount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Live status"
+                                    android:text="@string/label_live_status"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -312,7 +312,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="History"
+                                    android:text="@string/nav_history"
                                     android:textColor="@color/text_primary"
                                     android:textSize="13sp"
                                     android:textStyle="bold" />
@@ -321,7 +321,7 @@
                                     android:id="@+id/tvStatConfirmedCount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Past records"
+                                    android:text="@string/label_past_records"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -366,7 +366,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Support"
+                                    android:text="@string/nav_support"
                                     android:textColor="@color/text_primary"
                                     android:textSize="13sp"
                                     android:textStyle="bold" />
@@ -374,7 +374,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="24/7 Help"
+                                    android:text="@string/label_24_7_help"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -403,7 +403,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Agent Attendance"
+                            android:text="@string/title_agent_attendance"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -415,7 +415,7 @@
                             android:layout_marginTop="8dp"
                             android:paddingHorizontal="10dp"
                             android:paddingVertical="5dp"
-                            android:text="OFF DUTY"
+                            android:text="@string/status_off_duty"
                             android:textColor="#EF4444"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -425,7 +425,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="Camera photo verification required to Start Duty"
+                            android:text="@string/attendance_prompt"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -434,7 +434,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
                             android:layout_marginTop="12dp"
-                            android:text="START DUTY - SELFIE"
+                            android:text="@string/btn_start_duty"
                             android:textAllCaps="false"
                             android:textColor="@android:color/white"
                             android:textStyle="bold"
@@ -455,7 +455,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Active Booking"
+                        android:text="@string/title_active_booking"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -477,7 +477,7 @@
                                 android:id="@+id/tvLiveBookingId"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="TRK-2024001"
+                                android:text="@string/sample_tracking_number"
                                 android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -491,7 +491,7 @@
                                 android:background="@drawable/bg_status_completed"
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="3dp"
-                                android:text="In Transit"
+                                android:text="@string/status_in_transit"
                                 android:textColor="#16A34A"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
@@ -504,7 +504,7 @@
                                 android:layout_marginTop="12dp"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:text="View Details >"
+                                android:text="@string/action_view_details"
                                 android:textColor="@color/primary_blue"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
@@ -522,7 +522,7 @@
                                 <ImageView
                                     android:layout_width="32dp"
                                     android:layout_height="32dp"
-                                    android:contentDescription="Client Location Pin"
+                                    android:contentDescription="@string/cd_client_pin"
                                     android:src="@drawable/ic_location"
                                     app:tint="@color/primary_blue" />
                             </LinearLayout>
@@ -561,7 +561,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:text="Recent Bookings"
+                        android:text="@string/title_recent_bookings"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -575,7 +575,7 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:padding="4dp"
-                        android:text="View All"
+                        android:text="@string/action_view_all"
                         android:textColor="@color/primary_blue"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -609,7 +609,7 @@
                                 android:id="@+id/tvCard1Id"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="TRK-2024001"
+                                android:text="@string/sample_tracking_number"
                                 android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -622,7 +622,7 @@
                                 android:background="@drawable/bg_status_completed"
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="3dp"
-                                android:text="Completed"
+                                android:text="@string/status_completed"
                                 android:textColor="#16A34A"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
@@ -633,7 +633,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Apr 16, 2024 • 10:30 AM"
+                            android:text="@string/sample_date_1"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
@@ -645,7 +645,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Fare"
+                                android:text="@string/label_fare"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
 
@@ -654,7 +654,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentEnd="true"
-                                android:text="₱ 150.00"
+                                android:text="@string/sample_fare"
                                 android:textColor="@color/primary_blue"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -691,7 +691,7 @@
                                 android:id="@+id/tvCard2Id"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="TRK-2024000"
+                                android:text="@string/sample_tracking_zero"
                                 android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -704,7 +704,7 @@
                                 android:background="@drawable/bg_status_cancelled"
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="3dp"
-                                android:text="Cancelled"
+                                android:text="@string/status_cancelled"
                                 android:textColor="#DC2626"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
@@ -715,7 +715,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Apr 15, 2024 • 2:15 PM"
+                            android:text="@string/sample_date_2"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
@@ -727,7 +727,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Fare"
+                                android:text="@string/label_fare"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
 
@@ -736,7 +736,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentEnd="true"
-                                android:text="₱ 150.00"
+                                android:text="@string/sample_fare"
                                 android:textColor="@color/primary_blue"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />

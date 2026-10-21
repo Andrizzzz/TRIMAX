@@ -25,7 +25,7 @@
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:contentDescription="Back"
+            android:contentDescription="@string/cd_back"
             android:focusable="true"
             android:padding="6dp"
             android:src="@drawable/ic_arrow_back"
@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Profile"
+            android:text="@string/profile_title"
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -63,7 +63,7 @@
                 android:layout_width="88dp"
                 android:layout_height="88dp"
                 android:background="@drawable/bg_pill_unselected"
-                android:contentDescription="Profile picture. Tap to change."
+                android:contentDescription="@string/cd_profile_photo"
                 android:clickable="true"
                 android:focusable="true"
                 android:scaleType="centerCrop"
@@ -74,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Tap photo to change"
+                android:text="@string/tap_photo_to_change"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
@@ -84,7 +84,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Juan Santos"
+                android:text="@string/default_agent_name"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Driver"
+                android:text="@string/default_agent_role"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
@@ -128,7 +128,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
-                            android:contentDescription="Icon"
+                            android:contentDescription="@string/cd_icon"
                             android:src="@drawable/ic_user"
                             app:tint="@color/primary_blue" />
 
@@ -138,7 +138,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginStart="14dp"
                             android:layout_toEndOf="@+id/ic1"
-                            android:text="My Profile"
+                            android:text="@string/menu_my_profile"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -148,7 +148,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:text="›"
+                            android:text="@string/chevron_right"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </RelativeLayout>
@@ -172,7 +172,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
-                            android:contentDescription="Icon"
+                            android:contentDescription="@string/cd_icon"
                             android:src="@drawable/calendar"
                             app:tint="@color/primary_blue" />
 
@@ -182,7 +182,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginStart="14dp"
                             android:layout_toEndOf="@+id/ic2"
-                            android:text="Reports"
+                            android:text="@string/menu_reports"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -192,7 +192,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:text="›"
+                            android:text="@string/chevron_right"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </RelativeLayout>
@@ -216,7 +216,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
-                            android:contentDescription="Icon"
+                            android:contentDescription="@string/cd_icon"
                             android:src="@drawable/ic_bookings"
                             app:tint="@color/primary_blue" />
 
@@ -226,7 +226,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginStart="14dp"
                             android:layout_toEndOf="@+id/ic3"
-                            android:text="Delivery History"
+                            android:text="@string/menu_delivery_history"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -236,7 +236,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:text="›"
+                            android:text="@string/chevron_right"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </RelativeLayout>
@@ -260,7 +260,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
-                            android:contentDescription="Icon"
+                            android:contentDescription="@string/cd_icon"
                             android:src="@drawable/ic_lock"
                             app:tint="@color/primary_blue" />
 
@@ -270,7 +270,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginStart="14dp"
                             android:layout_toEndOf="@+id/ic4"
-                            android:text="Settings"
+                            android:text="@string/menu_settings"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -280,7 +280,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:text="›"
+                            android:text="@string/chevron_right"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </RelativeLayout>
@@ -304,7 +304,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
-                            android:contentDescription="Icon"
+                            android:contentDescription="@string/cd_icon"
                             android:src="@drawable/ic_phone"
                             app:tint="@color/primary_blue" />
 
@@ -314,7 +314,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginStart="14dp"
                             android:layout_toEndOf="@+id/ic5"
-                            android:text="Help &amp; Support"
+                            android:text="@string/menu_help_support"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -324,7 +324,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:text="›"
+                            android:text="@string/chevron_right"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </RelativeLayout>
