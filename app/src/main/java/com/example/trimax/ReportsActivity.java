@@ -139,6 +139,12 @@ public class ReportsActivity extends AppCompatActivity {
         if (tvReportConfirmedCount != null) tvReportConfirmedCount.setText(String.valueOf(confirmed));
         if (tvReportPendingCount != null) tvReportPendingCount.setText(String.valueOf(pending));
         if (tvReportCancelledCount != null) tvReportCancelledCount.setText(String.valueOf(cancelled));
+        TextView tvReportFailedCount = findViewById(R.id.tvReportFailedCount);
+        if (tvReportFailedCount != null) {
+            int failedCount = selectedDateRange == -1 ? dbHelper.getBookingCountByStatus("FAILED")
+                    : dbHelper.getBookingCountByStatusAndDateRange("FAILED", getSelectedDateBounds(selectedDateRange)[0], getSelectedDateBounds(selectedDateRange)[1]);
+            tvReportFailedCount.setText(String.valueOf(failedCount));
+        }
 
         TextView tvInsights = findViewById(R.id.tvOperationalInsights);
         if (tvInsights != null) {
