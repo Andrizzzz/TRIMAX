@@ -52,6 +52,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         customerName = intent.getStringExtra("CUSTOMER_NAME");
         customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
         customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
+        String bookingDate = intent.getStringExtra("DATE");
+        String bookingTime = intent.getStringExtra("TIME");
         customerAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
         if (customerAddress == null || customerAddress.trim().isEmpty()) {
             customerAddress = intent.getStringExtra("ADDRESS");
@@ -121,8 +123,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 summaryIntent.putExtra("SERVICE", serviceBuilder.toString());
                 summaryIntent.putExtra("SELECTED_PRICE", totalPrice / Math.max(1, totalQuantity));
                 summaryIntent.putExtra("QUANTITY", totalQuantity);
-                summaryIntent.putExtra("DATE", "July 19, 2026");
-                summaryIntent.putExtra("TIME", "10:00 AM");
+                summaryIntent.putExtra("DATE", bookingDate != null ? bookingDate : "ASAP");
+                summaryIntent.putExtra("TIME", bookingTime != null ? bookingTime : "");
                 summaryIntent.putExtra("NOTES", notes);
                 summaryIntent.putExtra("PICKUP_LAT", pickupLat);
                 summaryIntent.putExtra("PICKUP_LNG", pickupLng);
