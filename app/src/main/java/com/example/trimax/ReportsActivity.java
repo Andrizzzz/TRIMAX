@@ -319,7 +319,7 @@ public class ReportsActivity extends AppCompatActivity {
     private void exportCsv() {
         try {
             List<Delivery> bookings = getFilteredBookings();
-            StringBuilder csv = new StringBuilder("Booking ID,Customer,Driver,Status,Pickup,Destination,Scheduled Time,Created At,Amount\\n");
+            StringBuilder csv = new StringBuilder("Booking ID,Customer,Driver,Status,Pickup,Destination,Scheduled Time,Created At,Amount\n");
             for (Delivery d : bookings) {
                 csv.append(csvCell(d.getBookingId())).append(',')
                     .append(csvCell(d.getCustomerName())).append(',')
@@ -329,7 +329,7 @@ public class ReportsActivity extends AppCompatActivity {
                     .append(csvCell(d.getDestination())).append(',')
                     .append(csvCell(d.getScheduledTime())).append(',')
                     .append(csvCell(d.getCreatedAt())).append(',')
-                    .append(d.getCurrentTotal()).append('\\n');
+                    .append(d.getCurrentTotal()).append('\n');
             }
             requestSaveReport(csv.toString().getBytes(StandardCharsets.UTF_8),
                     "text/csv", "trimax_report_" + reportTimestamp() + ".csv", REQUEST_SAVE_CSV);
