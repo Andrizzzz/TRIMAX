@@ -3,14 +3,16 @@ package com.example.trimax;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
@@ -25,27 +27,35 @@ public class DriverHistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Match Reports system-bar behavior; avoid applying the top inset twice.
         setContentView(R.layout.activity_driver_history);
 
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);
 
-        ImageView btnBack = findViewById(R.id.btnBack);
         containerHistory = findViewById(R.id.containerHistory);
 
         MaterialButton chipAll = findViewById(R.id.chipAll);
         MaterialButton chipCompleted = findViewById(R.id.chipCompleted);
         MaterialButton chipFailed = findViewById(R.id.chipFailed);
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> handleBackNavigation());
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+            bottomNavigation.setSelectedItemId(R.id.nav_packages);
+            setupBottomNavigation(bottomNavigation);
         }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                handleBackNavigation();
+                Intent intent = new Intent(DriverHistoryActivity.this, DriverDashboardActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
             }
         });
 
@@ -55,6 +65,44 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
         updateFilterChipStyles();
         loadHistory();
+    }
+
+    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+        if (bottomNavigation.getMenu().findItem(R.id.nav_bookings) != null) {
+            bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
+        }
+        if (bottomNavigation.getMenu().findItem(R.id.nav_clients) != null) {
+            bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
+        }
+        if (bottomNavigation.getMenu().findItem(R.id.nav_packages) != null) {
+            bottomNavigation.getMenu().findItem(R.id.nav_packages).setTitle("Delivery History");
+        }
+
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                Intent intent = new Intent(this, DriverDashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_bookings) {
+                startActivity(new Intent(this, DriverDeliveriesActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_packages) {
+                return true;
+            } else if (itemId == R.id.nav_clients) {
+                startActivity(new Intent(this, DriverNotificationsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                startActivity(new Intent(this, DriverProfileActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
@@ -168,14 +216,5 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
             containerHistory.addView(card);
         }
-    }
-
-    private void handleBackNavigation() {
-        if (isTaskRoot()) {
-            Intent intent = new Intent(this, DriverDashboardActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-        }
-        finish();
     }
 }
