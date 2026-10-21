@@ -14,6 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -143,6 +145,17 @@ public class ReportsActivity extends AppCompatActivity {
             int failed = dbHelper.getBookingCountByStatus("FAILED");
             int completed = dbHelper.getBookingCountByStatus("COMPLETED");
             int completionRate = total == 0 ? 0 : Math.round(completed * 100f / total);
+            List<Delivery> reportBookings = getFilteredBookings();
+            Map<String, Integer> destinations = new HashMap<>();
+            Map<String, Integer> drivers = new HashMap<>();
+            for (Delivery booking : reportBookings) {
+                String destination = booking.getDestination() == null ? "" : booking.getDestination().trim();
+                if (!destination.isEmpty()) destinations.put(destination, destinations.getOrDefault(destination, 0) + 1);
+                String driver = booking.getDriverId() == null || booking.getDriverId().trim().isEmpty() ? "Unassigned" : booking.getDriverId().trim();
+                drivers.put(driver, drivers.getOrDefault(driver, 0) + 1);
+            }
+            String topDestination = mostFrequent(destinations);
+            String busiestDriver = mostFrequent(drivers);
             StringBuilder insights = new StringBuilder();
             insights.append("Completion rate: ").append(completionRate).append("%\n");
             if (pending > 0) insights.append("Action needed: ").append(pending).append(" booking(s) are still pending.\n");
@@ -150,8 +163,51 @@ public class ReportsActivity extends AppCompatActivity {
             if (cancelled > 0) insights.append("Cancelled bookings: ").append(cancelled).append(". Review cancellation reasons if recorded.\n");
             if (total == 0) insights.append("No bookings found for this period. Insights will update when records are added.");
             else if (pending == 0 && failed == 0 && cancelled == 0) insights.append("No pending, failed, or cancelled bookings detected in this overview.");
+            if (!topDestination.isEmpty()) insights.append("Most frequent destination: ").append(topDestination).append(".\n");
+            if (!busiestDriver.isEmpty()) insights.append("Most assigned driver by booking count: ").append(busiestDriver).append(".\n");
             tvInsights.setText(insights.toString().trim());
         }
+    }
+
+    private String mostFrequent(Map<String, Integer> counts) {
+        String best = "";
+        int max = 0;
+        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+            if (entry.getValue() > max) {
+                best = entry.getKey() + " (" + entry.getValue() + ")";
+                max = entry.getValue();
+            }
+        }
+        return best;
+    }
+
+    private List<Delivery> getFilteredBookings() {
+        List<Delivery> all = dbHelper.getAllBookings();
+        if (selectedDateRange == -1) return all;
+        long[] bounds = getSelectedDateBounds(selectedDateRange);
+        List<Delivery> filtered = new java.util.ArrayList<>();
+        for (Delivery d : all) {
+            long created = parseCreatedAt(d.getCreatedAt());
+            if (created >= bounds[0] && created <= bounds[1]) filtered.add(d);
+        }
+        return filtered;
+    }
+
+    private long parseCreatedAt(String value) {
+        if (value == null || value.trim().isEmpty()) return -1;
+        try {
+            long raw = Long.parseLong(value.trim());
+            return raw < 100000000000L ? raw * 1000L : raw;
+        } catch (NumberFormatException ignored) { }
+        String[] formats = {"yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"};
+        for (String format : formats) {
+            try {
+                SimpleDateFormat parser = new SimpleDateFormat(format, Locale.US);
+                parser.setLenient(false);
+                return parser.parse(value.trim()).getTime();
+            } catch (Exception ignored) { }
+        }
+        return -1;
     }
 
     private File getReportDirectory() throws Exception {
@@ -173,7 +229,7 @@ public class ReportsActivity extends AppCompatActivity {
 
     private void exportCsv() {
         try {
-            List<Delivery> bookings = dbHelper.getAllBookings();
+            List<Delivery> bookings = getFilteredBookings();
             File file = new File(getReportDirectory(), "trimax_report_" + reportTimestamp() + ".csv");
             StringBuilder csv = new StringBuilder("Booking ID,Customer,Driver,Status,Pickup,Destination,Scheduled Time,Created At,Amount\n");
             for (Delivery d : bookings) {
