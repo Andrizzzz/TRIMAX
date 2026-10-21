@@ -142,8 +142,16 @@ public class ReportsActivity extends AppCompatActivity {
 
         TextView tvInsights = findViewById(R.id.tvOperationalInsights);
         if (tvInsights != null) {
-            int failed = dbHelper.getBookingCountByStatus("FAILED");
-            int completed = dbHelper.getBookingCountByStatus("COMPLETED");
+            int failed;
+            int completed;
+            if (selectedDateRange == -1) {
+                failed = dbHelper.getBookingCountByStatus("FAILED");
+                completed = dbHelper.getBookingCountByStatus("COMPLETED");
+            } else {
+                long[] insightBounds = getSelectedDateBounds(selectedDateRange);
+                failed = dbHelper.getBookingCountByStatusAndDateRange("FAILED", insightBounds[0], insightBounds[1]);
+                completed = dbHelper.getBookingCountByStatusAndDateRange("COMPLETED", insightBounds[0], insightBounds[1]);
+            }
             int completionRate = total == 0 ? 0 : Math.round(completed * 100f / total);
             List<Delivery> reportBookings = getFilteredBookings();
             Map<String, Integer> destinations = new HashMap<>();
