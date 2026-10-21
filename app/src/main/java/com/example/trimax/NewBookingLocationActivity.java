@@ -133,8 +133,10 @@ public class NewBookingLocationActivity extends AppCompatActivity {
                             if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
                         }
                         if (newLat != 0 && newLng != 0 && mockMapView != null) {
+                            // Preserve the coordinates returned by the full-map picker.
+                            // recenter() targets the driver's GPS and would move the map center
+                            // away from the chosen destination, causing onMapMoved() to overwrite it.
                             mockMapView.setDestinationLocation(newLat, newLng, "Selected Location", selectedCustomerAddress);
-                            mockMapView.recenter();
                         }
                     }
                 }
@@ -350,6 +352,22 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             detailsIntent.putExtra("PICKUP_LNG", 121.0475865);
             detailsIntent.putExtra("DEST_LAT", destPoint.getLatitude());
             detailsIntent.putExtra("DEST_LNG", destPoint.getLongitude());
+
+            // Keep the selected customer's directory location in sync with the confirmed pin.
+            // This updates an existing customer (matched by phone) or creates the record if needed.
+            if (customerName != null && !customerName.trim().isEmpty()
+                    && customerPhone != null && !customerPhone.trim().isEmpty()) {
+                boolean customerLocationSaved = new DatabaseHelper(this).saveCustomer(
+                        customerName, customerPhone, customerEmail, finalAddress,
+                        destPoint.getLatitude(), destPoint.getLongitude());
+                if (!customerLocationSaved) {
+                    btnConfirmLocation.setEnabled(true);
+                    Toast.makeText(this,
+                            "Could not update the customer's saved location. Please try again.",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
             startActivity(detailsIntent);
         });
     }
@@ -363,8 +381,9 @@ public class NewBookingLocationActivity extends AppCompatActivity {
                 locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
                     if (mockMapView != null) mockMapView.updateDriverLocation(latitude, longitude);
                 });
+                // Update only the driver marker. Do not recenter here: onResume can run
+                // after returning from the map picker, and recentering would override the pin. 
                 mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-                mockMapView.recenter();
             }
         }
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
