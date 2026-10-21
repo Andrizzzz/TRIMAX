@@ -181,6 +181,63 @@ public class ReportsActivity extends AppCompatActivity {
             if (!busiestDriver.isEmpty()) insights.append("Most assigned driver by booking count: ").append(busiestDriver).append(".\n");
             tvInsights.setText(insights.toString().trim());
         }
+
+        updateActivityTrendChart();
+    }
+
+    private void updateActivityTrendChart() {
+        ActivityTrendChartView chart = findViewById(R.id.activityTrendChart);
+        if (chart == null || dbHelper == null) return;
+
+        List<Delivery> bookings = getFilteredBookings();
+        List<Long> timestamps = new java.util.ArrayList<>();
+        for (Delivery booking : bookings) {
+            long timestamp = parseCreatedAt(booking.getCreatedAt());
+            if (timestamp > 0L) timestamps.add(timestamp);
+        }
+        if (timestamps.isEmpty()) {
+            chart.setChartData(new java.util.ArrayList<>(), new java.util.ArrayList<>());
+            return;
+        }
+
+        long min = timestamps.get(0);
+        long max = timestamps.get(0);
+        for (Long timestamp : timestamps) {
+            if (timestamp < min) min = timestamp;
+            if (timestamp > max) max = timestamp;
+        }
+
+        Calendar first = Calendar.getInstance();
+        first.setTimeInMillis(min);
+        first.set(Calendar.HOUR_OF_DAY, 0);
+        first.set(Calendar.MINUTE, 0);
+        first.set(Calendar.SECOND, 0);
+        first.set(Calendar.MILLISECOND, 0);
+        Calendar last = Calendar.getInstance();
+        last.setTimeInMillis(max);
+        last.set(Calendar.HOUR_OF_DAY, 0);
+        last.set(Calendar.MINUTE, 0);
+        last.set(Calendar.SECOND, 0);
+        last.set(Calendar.MILLISECOND, 0);
+
+        long daySpan = Math.max(1L, ((last.getTimeInMillis() - first.getTimeInMillis()) / 86400000L) + 1L);
+        int bucketCount = (int) Math.min(7L, daySpan);
+        long bucketSize = Math.max(1L, (long) Math.ceil(daySpan / (double) bucketCount));
+        List<String> labels = new java.util.ArrayList<>();
+        List<Integer> counts = new java.util.ArrayList<>();
+        SimpleDateFormat labelFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
+        for (int i = 0; i < bucketCount; i++) {
+            Calendar bucketStart = (Calendar) first.clone();
+            bucketStart.add(Calendar.DAY_OF_YEAR, (int) (i * bucketSize));
+            labels.add(labelFormat.format(bucketStart.getTime()));
+            counts.add(0);
+        }
+        for (Long timestamp : timestamps) {
+            long dayOffset = (timestamp - first.getTimeInMillis()) / 86400000L;
+            int bucket = (int) Math.min(bucketCount - 1L, dayOffset / bucketSize);
+            counts.set(bucket, counts.get(bucket) + 1);
+        }
+        chart.setChartData(labels, counts);
     }
 
     private String mostFrequent(Map<String, Integer> counts) {
