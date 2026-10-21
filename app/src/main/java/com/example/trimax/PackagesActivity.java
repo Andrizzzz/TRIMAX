@@ -36,7 +36,9 @@ public class PackagesActivity extends AppCompatActivity {
         if (root != null) {
             ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                // Keep the content below the status bar, but don't shrink the whole layout
+                // by applying the bottom navigation-bar inset to the root.
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
                 return insets;
             });
         }
@@ -55,6 +57,14 @@ public class PackagesActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                return insets;
+            });
+            bottomNavigation.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_LABELED);
+            bottomNavigation.setItemHorizontalTranslationEnabled(false);
+            bottomNavigation.setItemActiveIndicatorEnabled(false);
             bottomNavigation.setSelectedItemId(R.id.nav_packages);
             setupBottomNavigation(bottomNavigation);
         }
