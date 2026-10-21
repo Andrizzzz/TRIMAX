@@ -70,6 +70,7 @@ public class MockMapView extends FrameLayout {
     private OnLocationChangeListener locationChangeListener;
 
     private MapView mapView;
+    private Marker hubMarker;
     private Marker riderMarker;
     private Marker customerMarker;
     private Polyline routePolyline;
@@ -158,11 +159,18 @@ public class MockMapView extends FrameLayout {
 
         routingService = new OSMRoutingService();
 
-        // Setup Rider / Pickup Marker
+        // Setup Fixed TRIMAX Hub Marker (STATIC - NEVER MOVES)
+        hubMarker = new Marker(mapView);
+        hubMarker.setPosition(RIDER_POINT);
+        hubMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        hubMarker.setTitle("TRIMAX Hub — Fixed Pickup Location");
+        mapView.getOverlays().add(hubMarker);
+
+        // Setup Live Driver / GPS Marker
         riderMarker = new Marker(mapView);
         riderMarker.setPosition(RIDER_POINT);
         riderMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        riderMarker.setTitle("TRIMAX Hub — Fixed Pickup Location");
+        riderMarker.setTitle("🛵 Driver Location");
         mapView.getOverlays().add(riderMarker);
 
         // Setup Customer Destination Marker
@@ -423,7 +431,7 @@ public class MockMapView extends FrameLayout {
     }
 
     private void calculateRouteAndNotify() {
-        GeoPoint start = riderMarker != null ? riderMarker.getPosition() : RIDER_POINT;
+        GeoPoint start = RIDER_POINT;
         GeoPoint end = customerMarker != null ? customerMarker.getPosition() : sampleGeoPoints[0];
 
         routingService.calculateRoute(start, end, new RoutingService.RouteCallback() {

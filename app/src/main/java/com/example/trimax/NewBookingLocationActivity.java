@@ -88,11 +88,29 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         FloatingActionButton btnZoomOut = findViewById(R.id.btnZoomOut);
         FloatingActionButton btnMyLocation = findViewById(R.id.btnMyLocation);
 
+        TextView tvCustomerName = findViewById(R.id.tvCustomerName);
+        if (tvCustomerName != null) {
+            tvCustomerName.setText(customerName != null && !customerName.trim().isEmpty() ? customerName : "Guest Customer");
+        }
+
         TextView tvCustomerAddress = findViewById(R.id.tvCustomerAddress);
         if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
         if (mockMapView != null && savedCustomerLatitude != 0 && savedCustomerLongitude != 0) {
             mockMapView.setDestinationLocation(savedCustomerLatitude, savedCustomerLongitude,
                     selectedCustomerAddress, selectedCustomerAddress);
+        }
+        if (mockMapView != null) {
+            locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                if (mockMapView != null) {
+                    mockMapView.updateDriverLocation(latitude, longitude);
+                }
+            });
+            double currentLat = locationHelper.getLatitude();
+            double currentLng = locationHelper.getLongitude();
+            if (currentLat != 0 && currentLng != 0) {
+                mockMapView.updateDriverLocation(currentLat, currentLng);
+                mockMapView.recenter();
+            }
         }
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
 
@@ -248,16 +266,29 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             btnUseCurrentLocation.setOnClickListener(v -> checkAndFetchGpsLocation());
         }
 
-        if (btnChangeCustomerLocation != null && mockMapView != null) {
+        androidx.cardview.widget.CardView cardMapContainer = findViewById(R.id.cardMapContainer);
+        if (btnChangeCustomerLocation != null) {
             btnChangeCustomerLocation.setOnClickListener(v -> {
+                if (cardMapContainer != null) {
+                    android.view.ViewGroup.LayoutParams params = cardMapContainer.getLayoutParams();
+                    int expandedHeight = dp(380);
+                    int normalHeight = dp(180);
+                    boolean isExpanded = params.height == expandedHeight;
+                    params.height = isExpanded ? normalHeight : expandedHeight;
+                    cardMapContainer.setLayoutParams(params);
+                    if (btnChangeCustomerLocation != null) {
+                        btnChangeCustomerLocation.setText(isExpanded ? "Minimize Map" : "Change");
+                    }
+                }
                 if (actvSmartLocationSearch != null) {
                     actvSmartLocationSearch.requestFocus();
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     if (imm != null) imm.showSoftInput(actvSmartLocationSearch, InputMethodManager.SHOW_IMPLICIT);
                 }
-                Toast.makeText(this,
-                        "Search and select an address, or tap the map to place the pin. The map will not jump to sample locations.",
-                        Toast.LENGTH_LONG).show();
+                if (mockMapView != null) {
+                    mockMapView.recenter();
+                }
+                Toast.makeText(this, "Search an address or tap anywhere on the enlarged map to pin location.", Toast.LENGTH_SHORT).show();
             });
         }
 
@@ -321,6 +352,13 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         super.onResume();
         if (mockMapView != null) {
             mockMapView.onResume();
+            if (locationHelper != null) {
+                locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                    if (mockMapView != null) mockMapView.updateDriverLocation(latitude, longitude);
+                });
+                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+                mockMapView.recenter();
+            }
         }
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
         if (btnConfirmLocation != null) {
@@ -342,6 +380,10 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         if (nominatimSearchService != null) nominatimSearchService.cancelPendingSearches();
         if (mockMapView != null) mockMapView.stopLiveDeliveryAnimation();
         super.onDestroy();
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void checkAndFetchGpsLocation() {
