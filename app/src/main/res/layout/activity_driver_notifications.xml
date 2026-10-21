@@ -90,7 +90,10 @@
 
                     <TextView
                         android:id="@+id/tvNotif1Title"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_toStartOf="@id/tvNotif1Time"
+                        android:ellipsize="end"
+                        android:maxLines="2"
                         android:layout_height="wrap_content"
                         android:text="📦 New Delivery Assigned"
                         android:textColor="@color/text_primary"
@@ -138,7 +141,10 @@
 
                     <TextView
                         android:id="@+id/tvNotif2Title"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_toStartOf="@id/tvNotif2Time"
+                        android:ellipsize="end"
+                        android:maxLines="2"
                         android:layout_height="wrap_content"
                         android:text="⚡ Delivery Priority Updated"
                         android:textColor="@color/text_primary"
