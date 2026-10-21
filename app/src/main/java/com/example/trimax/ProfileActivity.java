@@ -90,7 +90,15 @@ public class ProfileActivity extends AppCompatActivity {
         if (cardEditProfile != null) cardEditProfile.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, EditProfileActivity.class)));
         if (cardSettings != null) cardSettings.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, SettingsActivity.class)));
         if (cardDeliveryHistory != null) cardDeliveryHistory.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, BookingsActivity.class)));
-        if (cardHelpSupport != null) cardHelpSupport.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, SettingsActivity.class)));
+        if (cardHelpSupport != null) {
+            cardHelpSupport.setOnClickListener(v -> new AlertDialog.Builder(ProfileActivity.this)
+                    .setTitle("Help & Support")
+                    .setMessage("Need help with TRIMAX?\\n\\n"
+                            + "For booking, account, or delivery issues, contact your system administrator "
+                            + "or the support contact provided by your organization.")
+                    .setPositiveButton("OK", null)
+                    .show());
+        }
         if (cardReports != null) cardReports.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ReportsActivity.class)));
 
         if (btnLogout != null) btnLogout.setOnClickListener(v -> showLogoutDialog());
