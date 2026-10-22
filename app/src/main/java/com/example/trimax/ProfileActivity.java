@@ -56,6 +56,18 @@ public class ProfileActivity extends AppCompatActivity {
             });
         }
 
+        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
+        if (cardBottomNavContainer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
+                params.bottomMargin = baseMargin + systemBars.bottom;
+                v.setLayoutParams(params);
+                return insets;
+            });
+        }
+
         ImageView btnBack = findViewById(R.id.btnBack);
         ImageView ivProfilePhoto = findViewById(R.id.ivProfilePhoto);
         if (ivProfilePhoto != null) ivProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
