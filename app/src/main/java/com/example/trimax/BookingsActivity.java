@@ -284,6 +284,8 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         });
     }
 
+    private int currentTabIndex = 1;
+
     private void highlightBottomNavItem(int activeId) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
         int activeIndex = 0;
@@ -309,7 +311,6 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         LinearLayout navContainer = findViewById(R.id.bottomNavigation);
         if (indicator != null && navContainer != null) {
             final int targetIndex = activeIndex;
-            final int initialIndex = (prevIndex >= 0 && prevIndex != activeIndex) ? prevIndex : activeIndex;
 
             navContainer.post(() -> {
                 int totalWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
@@ -319,19 +320,27 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
                 }
                 int tabWidth = totalWidth / 5;
 
-                android.view.ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+                ViewGroup.LayoutParams lp = indicator.getLayoutParams();
                 int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
                 lp.width = tabWidth - (marginHorizontal * 2);
                 indicator.setLayoutParams(lp);
 
-                float startX = navContainer.getPaddingLeft() + (initialIndex * tabWidth) + marginHorizontal;
                 float targetX = navContainer.getPaddingLeft() + (targetIndex * tabWidth) + marginHorizontal;
 
-                indicator.setTranslationX(startX);
+                if (prevIndex >= 0 && prevIndex != targetIndex) {
+                    float startX = navContainer.getPaddingLeft() + (prevIndex * tabWidth) + marginHorizontal;
+                    indicator.setTranslationX(startX);
+                } else if (indicator.getTranslationX() == 0 && targetIndex > 0) {
+                    float startX = navContainer.getPaddingLeft() + (currentTabIndex * tabWidth) + marginHorizontal;
+                    indicator.setTranslationX(startX);
+                }
+
+                currentTabIndex = targetIndex;
+
                 indicator.animate()
                         .translationX(targetX)
-                        .setDuration(280)
-                        .setInterpolator(new android.view.animation.OvershootInterpolator(0.8f))
+                        .setDuration(260)
+                        .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
                         .start();
             });
         }
