@@ -167,6 +167,10 @@ public class BookingDetailActivity extends AppCompatActivity {
         if (btnConfirmBooking != null) {
             btnConfirmBooking.setOnClickListener(v -> {
                 if (currentDelivery == null) return;
+                if (!isAdminUser()) {
+                    Toast.makeText(this, "Only Admin can approve and confirm bookings", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
                 if (!"PENDING".equals(currentStatus)) {
                     Toast.makeText(this, "Only PENDING bookings can be confirmed", Toast.LENGTH_SHORT).show();
@@ -192,8 +196,12 @@ public class BookingDetailActivity extends AppCompatActivity {
             btnCancelBooking.setOnClickListener(v -> {
                 if (currentDelivery == null) return;
                 String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
-                if (!"PENDING".equals(currentStatus) && !"CONFIRMED".equals(currentStatus)) {
-                    Toast.makeText(this, "Only pending or confirmed bookings can be cancelled", Toast.LENGTH_SHORT).show();
+                boolean canCancel = "PENDING".equals(currentStatus)
+                        || (isAdminUser() && "CONFIRMED".equals(currentStatus));
+                if (!canCancel) {
+                    Toast.makeText(this, isAdminUser()
+                            ? "Only pending or confirmed bookings can be cancelled"
+                            : "Agents can only cancel pending bookings", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -322,7 +330,7 @@ public class BookingDetailActivity extends AppCompatActivity {
             tvStatusBadge.setText("PENDING");
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
             tvStatusBadge.setTextColor(0xFFD97706);
-            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.VISIBLE);
+            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(isAdminUser() ? View.VISIBLE : View.GONE);
             if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.VISIBLE);
             return;
         }
@@ -351,8 +359,12 @@ public class BookingDetailActivity extends AppCompatActivity {
         tvStatusBadge.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.primary_blue));
         if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
         if (btnCancelBooking != null) {
-            btnCancelBooking.setVisibility("CONFIRMED".equals(upperStatus) ? View.VISIBLE : View.GONE);
+            btnCancelBooking.setVisibility(isAdminUser() && "CONFIRMED".equals(upperStatus) ? View.VISIBLE : View.GONE);
         }
+    }
+
+    private boolean isAdminUser() {
+        return session != null && "ADMIN".equalsIgnoreCase(session.getRole());
     }
 
     private void showErrorState(String title, String message) {
