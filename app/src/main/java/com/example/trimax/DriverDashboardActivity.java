@@ -554,7 +554,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 tvDutyStatusPill.setTextColor(0xFF34D399); // Green
             }
             if (btnToggleDuty != null) {
-                btnToggleDuty.setText("END DUTY");
+                btnToggleDuty.setText("END DUTY 📷");
                 btnToggleDuty.setTextColor(0xFFEF4444); // Red
             }
             if (tvGpsTrackingLabel != null) {
@@ -571,7 +571,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 tvDutyStatusPill.setTextColor(0xFFF87171); // Red
             }
             if (btnToggleDuty != null) {
-                btnToggleDuty.setText("START DUTY");
+                btnToggleDuty.setText("START DUTY 📷");
                 btnToggleDuty.setTextColor(0xFF2563EB); // Blue
             }
             if (tvGpsTrackingLabel != null) {
