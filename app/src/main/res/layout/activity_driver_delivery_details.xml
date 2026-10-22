@@ -207,7 +207,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 2. LOCATIONS CARD (PICKUP & DESTINATION) -->
+            <!-- 2. DROP-OFF DESTINATION CARD (truck starts at the TRIMAX hub) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -221,53 +221,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp">
-
-                    <!-- PICKUP -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="top"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:layout_marginTop="2dp"
-                            android:contentDescription="Pickup Pin"
-                            android:src="@drawable/ic_location"
-                            app:tint="#2563EB" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="PICKUP LOCATION"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvPickupAddress"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="123 Maple St., San Jose del Monte, Bulacan"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="#2064748B" />
 
                     <!-- DESTINATION -->
                     <LinearLayout
