@@ -16,7 +16,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -80,11 +79,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
         View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_bookings);
-            setupBottomNavigation(bottomNavigation);
-        }
+        setupBottomNavigation();
 
         // RecyclerView Setup
         bookingAdapter = new BookingAdapter(this);
@@ -230,31 +225,47 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         finish();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                Intent dashboardIntent = new Intent(this, DashboardActivity.class);
-                dashboardIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(dashboardIntent);
+    private void setupBottomNavigation() {
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        View selected = findViewById(R.id.nav_bookings);
+        if (selected != null) selected.setSelected(true);
+
+        if (home != null) home.setOnClickListener(v -> {
+            if (R.id.nav_bookings != R.id.nav_home) {
+                Intent intent = new Intent(BookingsActivity.this, DashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
+            }
+        });
+        if (bookings != null) bookings.setOnClickListener(v -> {
+            if (R.id.nav_bookings != R.id.nav_bookings) {
+                startActivity(new Intent(this, BookingsActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
+            }
+        });
+        if (packages != null) packages.setOnClickListener(v -> {
+            if (R.id.nav_bookings != R.id.nav_packages) {
                 startActivity(new Intent(this, PackagesActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
+            }
+        });
+        if (clients != null) clients.setOnClickListener(v -> {
+            if (R.id.nav_bookings != R.id.nav_clients) {
+                startActivity(new Intent(this, ClientsActivity.class));
+                finish();
+            }
+        });
+        if (profile != null) profile.setOnClickListener(v -> {
+            if (R.id.nav_bookings != R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));
                 finish();
-                return true;
             }
-            return false;
         });
     }
 }
