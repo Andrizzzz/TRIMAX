@@ -467,7 +467,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         tvHeroStatusPill.setText(currentHeroDelivery.getStatus());
         tvHeroCustomerName.setText(currentHeroDelivery.getCustomerName());
         tvHeroPickup.setText(currentHeroDelivery.getPickupLocation());
-        tvHeroDestination.setText(currentHeroDelivery.getDestination());
+        tvHeroDestination.setText("Drop-off: " + (TextUtils.isEmpty(currentHeroDelivery.getDestination()) ? "Not specified" : currentHeroDelivery.getDestination()));
 
         String instructions = currentHeroDelivery.getSpecialInstructions();
         if (TextUtils.isEmpty(instructions)) {
