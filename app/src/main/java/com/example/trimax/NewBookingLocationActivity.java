@@ -109,7 +109,13 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             double currentLng = locationHelper.getLongitude();
             if (currentLat != 0 && currentLng != 0) {
                 mockMapView.updateDriverLocation(currentLat, currentLng);
-                mockMapView.recenter();
+                // Preserve the saved customer destination. Recentring on the live GPS here
+                // moves the map center away from the saved pin, and onMapMoved() can then
+                // overwrite the customer's saved destination with the driver's location.
+                boolean hasSavedCustomerLocation = isValidCoordinate(savedCustomerLatitude, savedCustomerLongitude);
+                if (!hasSavedCustomerLocation) {
+                    mockMapView.recenter();
+                }
             }
         }
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
