@@ -403,7 +403,7 @@ public class DashboardActivity extends AppCompatActivity {
                 tvDutyTimeInfo.setText("On Duty shift active since " + startTime);
             }
             if (btnAgentStartDuty != null) {
-                btnAgentStartDuty.setText("END DUTY 🛑");
+                btnAgentStartDuty.setText("END DUTY 📷");
                 btnAgentStartDuty.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEF4444)); // Red
             }
         } else {
