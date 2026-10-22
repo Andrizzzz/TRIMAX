@@ -762,22 +762,146 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
+            <LinearLayout
                 android:id="@+id/bottomNavigation"
                 android:layout_width="match_parent"
                 android:layout_height="72dp"
-                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:gravity="center"
                 android:background="@android:color/transparent"
-                app:elevation="0dp"
-                app:itemActiveIndicatorStyle="@style/App.BottomNavActiveIndicator"
-                app:itemIconSize="24dp"
-                app:itemIconTint="@color/primary_blue"
-                app:itemRippleColor="#3B82F6"
-                app:itemTextColor="@color/primary_blue"
-                app:labelVisibilityMode="labeled"
-                app:paddingBottomSystemWindowInsets="false"
-                app:paddingTopSystemWindowInsets="false"
-                app:menu="@menu/bottom_nav_menu" />
+                android:paddingHorizontal="4dp"
+                android:weightSum="5">
+
+                <LinearLayout
+                    android:id="@+id/nav_home"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Home">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_home"
+                        android:tint="@color/primary_blue"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Home"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_bookings"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Bookings">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_bookings"
+                        android:tint="@color/primary_blue"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bookings"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_packages"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Packages">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_categories"
+                        android:tint="@color/primary_blue"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Packages"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_clients"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Clients">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_clients"
+                        android:tint="@color/primary_blue"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Clients"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_profile"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Profile">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_account"
+                        android:tint="@color/primary_blue"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Profile"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+            </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
