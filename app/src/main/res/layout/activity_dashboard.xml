@@ -776,7 +776,7 @@
                     android:layout_gravity="start|top"
                     android:layout_marginHorizontal="6dp"
                     android:layout_marginVertical="8dp"
-                    android:background="@drawable/bg_bottom_nav_pill"
+                    android:background="@android:color/transparent"
                     android:clickable="false"
                     android:focusable="false" />
 
@@ -797,7 +797,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_bottom_nav_pill"
+                    android:background="@android:color/transparent"
                     android:clickable="true"
                     android:focusable="true"
                     android:contentDescription="Home">
@@ -825,7 +825,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_bottom_nav_pill"
+                    android:background="@android:color/transparent"
                     android:clickable="true"
                     android:focusable="true"
                     android:contentDescription="Bookings">
@@ -853,7 +853,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_bottom_nav_pill"
+                    android:background="@android:color/transparent"
                     android:clickable="true"
                     android:focusable="true"
                     android:contentDescription="Packages">
@@ -881,7 +881,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_bottom_nav_pill"
+                    android:background="@android:color/transparent"
                     android:clickable="true"
                     android:focusable="true"
                     android:contentDescription="Clients">
@@ -909,7 +909,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_bottom_nav_pill"
+                    android:background="@android:color/transparent"
                     android:clickable="true"
                     android:focusable="true"
                     android:contentDescription="Profile">
