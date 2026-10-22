@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 9; // Fixed TRIMAX pickup hub and destination validation
+    private static final int DATABASE_VERSION = 10; // Duty photo verification for both start and end
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -225,6 +225,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "start_time TEXT, "
                 + "end_time TEXT, "
                 + "photo_path TEXT, "
+                + "end_photo_path TEXT, "
+                + "role TEXT, "
                 + "latitude REAL, "
                 + "longitude REAL, "
                 + "created_at TEXT)";
@@ -476,9 +478,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "start_time TEXT, "
                 + "end_time TEXT, "
                 + "photo_path TEXT, "
+                + "end_photo_path TEXT, "
+                + "role TEXT, "
                 + "latitude REAL, "
                 + "longitude REAL, "
                 + "created_at TEXT)");
+        try { db.execSQL("ALTER TABLE " + TABLE_ATTENDANCE + " ADD COLUMN end_photo_path TEXT"); } catch (Exception ignored) {}
+        try { db.execSQL("ALTER TABLE " + TABLE_ATTENDANCE + " ADD COLUMN role TEXT"); } catch (Exception ignored) {}
         db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
         createCustomersTable(db);
         if (oldVersion < 6) {
@@ -1354,28 +1360,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean saveAttendance(String agentId, String photoPath, double lat, double lng) {
+        return saveAttendance(agentId, "", photoPath, lat, lng);
+    }
+
+    public boolean saveAttendance(String agentId, String role, String photoPath, double lat, double lng) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("agent_id", agentId);
+        cv.put("role", role != null ? role : "");
         cv.put("duty_status", "ON_DUTY");
         String nowStr = String.valueOf(System.currentTimeMillis());
         cv.put("start_time", nowStr);
         cv.put("end_time", "");
         cv.put("photo_path", photoPath != null ? photoPath : "");
+        cv.put("end_photo_path", "");
         cv.put("latitude", lat);
         cv.put("longitude", lng);
         cv.put("created_at", nowStr);
-
-        long id = db.insert(TABLE_ATTENDANCE, null, cv);
-        return id != -1;
+        return db.insert(TABLE_ATTENDANCE, null, cv) != -1;
     }
 
     public boolean endDuty(String agentId) {
+        return endDuty(agentId, "");
+    }
+
+    public boolean endDuty(String agentId, String endPhotoPath) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("duty_status", "OFF_DUTY");
         cv.put("end_time", String.valueOf(System.currentTimeMillis()));
-
+        cv.put("end_photo_path", endPhotoPath != null ? endPhotoPath : "");
         int rows = db.update(TABLE_ATTENDANCE, cv, "agent_id=? AND duty_status='ON_DUTY'", new String[]{agentId != null ? agentId : ""});
         return rows > 0;
     }
