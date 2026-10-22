@@ -131,22 +131,18 @@ public class PackagesActivity extends AppCompatActivity {
         return list;
     }
 
-    private int currentTabIndex = 2;
-
-    private void navigateToTab(int activeId, Class<?> targetClass) {
-        highlightBottomNavItem(activeId, () -> {
-            Intent intent = new Intent(PackagesActivity.this, targetClass);
-            intent.putExtra("PREV_TAB_INDEX", 2);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-            startActivity(intent);
-            overridePendingTransition(0, 0);
-            finish();
-            overridePendingTransition(0, 0);
-        });
+    private void navigateToTab(Class<?> targetClass) {
+        Intent intent = new Intent(PackagesActivity.this, targetClass);
+        intent.putExtra("PREV_TAB_INDEX", 2);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
     }
 
     private void setupBottomNavigation() {
-        highlightBottomNavItem(R.id.nav_packages, null);
+        highlightBottomNavItem(R.id.nav_packages);
 
         View home = findViewById(R.id.nav_home);
         View bookings = findViewById(R.id.nav_bookings);
@@ -154,14 +150,14 @@ public class PackagesActivity extends AppCompatActivity {
         View clients = findViewById(R.id.nav_clients);
         View profile = findViewById(R.id.nav_profile);
 
-        if (home != null) home.setOnClickListener(v -> navigateToTab(R.id.nav_home, DashboardActivity.class));
-        if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(R.id.nav_bookings, BookingsActivity.class));
-        if (packages != null) packages.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_packages, null));
-        if (clients != null) clients.setOnClickListener(v -> navigateToTab(R.id.nav_clients, ClientsActivity.class));
-        if (profile != null) profile.setOnClickListener(v -> navigateToTab(R.id.nav_profile, ProfileActivity.class));
+        if (home != null) home.setOnClickListener(v -> navigateToTab(DashboardActivity.class));
+        if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(BookingsActivity.class));
+        if (packages != null) packages.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_packages));
+        if (clients != null) clients.setOnClickListener(v -> navigateToTab(ClientsActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(ProfileActivity.class));
     }
 
-    private void highlightBottomNavItem(int activeId, Runnable onComplete) {
+    private void highlightBottomNavItem(int activeId) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
         int activeIndex = 0;
         for (int i = 0; i < ids.length; i++) {
@@ -186,7 +182,7 @@ public class PackagesActivity extends AppCompatActivity {
         LinearLayout navContainer = findViewById(R.id.bottomNavigation);
         if (indicator != null) {
             final int targetIndex = activeIndex;
-            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : (currentTabIndex >= 0 ? currentTabIndex : activeIndex);
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
 
             int screenWidth = getResources().getDisplayMetrics().widthPixels;
             int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
@@ -201,7 +197,7 @@ public class PackagesActivity extends AppCompatActivity {
             float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
             indicator.setTranslationX(startX);
 
-            if (navContainer != null) {
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
                 navContainer.post(() -> {
                     int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
                     if (measuredWidth > 0) {
@@ -213,24 +209,14 @@ public class PackagesActivity extends AppCompatActivity {
                     }
 
                     float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
-                    currentTabIndex = targetIndex;
 
                     indicator.animate()
                             .translationX(targetX)
-                            .setDuration(180)
+                            .setDuration(220)
                             .setInterpolator(new FastOutSlowInInterpolator())
-                            .withEndAction(() -> {
-                                if (onComplete != null) {
-                                    onComplete.run();
-                                }
-                            })
                             .start();
                 });
-            } else {
-                if (onComplete != null) onComplete.run();
             }
-        } else {
-            if (onComplete != null) onComplete.run();
         }
     }
 
