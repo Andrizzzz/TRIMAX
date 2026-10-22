@@ -567,6 +567,11 @@ public class MockMapView extends FrameLayout {
         return hasExplicitDestinationSelection;
     }
 
+    /** Clears the previous destination only when the user explicitly chooses GPS. */
+    public void clearExplicitDestinationSelection() {
+        hasExplicitDestinationSelection = false;
+    }
+
     private boolean isValidCoordinate(double latitude, double longitude) {
         return Double.isFinite(latitude) && Double.isFinite(longitude)
                 && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
