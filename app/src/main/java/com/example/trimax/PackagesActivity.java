@@ -212,7 +212,10 @@ public class PackagesActivity extends AppCompatActivity {
 
             navContainer.post(() -> {
                 int totalWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
-                if (totalWidth <= 0) return;
+                if (totalWidth <= 0) {
+                    int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                    totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+                }
                 int tabWidth = totalWidth / 5;
 
                 android.view.ViewGroup.LayoutParams lp = indicator.getLayoutParams();
