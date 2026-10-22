@@ -89,8 +89,6 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         chipCancelled = findViewById(R.id.chipCancelled);
         chipCompleted = findViewById(R.id.chipCompleted);
 
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-
         setupBottomNavigation();
 
         // RecyclerView Setup
