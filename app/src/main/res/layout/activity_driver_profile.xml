@@ -274,7 +274,7 @@
         app:itemIconTint="@color/primary_blue"
         app:itemRippleColor="#3B82F6"
         app:itemTextColor="@color/primary_blue"
-        app:labelVisibilityMode="selected"
+        app:labelVisibilityMode="labeled"
         app:itemHorizontalTranslationEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu" />
