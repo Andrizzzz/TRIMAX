@@ -253,7 +253,8 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:background="@android:color/transparent"
-            android:paddingHorizontal="4dp"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="8dp"
             android:weightSum="5">
 
             <LinearLayout
@@ -263,21 +264,23 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_bottom_nav_pill"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Home">
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:src="@drawable/ic_home"
-                    android:tint="@color/primary_blue"
+                    app:tint="@color/bottom_nav_icon_color"
+                    android:duplicateParentState="true"
                     android:contentDescription="@null" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Home"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/bottom_nav_text_color"
+                    android:duplicateParentState="true"
                     android:textSize="10sp"
                     android:maxLines="1" />
             </LinearLayout>
@@ -289,21 +292,23 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_bottom_nav_pill"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Bookings">
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:src="@drawable/ic_bookings"
-                    android:tint="@color/primary_blue"
+                    app:tint="@color/bottom_nav_icon_color"
+                    android:duplicateParentState="true"
                     android:contentDescription="@null" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Bookings"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/bottom_nav_text_color"
+                    android:duplicateParentState="true"
                     android:textSize="10sp"
                     android:maxLines="1" />
             </LinearLayout>
@@ -315,21 +320,23 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_bottom_nav_pill"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Packages">
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:src="@drawable/ic_categories"
-                    android:tint="@color/primary_blue"
+                    app:tint="@color/bottom_nav_icon_color"
+                    android:duplicateParentState="true"
                     android:contentDescription="@null" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Packages"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/bottom_nav_text_color"
+                    android:duplicateParentState="true"
                     android:textSize="10sp"
                     android:maxLines="1" />
             </LinearLayout>
@@ -341,21 +348,23 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_bottom_nav_pill"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Clients">
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:src="@drawable/ic_clients"
-                    android:tint="@color/primary_blue"
+                    app:tint="@color/bottom_nav_icon_color"
+                    android:duplicateParentState="true"
                     android:contentDescription="@null" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Clients"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/bottom_nav_text_color"
+                    android:duplicateParentState="true"
                     android:textSize="10sp"
                     android:maxLines="1" />
             </LinearLayout>
@@ -367,27 +376,28 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_bottom_nav_pill"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Profile">
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:src="@drawable/ic_account"
-                    android:tint="@color/primary_blue"
+                    app:tint="@color/bottom_nav_icon_color"
+                    android:duplicateParentState="true"
                     android:contentDescription="@null" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Profile"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/bottom_nav_text_color"
+                    android:duplicateParentState="true"
                     android:textSize="10sp"
                     android:maxLines="1" />
             </LinearLayout>
+
         </LinearLayout>
-
-
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

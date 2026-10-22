@@ -565,41 +565,52 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupBottomNavigation() {
+        highlightBottomNavItem(R.id.nav_home);
+
         View home = findViewById(R.id.nav_home);
         View bookings = findViewById(R.id.nav_bookings);
         View packages = findViewById(R.id.nav_packages);
         View clients = findViewById(R.id.nav_clients);
         View profile = findViewById(R.id.nav_profile);
 
-        if (home != null) {
-            home.setSelected(true);
-            home.setOnClickListener(v -> {
-                // Already on Home.
-            });
-        }
+        if (home != null) home.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_home));
         if (bookings != null) {
             bookings.setOnClickListener(v -> {
+                highlightBottomNavItem(R.id.nav_bookings);
                 startActivity(new Intent(DashboardActivity.this, BookingsActivity.class));
                 finish();
             });
         }
         if (packages != null) {
             packages.setOnClickListener(v -> {
+                highlightBottomNavItem(R.id.nav_packages);
                 startActivity(new Intent(DashboardActivity.this, PackagesActivity.class));
                 finish();
             });
         }
         if (clients != null) {
             clients.setOnClickListener(v -> {
+                highlightBottomNavItem(R.id.nav_clients);
                 startActivity(new Intent(DashboardActivity.this, ClientsActivity.class));
                 finish();
             });
         }
         if (profile != null) {
             profile.setOnClickListener(v -> {
+                highlightBottomNavItem(R.id.nav_profile);
                 startActivity(new Intent(DashboardActivity.this, ProfileActivity.class));
                 finish();
             });
+        }
+    }
+
+    private void highlightBottomNavItem(int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                v.setSelected(id == activeId);
+            }
         }
     }
 }

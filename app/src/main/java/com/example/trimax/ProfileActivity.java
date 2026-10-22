@@ -191,46 +191,46 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setupBottomNavigation() {
+        highlightBottomNavItem(R.id.nav_profile);
+
         View home = findViewById(R.id.nav_home);
         View bookings = findViewById(R.id.nav_bookings);
         View packages = findViewById(R.id.nav_packages);
         View clients = findViewById(R.id.nav_clients);
         View profile = findViewById(R.id.nav_profile);
 
-        View selected = findViewById(R.id.nav_profile);
-        if (selected != null) selected.setSelected(true);
-
         if (home != null) home.setOnClickListener(v -> {
-            if (R.id.nav_profile != R.id.nav_home) {
-                Intent intent = new Intent(ProfileActivity.this, DashboardActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-            }
+            highlightBottomNavItem(R.id.nav_home);
+            Intent intent = new Intent(ProfileActivity.this, DashboardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
         });
         if (bookings != null) bookings.setOnClickListener(v -> {
-            if (R.id.nav_profile != R.id.nav_bookings) {
-                startActivity(new Intent(this, BookingsActivity.class));
-                finish();
-            }
+            highlightBottomNavItem(R.id.nav_bookings);
+            startActivity(new Intent(this, BookingsActivity.class));
+            finish();
         });
         if (packages != null) packages.setOnClickListener(v -> {
-            if (R.id.nav_profile != R.id.nav_packages) {
-                startActivity(new Intent(this, PackagesActivity.class));
-                finish();
-            }
+            highlightBottomNavItem(R.id.nav_packages);
+            startActivity(new Intent(this, PackagesActivity.class));
+            finish();
         });
         if (clients != null) clients.setOnClickListener(v -> {
-            if (R.id.nav_profile != R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                finish();
-            }
+            highlightBottomNavItem(R.id.nav_clients);
+            startActivity(new Intent(this, ClientsActivity.class));
+            finish();
         });
-        if (profile != null) profile.setOnClickListener(v -> {
-            if (R.id.nav_profile != R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                finish();
+        if (profile != null) profile.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_profile));
+    }
+
+    private void highlightBottomNavItem(int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                v.setSelected(id == activeId);
             }
-        });
+        }
     }
 }

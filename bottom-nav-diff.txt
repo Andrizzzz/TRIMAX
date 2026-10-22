@@ -1,0 +1,162 @@
+﻿diff --git a/app/src/main/java/com/example/trimax/DashboardActivity.java b/app/src/main/java/com/example/trimax/DashboardActivity.java
+index 2695375..4e415ec 100644
+--- a/app/src/main/java/com/example/trimax/DashboardActivity.java
++++ b/app/src/main/java/com/example/trimax/DashboardActivity.java
+@@ -28,6 +28,7 @@ import androidx.core.view.ViewCompat;
+ import androidx.core.view.WindowInsetsCompat;
+ import androidx.drawerlayout.widget.DrawerLayout;
+ 
++import com.google.android.material.bottomnavigation.BottomNavigationView;
+ import com.google.android.material.button.MaterialButton;
+ import com.google.android.material.navigation.NavigationView;
+ 
+@@ -178,7 +179,6 @@ public class DashboardActivity extends AppCompatActivity {
+             });
+         }
+ 
+-        View customBottomNavigation = findViewById(R.id.customBottomNavigation);
+ 
+         String agentName = session.getFullName();
+         String agentEmail = session.getEmail();
+@@ -290,8 +290,12 @@ public class DashboardActivity extends AppCompatActivity {
+             btnQuickNewBooking.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class)));
+         }
+ 
+-        // 8. CUSTOM BOTTOM NAVIGATION
+-        setupCustomBottomNavigation();
++        // 8. BOTTOM NAVIGATION
++        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
++        if (bottomNavigation != null) {
++            bottomNavigation.setSelectedItemId(R.id.nav_home);
++            setupBottomNavigation(bottomNavigation);
++        }
+ 
+         // Back Press Handler for Navigation Drawer
+         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+@@ -553,21 +557,29 @@ public class DashboardActivity extends AppCompatActivity {
+                 .show();
+     }
+ 
+-    private void setupCustomBottomNavigation() {
+-        View home = findViewById(R.id.bottomHome);
+-        View bookings = findViewById(R.id.bottomBookings);
+-        View packages = findViewById(R.id.bottomPackages);
+-        View clients = findViewById(R.id.bottomClients);
+-        View profile = findViewById(R.id.bottomProfile);
+-
+-        if (home != null) home.setOnClickListener(v -> refreshDashboardContent());
+-        if (bookings != null) bookings.setOnClickListener(v ->
+-                startActivity(new Intent(this, BookingsActivity.class)));
+-        if (packages != null) packages.setOnClickListener(v ->
+-                startActivity(new Intent(this, PackagesActivity.class)));
+-        if (clients != null) clients.setOnClickListener(v ->
+-                startActivity(new Intent(this, ClientsActivity.class)));
+-        if (profile != null) profile.setOnClickListener(v ->
+-                startActivity(new Intent(this, ProfileActivity.class)));
++    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
++        bottomNavigation.setOnItemSelectedListener(item -> {
++            int itemId = item.getItemId();
++            if (itemId == R.id.nav_home) {
++                return true;
++            } else if (itemId == R.id.nav_bookings) {
++                startActivity(new Intent(this, BookingsActivity.class));
++                finish();
++                return true;
++            } else if (itemId == R.id.nav_clients) {
++                startActivity(new Intent(this, ClientsActivity.class));
++                finish();
++                return true;
++            } else if (itemId == R.id.nav_packages) {
++                startActivity(new Intent(this, PackagesActivity.class));
++                finish();
++                return true;
++            } else if (itemId == R.id.nav_profile) {
++                startActivity(new Intent(this, ProfileActivity.class));
++                finish();
++                return true;
++            }
++            return false;
++        });
+     }
+ }
+diff --git a/app/src/main/res/layout/activity_dashboard.xml b/app/src/main/res/layout/activity_dashboard.xml
+index aa20c1b..c9dd84c 100644
+--- a/app/src/main/res/layout/activity_dashboard.xml
++++ b/app/src/main/res/layout/activity_dashboard.xml
+@@ -748,54 +748,37 @@
+             </androidx.core.widget.NestedScrollView>
+         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+ 
+-        <!-- CUSTOM BOTTOM NAVIGATION: five equal-width items with stable icon/label alignment -->
++        <!-- BOTTOM NAVIGATION CONTAINER -->
+         <androidx.cardview.widget.CardView
+             android:id="@+id/cardBottomNavContainer"
+-            android:layout_width="0dp"
+-            android:layout_height="64dp"
+-            android:layout_marginHorizontal="16dp"
+-            android:layout_marginBottom="12dp"
++            android:layout_width="match_parent"
++            android:layout_height="72dp"
++            android:layout_marginHorizontal="20dp"
++            android:layout_marginBottom="16dp"
+             app:cardBackgroundColor="@color/card_bg"
+-            app:cardCornerRadius="32dp"
+-            app:cardElevation="8dp"
++            app:cardCornerRadius="36dp"
++            app:cardElevation="10dp"
+             app:layout_constraintBottom_toBottomOf="parent"
+             app:layout_constraintEnd_toEndOf="parent"
+             app:layout_constraintStart_toStartOf="parent">
+ 
+-            <LinearLayout
+-                android:id="@+id/customBottomNavigation"
++            <com.google.android.material.bottomnavigation.BottomNavigationView
++                android:id="@+id/bottomNavigation"
+                 android:layout_width="match_parent"
+-                android:layout_height="match_parent"
+-                android:orientation="horizontal"
+-                android:gravity="center_vertical"
+-                android:paddingHorizontal="4dp">
+-
+-                <LinearLayout android:id="@+id/bottomHome" style="@style/App.BottomNavItem">
+-                    <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_home" android:tint="@color/primary_blue" android:contentDescription="Home" />
+-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Home" android:textSize="10sp" android:textColor="@color/primary_blue" android:includeFontPadding="false" />
+-                </LinearLayout>
+-
+-                <LinearLayout android:id="@+id/bottomBookings" style="@style/App.BottomNavItem">
+-                    <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_bookings" android:tint="@color/primary_blue" android:contentDescription="Bookings" />
+-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bookings" android:textSize="10sp" android:textColor="@color/primary_blue" android:includeFontPadding="false" />
+-                </LinearLayout>
++                android:layout_height="72dp"
++                android:layout_gravity="center"
++                android:background="@android:color/transparent"
++                app:elevation="0dp"
++                app:itemActiveIndicatorStyle="@style/App.BottomNavActiveIndicator"
++                app:itemIconSize="24dp"
++                app:itemIconTint="@color/primary_blue"
++                app:itemRippleColor="#3B82F6"
++                app:itemTextColor="@color/primary_blue"
++                app:labelVisibilityMode="labeled"
++                app:paddingBottomSystemWindowInsets="false"
++                app:paddingTopSystemWindowInsets="false"
++                app:menu="@menu/bottom_nav_menu" />
+ 
+-                <LinearLayout android:id="@+id/bottomPackages" style="@style/App.BottomNavItem">
+-                    <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_categories" android:tint="@color/primary_blue" android:contentDescription="Packages" />
+-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Packages" android:textSize="10sp" android:textColor="@color/primary_blue" android:includeFontPadding="false" />
+-                </LinearLayout>
+-
+-                <LinearLayout android:id="@+id/bottomClients" style="@style/App.BottomNavItem">
+-                    <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_clients" android:tint="@color/primary_blue" android:contentDescription="Clients" />
+-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Clients" android:textSize="10sp" android:textColor="@color/primary_blue" android:includeFontPadding="false" />
+-                </LinearLayout>
+-
+-                <LinearLayout android:id="@+id/bottomProfile" style="@style/App.BottomNavItem">
+-                    <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_account" android:tint="@color/primary_blue" android:contentDescription="Profile" />
+-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Profile" android:textSize="10sp" android:textColor="@color/primary_blue" android:includeFontPadding="false" />
+-                </LinearLayout>
+-
+-            </LinearLayout>
+         </androidx.cardview.widget.CardView>
+ 
+     </androidx.constraintlayout.widget.ConstraintLayout>
