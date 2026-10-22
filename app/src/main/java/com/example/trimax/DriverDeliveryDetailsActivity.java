@@ -276,7 +276,7 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
             tvStatusBadge.setTextColor(0xFF2563EB);
             btnPrimaryAction.setText("START DELIVERY");
             btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("STARTED", "Delivery Started! En route to pickup."));
+            btnPrimaryAction.setOnClickListener(v -> advanceStatus("STARTED", "Delivery started from the TRIMAX hub."));
 
         } else if ("STARTED".equalsIgnoreCase(upperStatus)) {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
