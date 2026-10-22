@@ -4,8 +4,11 @@
          so existing screens and the shared custom navigation adapt automatically. -->
     <color name="bg_main">#081426</color>
     <color name="card_bg">#12243B</color>
-    <color name="nav_translucent_bg">#CC1E293B</color>
-    <color name="nav_glass_stroke">#40FFFFFF</color>
+    <!-- Dark frosted glass remains translucent so the screen subtly shows through -->
+    <color name="nav_translucent_bg">#99121F33</color>
+    <color name="nav_glass_top">#CC34445B</color>
+    <color name="nav_glass_bottom">#80121F33</color>
+    <color name="nav_glass_stroke">#66FFFFFF</color>
     <color name="nav_selected_bg">#332F80ED</color>
     <color name="nav_selected_fg">#7DB4FF</color>
     <color name="surface_alt">#1B304A</color>
