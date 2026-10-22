@@ -579,6 +579,7 @@ public class DashboardActivity extends AppCompatActivity {
                 highlightBottomNavItem(R.id.nav_bookings);
                 startActivity(new Intent(DashboardActivity.this, BookingsActivity.class));
                 finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
         if (packages != null) {
@@ -586,6 +587,7 @@ public class DashboardActivity extends AppCompatActivity {
                 highlightBottomNavItem(R.id.nav_packages);
                 startActivity(new Intent(DashboardActivity.this, PackagesActivity.class));
                 finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
         if (clients != null) {
@@ -593,6 +595,7 @@ public class DashboardActivity extends AppCompatActivity {
                 highlightBottomNavItem(R.id.nav_clients);
                 startActivity(new Intent(DashboardActivity.this, ClientsActivity.class));
                 finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
         if (profile != null) {
@@ -600,6 +603,7 @@ public class DashboardActivity extends AppCompatActivity {
                 highlightBottomNavItem(R.id.nav_profile);
                 startActivity(new Intent(DashboardActivity.this, ProfileActivity.class));
                 finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
     }
