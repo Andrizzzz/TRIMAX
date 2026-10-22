@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -231,8 +232,22 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         finish();
     }
 
+    private int currentTabIndex = 1;
+
+    private void navigateToTab(int activeId, Class<?> targetClass) {
+        highlightBottomNavItem(activeId, () -> {
+            Intent intent = new Intent(BookingsActivity.this, targetClass);
+            intent.putExtra("PREV_TAB_INDEX", 1);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+            finish();
+            overridePendingTransition(0, 0);
+        });
+    }
+
     private void setupBottomNavigation() {
-        highlightBottomNavItem(R.id.nav_bookings);
+        highlightBottomNavItem(R.id.nav_bookings, null);
 
         View home = findViewById(R.id.nav_home);
         View bookings = findViewById(R.id.nav_bookings);
@@ -240,53 +255,14 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         View clients = findViewById(R.id.nav_clients);
         View profile = findViewById(R.id.nav_profile);
 
-        if (home != null) home.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_home);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(BookingsActivity.this, DashboardActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 1);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
-        if (bookings != null) bookings.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_bookings));
-        if (packages != null) packages.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_packages);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(this, PackagesActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 1);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
-        if (clients != null) clients.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_clients);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(this, ClientsActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 1);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
-        if (profile != null) profile.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_profile);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(this, ProfileActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 1);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
+        if (home != null) home.setOnClickListener(v -> navigateToTab(R.id.nav_home, DashboardActivity.class));
+        if (bookings != null) bookings.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_bookings, null));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(R.id.nav_packages, PackagesActivity.class));
+        if (clients != null) clients.setOnClickListener(v -> navigateToTab(R.id.nav_clients, ClientsActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(R.id.nav_profile, ProfileActivity.class));
     }
 
-    private int currentTabIndex = 1;
-
-    private void highlightBottomNavItem(int activeId) {
+    private void highlightBottomNavItem(int activeId, Runnable onComplete) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
         int activeIndex = 0;
         for (int i = 0; i < ids.length; i++) {
@@ -339,10 +315,17 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
                 indicator.animate()
                         .translationX(targetX)
-                        .setDuration(260)
-                        .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                        .setDuration(180)
+                        .setInterpolator(new FastOutSlowInInterpolator())
+                        .withEndAction(() -> {
+                            if (onComplete != null) {
+                                onComplete.run();
+                            }
+                        })
                         .start();
             });
+        } else {
+            if (onComplete != null) onComplete.run();
         }
     }
 }
