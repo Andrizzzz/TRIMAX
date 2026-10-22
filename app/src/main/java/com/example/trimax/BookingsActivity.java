@@ -73,11 +73,6 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
             currentFilter = initialFilter.toUpperCase();
         }
 
-        View btnBack = findViewById(R.id.btnBack);
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> navigateBack());
-        }
-
         MaterialButton btnNewBooking = findViewById(R.id.btnNewBooking);
         etSearchBookings = findViewById(R.id.etSearchBookings);
         rvBookings = findViewById(R.id.rvBookings);
