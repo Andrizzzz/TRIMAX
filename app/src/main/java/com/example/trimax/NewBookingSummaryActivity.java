@@ -94,7 +94,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                     || !Double.isFinite(destLat) || !Double.isFinite(destLng)
                     || destLat < -90 || destLat > 90 || destLng < -180 || destLng > 180
                     || (destLat == 0 && destLng == 0)) {
-                Toast.makeText(this, "Please select a valid delivery destination before confirming.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Please select a valid delivery destination before submitting.", Toast.LENGTH_LONG).show();
                 return;
             }
             // Disable immediately after validation to prevent duplicate bookings from rapid taps.
@@ -110,7 +110,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
 
             Delivery newBooking = new Delivery();
             newBooking.setBookingId(generatedBookingId);
-            newBooking.setDriverId(session.getUsername() != null && !session.getUsername().isEmpty() ? session.getUsername() : "agent01");
+            newBooking.setDriverId("Unassigned"); // The Agent who creates the booking is not its assigned Driver.
             newBooking.setCustomerName(customerName != null ? customerName : "Guest Customer");
             newBooking.setCustomerPhone(customerPhone != null ? customerPhone : "N/A");
             newBooking.setPickupLocation("TRIMAX Hub (14.782700, 121.047587)");
@@ -124,7 +124,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             newBooking.setSpecialInstructions(notes != null ? notes : "");
             newBooking.setOriginalAmount(total);
             newBooking.setCurrentTotal(total);
-            newBooking.setStatus("CONFIRMED");
+            newBooking.setStatus("PENDING"); // Admin approval is required before confirmation.
             newBooking.setPriority("NORMAL");
 
             dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
@@ -134,7 +134,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 Toast.makeText(this, "Booking could not be saved. Please try again.", Toast.LENGTH_LONG).show();
                 return;
             }
-            dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + generatedBookingId + " was confirmed for " + (customerName != null ? customerName : "Customer"));
+            dbHelper.addNotification(session.getUsername(), "Booking Submitted", "Booking #" + generatedBookingId + " is pending Admin approval for " + (customerName != null ? customerName : "Customer"));
 
             Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
             confirmedIntent.putExtra("BOOKING_ID", generatedBookingId);
