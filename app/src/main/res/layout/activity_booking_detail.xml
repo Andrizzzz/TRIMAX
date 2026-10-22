@@ -343,7 +343,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="20dp"
                 android:backgroundTint="#059669"
-                    android:visibility="gone"
+                android:visibility="gone"
                 android:text="Confirm Booking"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
