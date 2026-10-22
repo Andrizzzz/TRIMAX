@@ -61,9 +61,12 @@ public class DriverProofActivity extends AppCompatActivity {
         locationHelper = new LocationHelper(this);
 
         deliveryCode = getIntent().getStringExtra("DELIVERY_ID");
-        if (deliveryCode == null || deliveryCode.isEmpty()) {
-            deliveryCode = "TRX-1024";
+        if (deliveryCode == null || deliveryCode.trim().isEmpty()) {
+            Toast.makeText(this, "Missing delivery ID. Reopen this screen from an assigned delivery.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
         }
+        deliveryCode = deliveryCode.trim();
 
         ImageView btnBack = findViewById(R.id.btnBack);
         TextView tvProofCustomerInfo = findViewById(R.id.tvProofCustomerInfo);
