@@ -748,16 +748,16 @@
             </androidx.core.widget.NestedScrollView>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <!-- BOTTOM NAVIGATION CONTAINER -->
+        <!-- BOTTOM NAVIGATION: compact pill with evenly spaced, non-shifting items -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardBottomNavContainer"
-            android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginBottom="16dp"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="12dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="36dp"
-            app:cardElevation="10dp"
+            app:cardCornerRadius="32dp"
+            app:cardElevation="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -765,15 +765,21 @@
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/bottomNavigation"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_gravity="center"
+                android:layout_height="match_parent"
                 android:background="@android:color/transparent"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 app:elevation="0dp"
-                app:itemActiveIndicatorStyle="@style/App.BottomNavActiveIndicator"
-                app:itemIconSize="24dp"
+                app:itemActiveIndicatorStyle="@style/NoActiveIndicator"
+                app:itemHorizontalTranslationEnabled="false"
+                app:itemIconSize="22dp"
                 app:itemIconTint="@color/primary_blue"
+                app:itemPaddingTop="6dp"
+                app:itemPaddingBottom="4dp"
                 app:itemRippleColor="#3B82F6"
                 app:itemTextColor="@color/primary_blue"
+                app:itemTextAppearanceActive="@style/App.BottomNavLabel"
+                app:itemTextAppearanceInactive="@style/App.BottomNavLabel"
                 app:labelVisibilityMode="labeled"
                 app:paddingBottomSystemWindowInsets="false"
                 app:paddingTopSystemWindowInsets="false"
