@@ -1,7 +1,11 @@
 package com.example.trimax;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
@@ -10,9 +14,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.view.GravityCompat;
@@ -24,6 +31,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.File;
 import java.util.List;
 
 public class DriverDashboardActivity extends AppCompatActivity {
@@ -32,6 +40,9 @@ public class DriverDashboardActivity extends AppCompatActivity {
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
+    private ActivityResultLauncher<Intent> dutyCameraLauncher;
+    private ActivityResultLauncher<String> dutyCameraPermissionLauncher;
+    private boolean capturingEndDutyPhoto = false;
 
     private TextView tvDutyStatusPill;
     private MaterialButton btnToggleDuty;
@@ -66,6 +77,62 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         locationHelper = new LocationHelper(this);
+
+        dutyCameraLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() != RESULT_OK || result.getData() == null || result.getData().getExtras() == null) {
+                capturingEndDutyPhoto = false;
+                Toast.makeText(this, "Attendance photo cancelled. Duty status unchanged.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
+            if (photo == null) {
+                capturingEndDutyPhoto = false;
+                Toast.makeText(this, "Could not retrieve attendance photo.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String label = capturingEndDutyPhoto ? "DRIVER_END_DUTY_ATTENDANCE" : "DRIVER_START_DUTY_ATTENDANCE";
+            File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(this, photo, label, locationHelper.getLatitude(), locationHelper.getLongitude());
+            String photoPath = savedFile != null ? savedFile.getAbsolutePath() : "";
+            if (photoPath.isEmpty()) {
+                capturingEndDutyPhoto = false;
+                Toast.makeText(this, "Failed to save attendance photo. Duty status unchanged.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (capturingEndDutyPhoto) {
+                boolean saved = dbHelper.endDuty(session.getUsername(), photoPath);
+                if (saved) {
+                    session.setDutyOnline(false);
+                    locationHelper.stopLocationUpdates();
+                    updateDutyUI();
+                    Toast.makeText(this, "End Duty photo saved. Shift ended.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "Could not save End Duty attendance record.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                boolean saved = dbHelper.saveAttendance(session.getUsername(), session.getRole(), photoPath, locationHelper.getLatitude(), locationHelper.getLongitude());
+                if (saved) {
+                    session.setDutyOnline(true);
+                    locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                        dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
+                        updateDutyUI();
+                    });
+                    dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                    updateDutyUI();
+                    Toast.makeText(this, "Start Duty photo saved. GPS tracking active.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "Could not save Start Duty attendance record.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            capturingEndDutyPhoto = false;
+        });
+        dutyCameraPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+            if (granted) {
+                launchDutyCamera();
+            } else {
+                capturingEndDutyPhoto = false;
+                Toast.makeText(this, "Camera permission is required for duty attendance.", Toast.LENGTH_LONG).show();
+            }
+        });
 
         drawerLayout = findViewById(R.id.drawerLayout);
         View mainContent = findViewById(R.id.mainContent);
@@ -442,25 +509,41 @@ public class DriverDashboardActivity extends AppCompatActivity {
     }
 
     private void toggleDriverDuty() {
-        boolean currentDuty = session.isDutyOnline();
-        if (currentDuty) {
+        if (session.isDutyOnline()) {
             if (dbHelper.hasActiveDelivery(session.getUsername())) {
                 Toast.makeText(this, "Cannot end duty while you have an active delivery in progress!", Toast.LENGTH_LONG).show();
                 return;
             }
-            session.setDutyOnline(false);
-            locationHelper.stopLocationUpdates();
-            Toast.makeText(this, "Driver Duty ended. You are now OFFLINE.", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setTitle("End Duty Shift")
+                    .setMessage("Take an attendance photo to verify the end of your shift.")
+                    .setPositiveButton("Take Photo & End Duty", (dialog, which) -> {
+                        capturingEndDutyPhoto = true;
+                        requestDutyCamera();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         } else {
-            session.setDutyOnline(true);
-            locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
-                updateDutyUI();
-            });
-            Toast.makeText(this, "Driver Duty started! GPS tracking active.", Toast.LENGTH_SHORT).show();
-            dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+            capturingEndDutyPhoto = false;
+            requestDutyCamera();
         }
-        updateDutyUI();
+    }
+
+    private void requestDutyCamera() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchDutyCamera();
+        } else {
+            dutyCameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void launchDutyCamera() {
+        try {
+            dutyCameraLauncher.launch(new Intent(MediaStore.ACTION_IMAGE_CAPTURE));
+        } catch (Exception e) {
+            capturingEndDutyPhoto = false;
+            Toast.makeText(this, "Camera app unavailable. Duty status unchanged.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateDutyUI() {
