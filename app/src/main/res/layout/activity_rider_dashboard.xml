@@ -137,7 +137,7 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="20dp"
                 android:paddingTop="12dp"
-                android:paddingBottom="24dp">
+                android:paddingBottom="110dp">
 
                 <!-- WELCOME RIDER BANNER CARD WITH DUTY TOGGLE -->
                 <androidx.cardview.widget.CardView

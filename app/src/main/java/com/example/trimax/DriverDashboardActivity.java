@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -152,14 +153,20 @@ public class DriverDashboardActivity extends AppCompatActivity {
             });
         }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
+        if (cardBottomNavContainer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
+                params.bottomMargin = baseMargin + systemBars.bottom;
+                v.setLayoutParams(params);
                 return insets;
             });
+        }
 
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
             // This menu is shared with the agent dashboard, so label it for driver tasks.
             if (bottomNavigation.getMenu().findItem(R.id.nav_bookings) != null) {
                 bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");

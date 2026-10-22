@@ -52,7 +52,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingTop="12dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="110dp">
 
             <!-- Dynamic Delivery Cards appended programmatically -->
 

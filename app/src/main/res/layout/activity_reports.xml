@@ -106,7 +106,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingTop="16dp"
-            android:paddingBottom="40dp">
+            android:paddingBottom="110dp">
 
             <!-- Date Range Selector Pill -->
             <com.google.android.material.button.MaterialButton

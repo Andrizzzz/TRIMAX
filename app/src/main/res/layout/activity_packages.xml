@@ -94,7 +94,7 @@
         android:clipToPadding="false"
         android:paddingHorizontal="6dp"
         android:paddingTop="6dp"
-        android:paddingBottom="12dp"
+        android:paddingBottom="110dp"
         app:layout_constraintBottom_toTopOf="@+id/cardBottomNavContainer"
         app:layout_constraintTop_toBottomOf="@+id/titleSection" />
 

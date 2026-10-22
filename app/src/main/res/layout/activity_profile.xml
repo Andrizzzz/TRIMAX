@@ -55,7 +55,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingTop="16dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="110dp">
 
             <!-- Avatar -->
             <ImageView

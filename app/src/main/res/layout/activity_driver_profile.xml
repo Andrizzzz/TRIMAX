@@ -50,7 +50,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingTop="8dp"
-            android:paddingBottom="36dp">
+            android:paddingBottom="110dp">
 
             <!-- Profile Info Card -->
             <androidx.cardview.widget.CardView

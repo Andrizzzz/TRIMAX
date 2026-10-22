@@ -75,13 +75,20 @@ public class NotificationsActivity extends AppCompatActivity {
         tvNotif2Time = findViewById(R.id.tvNotif2Time);
         if (cardNotif1 != null && cardNotif1.getParent() instanceof LinearLayout) notificationContainer = (LinearLayout) cardNotif1.getParent();
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
+        if (cardBottomNavContainer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
+                params.bottomMargin = baseMargin + systemBars.bottom;
+                v.setLayoutParams(params);
                 return insets;
             });
+        }
+
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
             setupBottomNavigation(bottomNavigation);
         }
 

@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="110dp">
 
             <!-- Client Card 1 -->
             <androidx.cardview.widget.CardView
