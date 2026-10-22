@@ -624,9 +624,10 @@ public class DashboardActivity extends AppCompatActivity {
         View indicator = findViewById(R.id.bottomNavIndicator);
         View itemsContainer = findViewById(R.id.bottomNavigationItems);
         if (indicator != null && itemsContainer != null && selectedView != null) {
+            final View activeView = selectedView;
             Runnable moveIndicator = () -> {
-                float targetX = selectedView.getX();
-                float targetWidth = selectedView.getWidth();
+                float targetX = activeView.getX();
+                float targetWidth = activeView.getWidth();
                 if (targetWidth <= 0) return;
                 android.view.ViewGroup.LayoutParams params = indicator.getLayoutParams();
                 int horizontalInset = (int) (4 * getResources().getDisplayMetrics().density);
