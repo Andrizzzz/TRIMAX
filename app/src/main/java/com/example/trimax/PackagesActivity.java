@@ -212,7 +212,7 @@ public class PackagesActivity extends AppCompatActivity {
 
                     indicator.animate()
                             .translationX(targetX)
-                            .setDuration(220)
+                            .setDuration(140)
                             .setInterpolator(new FastOutSlowInInterpolator())
                             .start();
                 });
