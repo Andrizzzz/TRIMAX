@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 9; // Fixed TRIMAX pickup hub and destination validation
+    private static final int DATABASE_VERSION = 11; // Fixed TRIMAX pickup hub and destination validation
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -494,6 +494,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             pickupValues.put("pickup_longitude", 121.0475865);
             db.update(TABLE_DELIVERIES, pickupValues, null, null);
         }
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
     }
 
     // Authenticate User with Secure Password Verification & Legacy Plaintext Upgrade
