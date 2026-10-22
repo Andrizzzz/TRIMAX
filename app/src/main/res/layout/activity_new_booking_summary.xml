@@ -475,7 +475,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="24dp" />
 
-            <!-- ACTION BUTTONS ROW (BACK / CONFIRM BOOKING) -->
+            <!-- ACTION BUTTONS ROW (BACK / SUBMIT FOR ADMIN APPROVAL) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -504,7 +504,7 @@
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/primary_blue"
-                    android:text="Confirm Booking"
+                    android:text="Submit for Approval"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="15sp"
