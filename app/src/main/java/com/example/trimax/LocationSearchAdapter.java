@@ -20,7 +20,7 @@ public class LocationSearchAdapter extends ArrayAdapter<SearchResultItem> {
     private List<SearchResultItem> items;
 
     public LocationSearchAdapter(@NonNull Context context, @NonNull List<SearchResultItem> items) {
-        super(context, android.R.layout.simple_dropdown_item_1line, items);
+        super(context, R.layout.item_search_suggestion, items);
         this.context = context;
         this.items = new ArrayList<>(items);
     }
@@ -50,26 +50,30 @@ public class LocationSearchAdapter extends ArrayAdapter<SearchResultItem> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        return createView(position, convertView, parent);
+    }
+
+    @Override
+    public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        return createView(position, convertView, parent);
+    }
+
+    private View createView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_2, parent, false);
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_search_suggestion, parent, false);
         }
 
         SearchResultItem item = getItem(position);
         if (item != null) {
-            TextView text1 = convertView.findViewById(android.R.id.text1);
-            TextView text2 = convertView.findViewById(android.R.id.text2);
+            TextView tvShort = convertView.findViewById(R.id.tvSearchShortName);
+            TextView tvFull = convertView.findViewById(R.id.tvSearchFullAddress);
 
-            if (text1 != null) {
-                text1.setText(item.getShortName());
-                text1.setTextColor(0xFF0F172A);
-                text1.setTextSize(14);
-                text1.setTypeface(null, android.graphics.Typeface.BOLD);
+            if (tvShort != null) {
+                tvShort.setText(item.getShortName());
             }
 
-            if (text2 != null) {
-                text2.setText(item.getFullAddress());
-                text2.setTextColor(0xFF64748B);
-                text2.setTextSize(12);
+            if (tvFull != null) {
+                tvFull.setText(item.getFullAddress());
             }
         }
 
