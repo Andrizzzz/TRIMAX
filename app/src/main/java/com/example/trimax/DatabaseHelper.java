@@ -295,35 +295,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void seedInitialData(SQLiteDatabase db) {
-        // Driver User Account
-        ContentValues driverUser = new ContentValues();
-        driverUser.put("username", "driver01");
-        driverUser.put("password", hashPassword("driver123"));
-        driverUser.put("role", "DRIVER");
-        driverUser.put("full_name", "Test Driver");
-        driverUser.put("email", "driver@trimax.com");
-        driverUser.put("phone", "09123456789");
-        db.insertWithOnConflict(TABLE_USERS, null, driverUser, SQLiteDatabase.CONFLICT_REPLACE);
-
-        // Official Agent User Account
-        ContentValues agentUser = new ContentValues();
-        agentUser.put("username", "agent01");
-        agentUser.put("password", hashPassword("agent123"));
-        agentUser.put("role", "AGENT");
-        agentUser.put("full_name", "Test Agent");
-        agentUser.put("email", "agent@trimax.com");
-        agentUser.put("phone", "09170001122");
-        db.insertWithOnConflict(TABLE_USERS, null, agentUser, SQLiteDatabase.CONFLICT_REPLACE);
-
-        // Secondary Agent User Account
-        ContentValues riderUser = new ContentValues();
-        riderUser.put("username", "rider01");
-        riderUser.put("password", hashPassword("rider123"));
-        riderUser.put("role", "AGENT");
-        riderUser.put("full_name", "Test Agent");
-        riderUser.put("email", "rider@trimax.com");
-        riderUser.put("phone", "09987654321");
-        db.insertWithOnConflict(TABLE_USERS, null, riderUser, SQLiteDatabase.CONFLICT_REPLACE);
+        // Never create accounts with hard-coded credentials in the mobile database.
+        // User accounts must be provisioned through the authorized TRIMAX account workflow.
 
         // Sample Admin-Assigned Bookings for driver01
         ContentValues b1 = new ContentValues();
