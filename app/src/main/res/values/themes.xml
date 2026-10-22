@@ -25,6 +25,13 @@
         <item name="android:color">@android:color/transparent</item>
     </style>
 
+    <!-- Small, consistent labels prevent five bottom-nav items from crowding on narrow phones. -->
+    <style name="App.BottomNavLabel" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
     <style name="App.BottomNavActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@color/surface_alt</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.BottomNavIndicator</item>
