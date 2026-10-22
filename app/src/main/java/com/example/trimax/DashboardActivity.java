@@ -28,7 +28,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -179,7 +178,7 @@ public class DashboardActivity extends AppCompatActivity {
             });
         }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        View customBottomNavigation = findViewById(R.id.customBottomNavigation);
 
         String agentName = session.getFullName();
         String agentEmail = session.getEmail();
@@ -291,16 +290,8 @@ public class DashboardActivity extends AppCompatActivity {
             btnQuickNewBooking.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class)));
         }
 
-        // 8. BOTTOM NAVIGATION
-        if (bottomNavigation != null) {
-            setupBottomNavigation(bottomNavigation);
-            bottomNavigation.setOnItemReselectedListener(item -> {
-                if (item.getItemId() == R.id.nav_home) {
-                    refreshDashboardContent();
-                }
-            });
-            bottomNavigation.setSelectedItemId(R.id.nav_home);
-        }
+        // 8. CUSTOM BOTTOM NAVIGATION
+        setupCustomBottomNavigation();
 
         // Back Press Handler for Navigation Drawer
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -406,10 +397,6 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        BottomNavigationView dashboardNavigation = findViewById(R.id.bottomNavigation);
-        if (dashboardNavigation != null && dashboardNavigation.getSelectedItemId() != R.id.nav_home) {
-            dashboardNavigation.setSelectedItemId(R.id.nav_home);
-        }
         NavigationView dashboardDrawer = findViewById(R.id.navigationView);
         if (dashboardDrawer != null) {
             dashboardDrawer.setCheckedItem(R.id.drawer_home);
@@ -566,26 +553,21 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                refreshDashboardContent();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, BookingsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                startActivity(new Intent(this, PackagesActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                return true;
-            }
-            return false;
-        });
+    private void setupCustomBottomNavigation() {
+        View home = findViewById(R.id.bottomHome);
+        View bookings = findViewById(R.id.bottomBookings);
+        View packages = findViewById(R.id.bottomPackages);
+        View clients = findViewById(R.id.bottomClients);
+        View profile = findViewById(R.id.bottomProfile);
+
+        if (home != null) home.setOnClickListener(v -> refreshDashboardContent());
+        if (bookings != null) bookings.setOnClickListener(v ->
+                startActivity(new Intent(this, BookingsActivity.class)));
+        if (packages != null) packages.setOnClickListener(v ->
+                startActivity(new Intent(this, PackagesActivity.class)));
+        if (clients != null) clients.setOnClickListener(v ->
+                startActivity(new Intent(this, ClientsActivity.class)));
+        if (profile != null) profile.setOnClickListener(v ->
+                startActivity(new Intent(this, ProfileActivity.class)));
     }
 }
