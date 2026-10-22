@@ -19,7 +19,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -66,35 +65,7 @@ public class ProfileActivity extends AppCompatActivity {
         View cardHelpSupport = findViewById(R.id.cardHelpSupport);
         View cardReports = findViewById(R.id.cardReports);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> handleBackNavigation());
-        }
-
-        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                handleBackNavigation();
-            }
-        });
-
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-        if (cardBottomNavContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
-                params.bottomMargin = baseMargin + systemBars.bottom;
-                v.setLayoutParams(params);
-                return insets;
-            });
-        }
-
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_profile);
-            setupBottomNavigation(bottomNavigation);
-        }
+        setupBottomNavigation();
 
         if (cardEditProfile != null) cardEditProfile.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, EditProfileActivity.class)));
         if (cardSettings != null) cardSettings.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, SettingsActivity.class)));
@@ -207,29 +178,47 @@ public class ProfileActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                startActivity(new Intent(this, DashboardActivity.class));
+    private void setupBottomNavigation() {
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        View selected = findViewById(R.id.nav_profile);
+        if (selected != null) selected.setSelected(true);
+
+        if (home != null) home.setOnClickListener(v -> {
+            if (R.id.nav_profile != R.id.nav_home) {
+                Intent intent = new Intent(ProfileActivity.this, DashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
+            }
+        });
+        if (bookings != null) bookings.setOnClickListener(v -> {
+            if (R.id.nav_profile != R.id.nav_bookings) {
                 startActivity(new Intent(this, BookingsActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
+            }
+        });
+        if (packages != null) packages.setOnClickListener(v -> {
+            if (R.id.nav_profile != R.id.nav_packages) {
                 startActivity(new Intent(this, PackagesActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                return true;
             }
-            return false;
+        });
+        if (clients != null) clients.setOnClickListener(v -> {
+            if (R.id.nav_profile != R.id.nav_clients) {
+                startActivity(new Intent(this, ClientsActivity.class));
+                finish();
+            }
+        });
+        if (profile != null) profile.setOnClickListener(v -> {
+            if (R.id.nav_profile != R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                finish();
+            }
         });
     }
 }
