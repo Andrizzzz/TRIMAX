@@ -28,6 +28,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -178,7 +179,6 @@ public class DashboardActivity extends AppCompatActivity {
             });
         }
 
-        View customBottomNavigation = findViewById(R.id.customBottomNavigation);
 
         String agentName = session.getFullName();
         String agentEmail = session.getEmail();
@@ -290,8 +290,12 @@ public class DashboardActivity extends AppCompatActivity {
             btnQuickNewBooking.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class)));
         }
 
-        // 8. CUSTOM BOTTOM NAVIGATION
-        setupCustomBottomNavigation();
+        // 8. BOTTOM NAVIGATION
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation != null) {
+            bottomNavigation.setSelectedItemId(R.id.nav_home);
+            setupBottomNavigation(bottomNavigation);
+        }
 
         // Back Press Handler for Navigation Drawer
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -553,21 +557,29 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupCustomBottomNavigation() {
-        View home = findViewById(R.id.bottomHome);
-        View bookings = findViewById(R.id.bottomBookings);
-        View packages = findViewById(R.id.bottomPackages);
-        View clients = findViewById(R.id.bottomClients);
-        View profile = findViewById(R.id.bottomProfile);
-
-        if (home != null) home.setOnClickListener(v -> refreshDashboardContent());
-        if (bookings != null) bookings.setOnClickListener(v ->
-                startActivity(new Intent(this, BookingsActivity.class)));
-        if (packages != null) packages.setOnClickListener(v ->
-                startActivity(new Intent(this, PackagesActivity.class)));
-        if (clients != null) clients.setOnClickListener(v ->
-                startActivity(new Intent(this, ClientsActivity.class)));
-        if (profile != null) profile.setOnClickListener(v ->
-                startActivity(new Intent(this, ProfileActivity.class)));
+    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                return true;
+            } else if (itemId == R.id.nav_bookings) {
+                startActivity(new Intent(this, BookingsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_clients) {
+                startActivity(new Intent(this, ClientsActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_packages) {
+                startActivity(new Intent(this, PackagesActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 }
