@@ -65,18 +65,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     }
                     Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
                 } else {
-                    User user = dbHelper.getUserByEmailOrUsername(email);
-                    if (user != null) {
-                        btnSendResetLink.setEnabled(false);
-                        Toast.makeText(this, "Password reset instructions sent to " + email, Toast.LENGTH_LONG).show();
-                        finish();
-                    } else {
-                        if (etResetEmail != null) {
-                            etResetEmail.setError("Email address not found");
-                            etResetEmail.requestFocus();
-                        }
-                        Toast.makeText(this, "No account associated with " + email, Toast.LENGTH_SHORT).show();
-                    }
+                    // This mobile build has no verified password-reset backend or email sender.
+                    // Do not claim an email was sent or reveal whether an account exists.
+                    Toast.makeText(this,
+                            "Password reset is not available yet. Please contact your TRIMAX administrator.",
+                            Toast.LENGTH_LONG).show();
                 }
             });
         }
