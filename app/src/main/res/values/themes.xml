@@ -21,6 +21,10 @@
 
     <style name="Theme.TRIMAX" parent="Base.Theme.TRIMAX" />
 
+    <style name="App" />
+    <style name="ShapeAppearance" />
+    <style name="ShapeAppearance.App" />
+
     <style name="NoActiveIndicator">
         <item name="android:color">@android:color/transparent</item>
     </style>
