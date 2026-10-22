@@ -294,9 +294,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
     }
 
+    private void insertDebugUser(SQLiteDatabase db, String username, String password,
+                                  String role, String fullName, String email, String phone) {
+        ContentValues values = new ContentValues();
+        values.put("username", username);
+        values.put("password", hashPassword(password));
+        values.put("role", role);
+        values.put("full_name", fullName);
+        values.put("email", email);
+        values.put("phone", phone);
+        db.insertWithOnConflict(TABLE_USERS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
     private void seedInitialData(SQLiteDatabase db) {
-        // Never create accounts with hard-coded credentials in the mobile database.
-        // User accounts must be provisioned through the authorized TRIMAX account workflow.
+        // Demo credentials are seeded only into explicitly debuggable builds.
+        // Release builds must use accounts provisioned through the authorized TRIMAX workflow.
+        boolean debugBuild = (getContext().getApplicationInfo().flags
+                & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        if (debugBuild) {
+            insertDebugUser(db, "driver01", "driver123", "DRIVER", "Test Driver",
+                    "driver@trimax.com", "09123456789");
+            insertDebugUser(db, "agent01", "agent123", "AGENT", "Test Agent",
+                    "agent@trimax.com", "09170001122");
+            insertDebugUser(db, "rider01", "rider123", "AGENT", "Test Agent",
+                    "rider@trimax.com", "09987654321");
+        }
 
         // Sample Admin-Assigned Bookings for driver01
         ContentValues b1 = new ContentValues();
