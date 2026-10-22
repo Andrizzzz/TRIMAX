@@ -274,7 +274,20 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         for (int id : ids) {
             View v = findViewById(id);
             if (v != null) {
-                v.setSelected(id == activeId);
+                boolean isActive = id == activeId;
+                v.setSelected(isActive);
+
+                // Subtle press bounce for the glass navigation bubble.
+                if (isActive) {
+                    v.animate().cancel();
+                    v.setScaleX(0.94f);
+                    v.setScaleY(0.94f);
+                    v.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(180)
+                            .start();
+                }
             }
         }
     }
