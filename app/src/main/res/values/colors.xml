@@ -15,6 +15,9 @@
     <color name="bg_main">#F4F7FC</color>
     <color name="card_bg">#FFFFFF</color>
     <color name="nav_translucent_bg">#D9FFFFFF</color>
+    <color name="nav_glass_stroke">#BFFFFFFF</color>
+    <color name="nav_selected_bg">#FFC928</color>
+    <color name="nav_selected_fg">#30240A</color>
     <color name="surface_alt">#EBF2FA</color>
     <color name="border_subtle">#E2EAF5</color>
     <color name="text_primary">#14213D</color>
