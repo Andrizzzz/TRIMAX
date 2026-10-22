@@ -181,64 +181,9 @@ public class DriverProofActivity extends AppCompatActivity {
 
         if (btnConfirmDelivery != null) {
             btnConfirmDelivery.setOnClickListener(v -> {
-                if (!photoCaptured || TextUtils.isEmpty(capturedPhotoPath)) {
-                    Toast.makeText(this, "⚠️ Delivery Photo Evidence is REQUIRED before completing drop-off!", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                String recipient = etRecipientName != null && etRecipientName.getText() != null ? etRecipientName.getText().toString().trim() : "";
-                String otp = etOtpCode != null && etOtpCode.getText() != null ? etOtpCode.getText().toString().trim() : "";
-
-                if (TextUtils.isEmpty(recipient)) {
-                    if (etRecipientName != null) {
-                        etRecipientName.setError("Recipient name required");
-                        etRecipientName.requestFocus();
-                    }
-                    return;
-                }
-
-                String otpStatus;
-                if (!otp.isEmpty()) {
-                    // Local development mode: SMS backend unavailable; logging entered code for reference without remote verification claim
-                    otpStatus = "DEV_MODE_LOCAL_ENTERED_" + otp;
-                } else {
-                    otpStatus = "DEV_MODE_UNVERIFIED_NO_SMS_BACKEND";
-                }
-
-                btnConfirmDelivery.setEnabled(false);
-
-                // Save proof locally in SQLite
-                boolean saved = dbHelper.saveDeliveryProof(
-                        deliveryCode,
-                        session.getUsername(),
-                        capturedPhotoPath,
-                        recipient,
-                        "TOKEN_SIGNED",
-                        otpStatus,
-                        locationHelper.getLatitude(),
-                        locationHelper.getLongitude()
-                );
-
-                if (saved) {
-                    Toast.makeText(this, "✓ Delivery #" + deliveryCode + " COMPLETED!", Toast.LENGTH_SHORT).show();
-
-                    Delivery nextDelivery = dbHelper.getNextAssignedDelivery(session.getUsername());
-                    if (nextDelivery != null) {
-                        Toast.makeText(this, "NEXT ASSIGNED DELIVERY: " + nextDelivery.getBookingId(), Toast.LENGTH_LONG).show();
-                        Intent nextIntent = new Intent(this, DriverDeliveryDetailsActivity.class);
-                        nextIntent.putExtra("DELIVERY_ID", nextDelivery.getBookingId());
-                        startActivity(nextIntent);
-                    } else {
-                        Toast.makeText(this, "All assigned deliveries completed! Returning to Dashboard.", Toast.LENGTH_LONG).show();
-                        Intent dashIntent = new Intent(this, DriverDashboardActivity.class);
-                        dashIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        startActivity(dashIntent);
-                    }
-                    finish();
-                } else {
-                    btnConfirmDelivery.setEnabled(true);
-                    Toast.makeText(this, "Failed to save delivery proof in database", Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(this,
+                        "Completion is unavailable until server-side OTP verification is configured.",
+                        Toast.LENGTH_LONG).show();
             });
         }
     }
