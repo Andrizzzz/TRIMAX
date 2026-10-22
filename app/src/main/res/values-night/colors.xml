@@ -5,6 +5,9 @@
     <color name="bg_main">#081426</color>
     <color name="card_bg">#12243B</color>
     <color name="nav_translucent_bg">#CC1E293B</color>
+    <color name="nav_glass_stroke">#40FFFFFF</color>
+    <color name="nav_selected_bg">#FFC928</color>
+    <color name="nav_selected_fg">#30240A</color>
     <color name="surface_alt">#1B304A</color>
     <color name="border_subtle">#263B55</color>
     <color name="text_primary">#F3F7FC</color>
