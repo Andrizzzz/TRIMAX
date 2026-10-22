@@ -88,6 +88,11 @@ public class DriverProofActivity extends AppCompatActivity {
         });
 
         currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
+        if (currentDelivery == null) {
+            Toast.makeText(this, "Delivery not found. Please reopen an assigned delivery.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         if (currentDelivery != null) {
             if (tvProofCustomerInfo != null) {
                 tvProofCustomerInfo.setText(String.format("Booking #%s • Customer: %s", currentDelivery.getBookingId(), currentDelivery.getCustomerName()));
