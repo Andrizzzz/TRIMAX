@@ -75,22 +75,7 @@ public class NotificationsActivity extends AppCompatActivity {
         tvNotif2Time = findViewById(R.id.tvNotif2Time);
         if (cardNotif1 != null && cardNotif1.getParent() instanceof LinearLayout) notificationContainer = (LinearLayout) cardNotif1.getParent();
 
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-        if (cardBottomNavContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
-                params.bottomMargin = baseMargin + systemBars.bottom;
-                v.setLayoutParams(params);
-                return insets;
-            });
-        }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            setupBottomNavigation(bottomNavigation);
-        }
 
         if (tvMarkAllRead != null) {
             tvMarkAllRead.setOnClickListener(v -> {
@@ -222,31 +207,5 @@ public class NotificationsActivity extends AppCompatActivity {
         finish();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                startActivity(new Intent(this, DashboardActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, BookingsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                startActivity(new Intent(this, PackagesActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                finish();
-                return true;
-            }
-            return false;
-        });
-    }
+
 }

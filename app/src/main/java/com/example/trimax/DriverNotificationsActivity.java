@@ -60,23 +60,7 @@ public class DriverNotificationsActivity extends AppCompatActivity {
             notificationContainer = (LinearLayout) cardDriverNotif1.getParent();
         }
 
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-        if (cardBottomNavContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
-                params.bottomMargin = baseMargin + systemBars.bottom;
-                v.setLayoutParams(params);
-                return insets;
-            });
-        }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_clients);
-            setupBottomNavigation(bottomNavigation);
-        }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
             @Override
@@ -91,43 +75,7 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         loadNotifications();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        if (bottomNavigation.getMenu().findItem(R.id.nav_bookings) != null) {
-            bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
-        }
-        if (bottomNavigation.getMenu().findItem(R.id.nav_clients) != null) {
-            bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
-        }
-        if (bottomNavigation.getMenu().findItem(R.id.nav_packages) != null) {
-            bottomNavigation.getMenu().findItem(R.id.nav_packages).setTitle("Delivery History");
-        }
 
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                Intent intent = new Intent(this, DriverDashboardActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, DriverDeliveriesActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                startActivity(new Intent(this, DriverHistoryActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, DriverProfileActivity.class));
-                finish();
-                return true;
-            }
-            return false;
-        });
-    }
 
     @Override
     protected void onResume() {
