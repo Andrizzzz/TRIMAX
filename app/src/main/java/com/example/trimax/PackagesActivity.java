@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -169,24 +170,43 @@ public class PackagesActivity extends AppCompatActivity {
 
     private void highlightBottomNavItem(int activeId) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] == activeId) {
+                activeIndex = i;
+                break;
+            }
+        }
+
         for (int id : ids) {
             View v = findViewById(id);
             if (v != null) {
-                boolean isActive = id == activeId;
+                boolean isActive = (id == activeId);
                 v.setSelected(isActive);
-
-                // Subtle press bounce for the glass navigation bubble.
-                if (isActive) {
-                    v.animate().cancel();
-                    v.setScaleX(0.94f);
-                    v.setScaleY(0.94f);
-                    v.animate()
-                            .scaleX(1f)
-                            .scaleY(1f)
-                            .setDuration(180)
-                            .start();
-                }
             }
+        }
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        LinearLayout navContainer = findViewById(R.id.bottomNavigation);
+        if (indicator != null && navContainer != null) {
+            final int index = activeIndex;
+            navContainer.post(() -> {
+                int totalWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                if (totalWidth <= 0) return;
+                int tabWidth = totalWidth / 5;
+
+                android.view.ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+                int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
+                lp.width = tabWidth - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
+
+                float targetX = navContainer.getPaddingLeft() + (index * tabWidth) + marginHorizontal;
+                indicator.animate()
+                        .translationX(targetX)
+                        .setDuration(220)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .start();
+            });
         }
     }
 
