@@ -63,10 +63,6 @@ public class MockMapView extends FrameLayout {
             "© OpenStreetMap contributors, OSM France"
     );
 
-    public interface OnLocationChangeListener {
-        void onLocationSelected(String address, String distanceText);
-    }
-
     private OnLocationChangeListener locationChangeListener;
 
     private MapView mapView;
