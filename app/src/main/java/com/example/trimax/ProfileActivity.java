@@ -68,7 +68,6 @@ public class ProfileActivity extends AppCompatActivity {
             });
         }
 
-        ImageView btnBack = findViewById(R.id.btnBack);
         ImageView ivProfilePhoto = findViewById(R.id.ivProfilePhoto);
         if (ivProfilePhoto != null) ivProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
         View cardEditProfile = findViewById(R.id.cardEditProfile);
