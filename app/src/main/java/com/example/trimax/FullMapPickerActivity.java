@@ -71,6 +71,7 @@ public class FullMapPickerActivity extends AppCompatActivity {
         selectedLng = intent.getDoubleExtra("INITIAL_LNG", 0);
 
         ImageView btnBack = findViewById(R.id.btnBack);
+        ImageView btnClearSearch = findViewById(R.id.btnClearSearch);
         mockMapView = findViewById(R.id.mockMapView);
         actvSmartLocationSearch = findViewById(R.id.actvSmartLocationSearch);
         tvSelectedAddress = findViewById(R.id.tvSelectedAddress);
@@ -81,6 +82,40 @@ public class FullMapPickerActivity extends AppCompatActivity {
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnClearSearch != null && actvSmartLocationSearch != null) {
+            btnClearSearch.setOnClickListener(v -> actvSmartLocationSearch.setText(""));
+        }
+
+        View.OnClickListener chipListener = v -> {
+            String query;
+            int id = v.getId();
+            if (id == R.id.chipTungkongMangga) {
+                query = "Tungkong Mangga, San Jose del Monte";
+            } else if (id == R.id.chipMuzon) {
+                query = "Muzon, San Jose del Monte";
+            } else if (id == R.id.chipGayagaya) {
+                query = "Gaya-gaya, San Jose del Monte";
+            } else if (id == R.id.chipPoblacion) {
+                query = "Poblacion, San Jose del Monte";
+            } else {
+                query = "";
+            }
+
+            if (!query.isEmpty() && actvSmartLocationSearch != null) {
+                actvSmartLocationSearch.setText(query);
+                actvSmartLocationSearch.setSelection(query.length());
+            }
+        };
+
+        View chipTm = findViewById(R.id.chipTungkongMangga);
+        View chipMz = findViewById(R.id.chipMuzon);
+        View chipGy = findViewById(R.id.chipGayagaya);
+        View chipPb = findViewById(R.id.chipPoblacion);
+
+        if (chipTm != null) chipTm.setOnClickListener(chipListener);
+        if (chipMz != null) chipMz.setOnClickListener(chipListener);
+        if (chipGy != null) chipGy.setOnClickListener(chipListener);
+        if (chipPb != null) chipPb.setOnClickListener(chipListener);
 
         if (selectedAddress != null && !selectedAddress.trim().isEmpty() && tvSelectedAddress != null) {
             tvSelectedAddress.setText(selectedAddress);
@@ -126,6 +161,9 @@ public class FullMapPickerActivity extends AppCompatActivity {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     if (isSelectingFromDropdown) return;
                     String query = s != null ? s.toString().trim() : "";
+                    if (btnClearSearch != null) {
+                        btnClearSearch.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+                    }
                     if (query.length() >= 2) {
                         nominatimSearchService.searchLocation(query, new NominatimSearchService.SearchCallback() {
                             @Override

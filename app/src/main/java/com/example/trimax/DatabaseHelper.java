@@ -32,8 +32,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_ATTENDANCE = "attendance_records";
     public static final String TABLE_CUSTOMERS = "customers";
 
+    private final Context context;
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context.getApplicationContext();
     }
 
     // -------------------------------------------------------------
@@ -309,7 +312,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private void seedInitialData(SQLiteDatabase db) {
         // Demo credentials are seeded only into explicitly debuggable builds.
         // Release builds must use accounts provisioned through the authorized TRIMAX workflow.
-        boolean debugBuild = (getContext().getApplicationInfo().flags
+        boolean debugBuild = (context.getApplicationInfo().flags
                 & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         if (debugBuild) {
             insertDebugUser(db, "driver01", "driver123", "DRIVER", "Test Driver",

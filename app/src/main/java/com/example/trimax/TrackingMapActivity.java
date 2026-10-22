@@ -73,6 +73,7 @@ public class TrackingMapActivity extends AppCompatActivity {
             mapView.setMultiTouchControls(true);
             mapView.setBuiltInZoomControls(false);
             mapView.getController().setZoom(12.0);
+            applyMapTheme();
         }
 
         FloatingActionButton btnZoomIn = findViewById(R.id.btnZoomIn);
@@ -385,6 +386,29 @@ public class TrackingMapActivity extends AppCompatActivity {
         bottomSheetDialog.show();
     }
 
+    private void applyMapTheme() {
+        if (mapView == null) return;
+        try {
+            int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            boolean isDark = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+
+            if (mapView.getOverlayManager() != null && mapView.getOverlayManager().getTilesOverlay() != null) {
+                if (isDark) {
+                    android.graphics.ColorMatrix matrix = new android.graphics.ColorMatrix(new float[]{
+                        -0.75f,  0.00f,  0.00f, 0.00f, 220.0f,
+                         0.00f, -0.75f,  0.00f, 0.00f, 225.0f,
+                         0.00f,  0.00f, -0.70f, 0.00f, 235.0f,
+                         0.00f,  0.00f,  0.00f, 1.00f,   0.0f
+                    });
+                    android.graphics.ColorMatrixColorFilter filter = new android.graphics.ColorMatrixColorFilter(matrix);
+                    mapView.getOverlayManager().getTilesOverlay().setColorFilter(filter);
+                } else {
+                    mapView.getOverlayManager().getTilesOverlay().setColorFilter(null);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     private boolean isValidCoordinate(double lat, double lng) {
         return Double.isFinite(lat) && Double.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
                 && !(lat == 0 && lng == 0);
@@ -396,7 +420,10 @@ public class TrackingMapActivity extends AppCompatActivity {
 
     @Override protected void onResume() {
         super.onResume();
-        if (mapView != null) mapView.onResume();
+        if (mapView != null) {
+            mapView.onResume();
+            applyMapTheme();
+        }
         if (subtitleTextView != null) showCustomerPins(subtitleTextView);
     }
 
