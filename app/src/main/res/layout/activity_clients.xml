@@ -208,10 +208,10 @@
     <!-- BOTTOM NAVIGATION CONTAINER -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardBottomNavContainer"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/card_bg"
         app:cardCornerRadius="36dp"
         app:cardElevation="10dp"
