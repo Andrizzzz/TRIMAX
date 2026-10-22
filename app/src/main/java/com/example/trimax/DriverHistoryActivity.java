@@ -51,13 +51,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
         MaterialButton chipCompleted = findViewById(R.id.chipCompleted);
         MaterialButton chipFailed = findViewById(R.id.chipFailed);
 
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_packages);
-            setupBottomNavigation(bottomNavigation);
-        }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
             @Override
@@ -77,43 +71,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
         loadHistory();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        if (bottomNavigation.getMenu().findItem(R.id.nav_bookings) != null) {
-            bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
-        }
-        if (bottomNavigation.getMenu().findItem(R.id.nav_clients) != null) {
-            bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
-        }
-        if (bottomNavigation.getMenu().findItem(R.id.nav_packages) != null) {
-            bottomNavigation.getMenu().findItem(R.id.nav_packages).setTitle("Delivery History");
-        }
 
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                Intent intent = new Intent(this, DriverDashboardActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, DriverDeliveriesActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, DriverNotificationsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, DriverProfileActivity.class));
-                finish();
-                return true;
-            }
-            return false;
-        });
-    }
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 

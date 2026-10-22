@@ -73,14 +73,7 @@ public class ReportsActivity extends AppCompatActivity {
             btnDateFilter.setOnClickListener(v -> showDateRangePicker());
         }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.getMenu().setGroupCheckable(0, true, false);
-            for (int i = 0; i < bottomNavigation.getMenu().size(); i++) {
-                bottomNavigation.getMenu().getItem(i).setChecked(false);
-            }
-            setupBottomNavigation(bottomNavigation);
-        }
+
 
         MaterialButton btnExportCsv = findViewById(R.id.btnExportCsv);
         MaterialButton btnExportPdf = findViewById(R.id.btnExportPdf);
@@ -90,33 +83,7 @@ public class ReportsActivity extends AppCompatActivity {
         updateMetrics();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                startActivity(new Intent(this, DashboardActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, BookingsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                startActivity(new Intent(this, PackagesActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                finish();
-                return true;
-            }
-            return false;
-        });
-    }
+
 
     @Override
     protected void onResume() {
