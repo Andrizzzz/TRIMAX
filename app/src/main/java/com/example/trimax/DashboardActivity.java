@@ -72,9 +72,21 @@ public class DashboardActivity extends AppCompatActivity {
         if (mainContent != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                // Keep the entire dashboard (including the bottom navigation container)
-                // inside the safe area above Android's system navigation bar.
-                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), systemBars.bottom);
+                // Apply only the status-bar inset here. The floating bottom navigation
+                // receives its own bottom inset so it stays fully above Android navigation.
+                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), 0);
+                return insets;
+            });
+        }
+
+        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
+        if (cardBottomNavContainer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
+                params.bottomMargin = baseMargin + systemBars.bottom;
+                v.setLayoutParams(params);
                 return insets;
             });
         }
