@@ -47,6 +47,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private boolean capturingEndDutyPhoto = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,32 +106,42 @@ public class DashboardActivity extends AppCompatActivity {
                             File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
                                     DashboardActivity.this,
                                     photoBitmap,
-                                    "AGENT_DUTY_ATTENDANCE",
+                                    capturingEndDutyPhoto ? "AGENT_END_DUTY_ATTENDANCE" : "AGENT_START_DUTY_ATTENDANCE",
                                     locationHelper.getLatitude(),
                                     locationHelper.getLongitude()
                             );
 
                             String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-
-                            if (saved) {
-                                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
-                                String startTimeStr = sdf.format(new Date());
-
-                                session.setDutyOnline(true);
-                                session.setDutyStartTime(startTimeStr);
-
-                                updateAttendanceUI();
-                                Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                            boolean saved;
+                            if (path.isEmpty()) {
+                                saved = false;
+                            } else if (capturingEndDutyPhoto) {
+                                saved = dbHelper.endDuty(session.getUsername(), path);
+                                if (saved) {
+                                    session.setDutyOnline(false);
+                                    session.setDutyStartTime("");
+                                    updateAttendanceUI();
+                                    Toast.makeText(DashboardActivity.this, "End Duty photo saved. Shift ended.", Toast.LENGTH_LONG).show();
+                                }
                             } else {
-                                Toast.makeText(DashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
+                                saved = dbHelper.saveAttendance(session.getUsername(), session.getRole(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                                if (saved) {
+                                    SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
+                                    String startTimeStr = sdf.format(new Date());
+                                    session.setDutyOnline(true);
+                                    session.setDutyStartTime(startTimeStr);
+                                    updateAttendanceUI();
+                                    Toast.makeText(DashboardActivity.this, "✓ Start Duty photo verified: " + startTimeStr, Toast.LENGTH_LONG).show();
+                                }
                             }
+                            if (!saved) Toast.makeText(DashboardActivity.this, "Failed to save attendance photo/record. Duty status was not changed.", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(DashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(DashboardActivity.this, "Attendance photo capture cancelled.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DashboardActivity.this, "Attendance photo capture cancelled. Duty status unchanged.", Toast.LENGTH_SHORT).show();
                     }
+                    capturingEndDutyPhoto = false;
                 }
         );
 
@@ -347,17 +358,19 @@ public class DashboardActivity extends AppCompatActivity {
         if (session.isDutyOnline()) {
             new AlertDialog.Builder(this)
                     .setTitle("End Duty Shift")
-                    .setMessage("Are you sure you want to end your active duty shift?")
-                    .setPositiveButton("End Duty Shift", (dialog, which) -> {
-                        dbHelper.endDuty(session.getUsername());
-                        session.setDutyOnline(false);
-                        session.setDutyStartTime("");
-                        updateAttendanceUI();
-                        Toast.makeText(this, "Agent Duty shift ended.", Toast.LENGTH_SHORT).show();
+                    .setMessage("Take an attendance photo to verify the end of your shift.")
+                    .setPositiveButton("Take Photo & End Duty", (dialog, which) -> {
+                        capturingEndDutyPhoto = true;
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            launchAttendanceCamera();
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+                        }
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
         } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            capturingEndDutyPhoto = false;
             launchAttendanceCamera();
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
