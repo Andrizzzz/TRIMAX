@@ -228,22 +228,26 @@ public class ClientsActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
             finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
         if (bookings != null) bookings.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_bookings);
             startActivity(new Intent(this, BookingsActivity.class));
             finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
         if (packages != null) packages.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_packages);
             startActivity(new Intent(this, PackagesActivity.class));
             finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
         if (clients != null) clients.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_clients));
         if (profile != null) profile.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_profile);
             startActivity(new Intent(this, ProfileActivity.class));
             finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
     }
 
