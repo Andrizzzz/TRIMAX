@@ -231,12 +231,15 @@
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="72dp"
             android:background="@android:color/transparent"
             app:elevation="0dp"
             app:itemIconTint="@color/text_secondary"
             app:itemRippleColor="#3B82F6"
             app:itemTextColor="@color/text_secondary"
+            app:labelVisibilityMode="labeled"
+            app:paddingBottomSystemWindowInsets="false"
+            app:paddingTopSystemWindowInsets="false"
             app:menu="@menu/bottom_nav_menu" />
 
     </androidx.cardview.widget.CardView>

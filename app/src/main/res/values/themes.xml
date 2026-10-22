@@ -20,4 +20,17 @@
     </style>
 
     <style name="Theme.TRIMAX" parent="Base.Theme.TRIMAX" />
+
+    <style name="NoActiveIndicator">
+        <item name="android:color">@android:color/transparent</item>
+    </style>
+
+    <style name="App.BottomNavActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/surface_alt</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.BottomNavIndicator</item>
+    </style>
+
+    <style name="ShapeAppearance.App.BottomNavIndicator" parent="ShapeAppearance.Material3.Corner.Full">
+        <item name="cornerSize">20dp</item>
+    </style>
 </resources>
