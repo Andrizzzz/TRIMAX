@@ -124,7 +124,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             newBooking.setSpecialInstructions(notes != null ? notes : "");
             newBooking.setOriginalAmount(total);
             newBooking.setCurrentTotal(total);
-            newBooking.setStatus("CONFIRMED");
+            newBooking.setStatus("PENDING");
             newBooking.setPriority("NORMAL");
 
             dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
@@ -134,7 +134,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 Toast.makeText(this, "Booking could not be saved. Please try again.", Toast.LENGTH_LONG).show();
                 return;
             }
-            dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + generatedBookingId + " was confirmed for " + (customerName != null ? customerName : "Customer"));
+            dbHelper.addNotification(session.getUsername(), "Booking Request Submitted", "Booking #" + generatedBookingId + " is pending admin confirmation.");
 
             Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
             confirmedIntent.putExtra("BOOKING_ID", generatedBookingId);
