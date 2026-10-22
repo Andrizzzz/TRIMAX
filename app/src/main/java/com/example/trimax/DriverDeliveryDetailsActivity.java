@@ -278,33 +278,16 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
             btnPrimaryAction.setEnabled(true);
             btnPrimaryAction.setOnClickListener(v -> advanceStatus("STARTED", "Delivery started from the TRIMAX hub."));
 
-        } else if ("STARTED".equalsIgnoreCase(upperStatus)) {
+        } else if ("STARTED".equalsIgnoreCase(upperStatus)
+                || "GOING TO PICKUP".equalsIgnoreCase(upperStatus)
+                || "ARRIVED AT PICKUP".equalsIgnoreCase(upperStatus)
+                || "PICKED UP".equalsIgnoreCase(upperStatus)) {
+            // Backward compatibility for old bookings: the truck already starts at the hub.
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("GO TO PICKUP");
+            btnPrimaryAction.setText("GO TO DROP-OFF");
             btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("GOING TO PICKUP", "En route to pickup location."));
-
-        } else if ("GOING TO PICKUP".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("ARRIVED AT PICKUP");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("ARRIVED AT PICKUP", "Arrived at pickup location!"));
-
-        } else if ("ARRIVED AT PICKUP".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("CONFIRM PICKUP");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("PICKED UP", "Package Picked Up successfully!"));
-
-        } else if ("PICKED UP".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("START TRANSPORT / ON THE WAY");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("ON THE WAY", "Delivery in transit to customer!"));
+            btnPrimaryAction.setOnClickListener(v -> advanceStatus("ON THE WAY", "En route from the TRIMAX hub to the customer drop-off."));
 
         } else if ("ON THE WAY".equalsIgnoreCase(upperStatus)) {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
