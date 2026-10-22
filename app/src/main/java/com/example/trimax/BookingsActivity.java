@@ -242,30 +242,45 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
         if (home != null) home.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_home);
-            Intent intent = new Intent(BookingsActivity.this, DashboardActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-            finish();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            v.postDelayed(() -> {
+                Intent intent = new Intent(BookingsActivity.this, DashboardActivity.class);
+                intent.putExtra("PREV_TAB_INDEX", 1);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            }, 120);
         });
         if (bookings != null) bookings.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_bookings));
         if (packages != null) packages.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_packages);
-            startActivity(new Intent(this, PackagesActivity.class));
-            finish();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            v.postDelayed(() -> {
+                Intent intent = new Intent(this, PackagesActivity.class);
+                intent.putExtra("PREV_TAB_INDEX", 1);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            }, 120);
         });
         if (clients != null) clients.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_clients);
-            startActivity(new Intent(this, ClientsActivity.class));
-            finish();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            v.postDelayed(() -> {
+                Intent intent = new Intent(this, ClientsActivity.class);
+                intent.putExtra("PREV_TAB_INDEX", 1);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            }, 120);
         });
         if (profile != null) profile.setOnClickListener(v -> {
             highlightBottomNavItem(R.id.nav_profile);
-            startActivity(new Intent(this, ProfileActivity.class));
-            finish();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            v.postDelayed(() -> {
+                Intent intent = new Intent(this, ProfileActivity.class);
+                intent.putExtra("PREV_TAB_INDEX", 1);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            }, 120);
         });
     }
 
@@ -287,10 +302,15 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
             }
         }
 
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        getIntent().removeExtra("PREV_TAB_INDEX");
+
         View indicator = findViewById(R.id.slidingIndicator);
         LinearLayout navContainer = findViewById(R.id.bottomNavigation);
         if (indicator != null && navContainer != null) {
-            final int index = activeIndex;
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != activeIndex) ? prevIndex : activeIndex;
+
             navContainer.post(() -> {
                 int totalWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
                 if (totalWidth <= 0) return;
@@ -301,11 +321,14 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
                 lp.width = tabWidth - (marginHorizontal * 2);
                 indicator.setLayoutParams(lp);
 
-                float targetX = navContainer.getPaddingLeft() + (index * tabWidth) + marginHorizontal;
+                float startX = navContainer.getPaddingLeft() + (initialIndex * tabWidth) + marginHorizontal;
+                float targetX = navContainer.getPaddingLeft() + (targetIndex * tabWidth) + marginHorizontal;
+
+                indicator.setTranslationX(startX);
                 indicator.animate()
                         .translationX(targetX)
-                        .setDuration(220)
-                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .setDuration(280)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator(0.8f))
                         .start();
             });
         }
