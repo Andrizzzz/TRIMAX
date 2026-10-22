@@ -72,7 +72,9 @@ public class DashboardActivity extends AppCompatActivity {
         if (mainContent != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), 0);
+                // Keep the entire dashboard (including the bottom navigation container)
+                // inside the safe area above Android's system navigation bar.
+                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), systemBars.bottom);
                 return insets;
             });
         }
@@ -178,14 +180,6 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-
-        if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-                return insets;
-            });
-        }
 
         String agentName = session.getFullName();
         String agentEmail = session.getEmail();
