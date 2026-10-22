@@ -17,7 +17,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,13 +66,7 @@ public class PackagesActivity extends AppCompatActivity {
             });
         }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_SELECTED);
-            bottomNavigation.setItemHorizontalTranslationEnabled(false);
-            bottomNavigation.setSelectedItemId(R.id.nav_packages);
-            setupBottomNavigation(bottomNavigation);
-        }
+        setupBottomNavigation();
     }
 
     private List<ServicePackage> getServicePackages() {
@@ -136,29 +129,47 @@ public class PackagesActivity extends AppCompatActivity {
         return list;
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                startActivity(new Intent(this, DashboardActivity.class));
+    private void setupBottomNavigation() {
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        View selected = findViewById(R.id.nav_packages);
+        if (selected != null) selected.setSelected(true);
+
+        if (home != null) home.setOnClickListener(v -> {
+            if (R.id.nav_packages != R.id.nav_home) {
+                Intent intent = new Intent(PackagesActivity.this, DashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
+            }
+        });
+        if (bookings != null) bookings.setOnClickListener(v -> {
+            if (R.id.nav_packages != R.id.nav_bookings) {
                 startActivity(new Intent(this, BookingsActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                return true;
-            } else if (itemId == R.id.nav_clients) {
+            }
+        });
+        if (packages != null) packages.setOnClickListener(v -> {
+            if (R.id.nav_packages != R.id.nav_packages) {
+                startActivity(new Intent(this, PackagesActivity.class));
+                finish();
+            }
+        });
+        if (clients != null) clients.setOnClickListener(v -> {
+            if (R.id.nav_packages != R.id.nav_clients) {
                 startActivity(new Intent(this, ClientsActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
+            }
+        });
+        if (profile != null) profile.setOnClickListener(v -> {
+            if (R.id.nav_packages != R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));
                 finish();
-                return true;
             }
-            return false;
         });
     }
 
