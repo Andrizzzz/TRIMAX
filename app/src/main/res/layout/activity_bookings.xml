@@ -232,16 +232,32 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
             android:layout_height="72dp"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:background="@drawable/bg_bottom_nav_glass"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="8dp"
-            android:weightSum="5">
+            android:background="@drawable/bg_bottom_nav_glass">
+
+            <View
+                android:id="@+id/bottomNavIndicator"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start|top"
+                android:layout_marginHorizontal="6dp"
+                android:layout_marginVertical="8dp"
+                android:background="@drawable/bg_bottom_nav_pill"
+                android:clickable="false"
+                android:focusable="false" />
+
+            <LinearLayout
+                android:id="@+id/bottomNavigationItems"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="8dp"
+                android:weightSum="5">
 
             <LinearLayout
                 android:id="@+id/nav_home"
@@ -250,7 +266,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_bottom_nav_pill"
+                android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Home">
@@ -278,7 +294,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_bottom_nav_pill"
+                android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Bookings">
@@ -306,7 +322,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_bottom_nav_pill"
+                android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Packages">
@@ -334,7 +350,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_bottom_nav_pill"
+                android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Clients">
@@ -362,7 +378,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_bottom_nav_pill"
+                android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Profile">
@@ -383,7 +399,8 @@
                     android:maxLines="1" />
             </LinearLayout>
 
-        </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
