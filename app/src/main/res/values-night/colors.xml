@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="card_bg">#1E293B</color>
     <color name="nav_translucent_bg">#CC1E293B</color>
-    <color name="surface_alt">#334155</color>
 </resources>
