@@ -28,7 +28,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -291,11 +290,7 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         // 8. BOTTOM NAVIGATION
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_home);
-            setupBottomNavigation(bottomNavigation);
-        }
+        setupBottomNavigation();
 
         // Back Press Handler for Navigation Drawer
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -557,29 +552,42 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, BookingsActivity.class));
+    private void setupBottomNavigation() {
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        if (home != null) {
+            home.setSelected(true);
+            home.setOnClickListener(v -> {
+                // Already on Home.
+            });
+        }
+        if (bookings != null) {
+            bookings.setOnClickListener(v -> {
+                startActivity(new Intent(DashboardActivity.this, BookingsActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
+            });
+        }
+        if (packages != null) {
+            packages.setOnClickListener(v -> {
+                startActivity(new Intent(DashboardActivity.this, PackagesActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                startActivity(new Intent(this, PackagesActivity.class));
+            });
+        }
+        if (clients != null) {
+            clients.setOnClickListener(v -> {
+                startActivity(new Intent(DashboardActivity.this, ClientsActivity.class));
                 finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
+            });
+        }
+        if (profile != null) {
+            profile.setOnClickListener(v -> {
+                startActivity(new Intent(DashboardActivity.this, ProfileActivity.class));
                 finish();
-                return true;
-            }
-            return false;
-        });
+            });
+        }
     }
 }
