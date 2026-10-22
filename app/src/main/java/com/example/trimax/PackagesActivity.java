@@ -184,45 +184,51 @@ public class PackagesActivity extends AppCompatActivity {
 
         View indicator = findViewById(R.id.slidingIndicator);
         LinearLayout navContainer = findViewById(R.id.bottomNavigation);
-        if (indicator != null && navContainer != null) {
+        if (indicator != null) {
             final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : (currentTabIndex >= 0 ? currentTabIndex : activeIndex);
 
-            navContainer.post(() -> {
-                int totalWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
-                if (totalWidth <= 0) {
-                    int screenWidth = getResources().getDisplayMetrics().widthPixels;
-                    totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
-                }
-                int tabWidth = totalWidth / 5;
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 5};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
 
-                ViewGroup.LayoutParams lp = indicator.getLayoutParams();
-                int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
-                lp.width = tabWidth - (marginHorizontal * 2);
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
                 indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
 
-                float targetX = navContainer.getPaddingLeft() + (targetIndex * tabWidth) + marginHorizontal;
+            if (navContainer != null) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 5;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
 
-                if (prevIndex >= 0 && prevIndex != targetIndex) {
-                    float startX = navContainer.getPaddingLeft() + (prevIndex * tabWidth) + marginHorizontal;
-                    indicator.setTranslationX(startX);
-                } else if (indicator.getTranslationX() == 0 && targetIndex > 0) {
-                    float startX = navContainer.getPaddingLeft() + (currentTabIndex * tabWidth) + marginHorizontal;
-                    indicator.setTranslationX(startX);
-                }
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+                    currentTabIndex = targetIndex;
 
-                currentTabIndex = targetIndex;
-
-                indicator.animate()
-                        .translationX(targetX)
-                        .setDuration(180)
-                        .setInterpolator(new FastOutSlowInInterpolator())
-                        .withEndAction(() -> {
-                            if (onComplete != null) {
-                                onComplete.run();
-                            }
-                        })
-                        .start();
-            });
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(180)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .withEndAction(() -> {
+                                if (onComplete != null) {
+                                    onComplete.run();
+                                }
+                            })
+                            .start();
+                });
+            } else {
+                if (onComplete != null) onComplete.run();
+            }
         } else {
             if (onComplete != null) onComplete.run();
         }

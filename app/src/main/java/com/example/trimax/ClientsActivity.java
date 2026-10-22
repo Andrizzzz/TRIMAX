@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -213,8 +214,22 @@ public class ClientsActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    private int currentTabIndex = 3;
+
+    private void navigateToTab(int activeId, Class<?> targetClass) {
+        highlightBottomNavItem(activeId, () -> {
+            Intent intent = new Intent(ClientsActivity.this, targetClass);
+            intent.putExtra("PREV_TAB_INDEX", 3);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+            finish();
+            overridePendingTransition(0, 0);
+        });
+    }
+
     private void setupBottomNavigation() {
-        highlightBottomNavItem(R.id.nav_clients);
+        highlightBottomNavItem(R.id.nav_clients, null);
 
         View home = findViewById(R.id.nav_home);
         View bookings = findViewById(R.id.nav_bookings);
@@ -222,53 +237,14 @@ public class ClientsActivity extends AppCompatActivity {
         View clients = findViewById(R.id.nav_clients);
         View profile = findViewById(R.id.nav_profile);
 
-        if (home != null) home.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_home);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(ClientsActivity.this, DashboardActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 3);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
-        if (bookings != null) bookings.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_bookings);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(this, BookingsActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 3);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
-        if (packages != null) packages.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_packages);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(this, PackagesActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 3);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
-        if (clients != null) clients.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_clients));
-        if (profile != null) profile.setOnClickListener(v -> {
-            highlightBottomNavItem(R.id.nav_profile);
-            v.postDelayed(() -> {
-                Intent intent = new Intent(this, ProfileActivity.class);
-                intent.putExtra("PREV_TAB_INDEX", 3);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }, 120);
-        });
+        if (home != null) home.setOnClickListener(v -> navigateToTab(R.id.nav_home, DashboardActivity.class));
+        if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(R.id.nav_bookings, BookingsActivity.class));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(R.id.nav_packages, PackagesActivity.class));
+        if (clients != null) clients.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_clients, null));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(R.id.nav_profile, ProfileActivity.class));
     }
 
-    private int currentTabIndex = 3;
-
-    private void highlightBottomNavItem(int activeId) {
+    private void highlightBottomNavItem(int activeId, Runnable onComplete) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
         int activeIndex = 0;
         for (int i = 0; i < ids.length; i++) {
@@ -291,40 +267,53 @@ public class ClientsActivity extends AppCompatActivity {
 
         View indicator = findViewById(R.id.slidingIndicator);
         LinearLayout navContainer = findViewById(R.id.bottomNavigation);
-        if (indicator != null && navContainer != null) {
+        if (indicator != null) {
             final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : (currentTabIndex >= 0 ? currentTabIndex : activeIndex);
 
-            navContainer.post(() -> {
-                int totalWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
-                if (totalWidth <= 0) {
-                    int screenWidth = getResources().getDisplayMetrics().widthPixels;
-                    totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
-                }
-                int tabWidth = totalWidth / 5;
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 5};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
 
-                ViewGroup.LayoutParams lp = indicator.getLayoutParams();
-                int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
-                lp.width = tabWidth - (marginHorizontal * 2);
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
                 indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
 
-                float targetX = navContainer.getPaddingLeft() + (targetIndex * tabWidth) + marginHorizontal;
+            if (navContainer != null) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 5;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
 
-                if (prevIndex >= 0 && prevIndex != targetIndex) {
-                    float startX = navContainer.getPaddingLeft() + (prevIndex * tabWidth) + marginHorizontal;
-                    indicator.setTranslationX(startX);
-                } else if (indicator.getTranslationX() == 0 && targetIndex > 0) {
-                    float startX = navContainer.getPaddingLeft() + (currentTabIndex * tabWidth) + marginHorizontal;
-                    indicator.setTranslationX(startX);
-                }
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+                    currentTabIndex = targetIndex;
 
-                currentTabIndex = targetIndex;
-
-                indicator.animate()
-                        .translationX(targetX)
-                        .setDuration(260)
-                        .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
-                        .start();
-            });
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(180)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .withEndAction(() -> {
+                                if (onComplete != null) {
+                                    onComplete.run();
+                                }
+                            })
+                            .start();
+                });
+            } else {
+                if (onComplete != null) onComplete.run();
+            }
+        } else {
+            if (onComplete != null) onComplete.run();
         }
     }
 }
