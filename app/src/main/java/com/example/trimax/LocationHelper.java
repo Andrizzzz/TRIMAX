@@ -122,6 +122,12 @@ public class LocationHelper {
                 currentBearing = best.getBearing();
                 lastTimestamp = best.getTime();
                 hasValidLocationFix = true;
+            } else if (System.currentTimeMillis() - lastTimestamp > 10 * 60 * 1000L) {
+                // Do not keep reporting a previously valid but now stale fix as current.
+                currentLatitude = 0.0;
+                currentLongitude = 0.0;
+                currentAccuracy = 0.0f;
+                hasValidLocationFix = false;
             }
         } catch (SecurityException ignored) {
             isTrackingActive = false;
