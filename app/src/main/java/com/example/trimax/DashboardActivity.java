@@ -610,23 +610,40 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void highlightBottomNavItem(int activeId) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        View selectedView = null;
         for (int id : ids) {
-            View v = findViewById(id);
-            if (v != null) {
+            View item = findViewById(id);
+            if (item != null) {
                 boolean isActive = id == activeId;
-                v.setSelected(isActive);
+                item.setSelected(isActive);
+                if (isActive) selectedView = item;
+            }
+        }
 
-                // Subtle press bounce for the glass navigation bubble.
-                if (isActive) {
-                    v.animate().cancel();
-                    v.setScaleX(0.94f);
-                    v.setScaleY(0.94f);
-                    v.animate()
-                            .scaleX(1f)
-                            .scaleY(1f)
-                            .setDuration(180)
-                            .start();
-                }
+        // Animate one shared pill instead of toggling a separate background per item.
+        View indicator = findViewById(R.id.bottomNavIndicator);
+        View itemsContainer = findViewById(R.id.bottomNavigationItems);
+        if (indicator != null && itemsContainer != null && selectedView != null) {
+            Runnable moveIndicator = () -> {
+                float targetX = selectedView.getX();
+                float targetWidth = selectedView.getWidth();
+                if (targetWidth <= 0) return;
+                android.view.ViewGroup.LayoutParams params = indicator.getLayoutParams();
+                int horizontalInset = (int) (4 * getResources().getDisplayMetrics().density);
+                params.width = Math.max(0, (int) targetWidth - horizontalInset * 2);
+                indicator.setLayoutParams(params);
+                float targetTranslation = targetX + horizontalInset - indicator.getLeft();
+                indicator.animate().cancel();
+                indicator.animate()
+                        .translationX(targetTranslation)
+                        .setDuration(320)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f))
+                        .start();
+            };
+            if (itemsContainer.getWidth() == 0 || selectedView.getWidth() == 0) {
+                itemsContainer.post(moveIndicator);
+            } else {
+                moveIndicator.run();
             }
         }
     }
