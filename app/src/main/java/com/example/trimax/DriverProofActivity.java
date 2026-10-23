@@ -87,27 +87,10 @@ public class DriverProofActivity extends AppCompatActivity {
             }
         });
 
-        currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
-        if (currentDelivery == null) {
-            Toast.makeText(this, "Delivery not found. Please reopen an assigned delivery.", Toast.LENGTH_LONG).show();
-            finish();
-            return;
-        }
-        if (currentDelivery != null) {
-            if (tvProofCustomerInfo != null) {
-                tvProofCustomerInfo.setText(String.format("Booking #%s • Customer: %s", currentDelivery.getBookingId(), currentDelivery.getCustomerName()));
-            }
-            if (etRecipientName != null) {
-                etRecipientName.setText(currentDelivery.getCustomerName());
-            }
-            if ("DELIVERED".equalsIgnoreCase(currentDelivery.getStatus()) || "COMPLETED".equalsIgnoreCase(currentDelivery.getStatus())) {
-                Toast.makeText(this, "Delivery #" + deliveryCode + " is already completed.", Toast.LENGTH_LONG).show();
-                if (btnConfirmDelivery != null) {
-                    btnConfirmDelivery.setEnabled(false);
-                    btnConfirmDelivery.setText("DELIVERY COMPLETED");
-                }
-            }
-        }
+        confirmButton = btnConfirmDelivery;
+        confirmLabel = btnConfirmDelivery != null ? btnConfirmDelivery.getText() : "OK";
+        if (btnConfirmDelivery != null) btnConfirmDelivery.setEnabled(false);   // until the server says ARRIVED
+        loadFromServer(tvProofCustomerInfo, etRecipientName);
 
         cameraPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
@@ -180,12 +163,142 @@ public class DriverProofActivity extends AppCompatActivity {
         }
 
         if (btnConfirmDelivery != null) {
-            btnConfirmDelivery.setOnClickListener(v -> {
-                Toast.makeText(this,
-                        "Completion is unavailable until server-side OTP verification is configured.",
-                        Toast.LENGTH_LONG).show();
-            });
+            btnConfirmDelivery.setOnClickListener(v -> confirmDelivered());
         }
+    }
+
+    // =====================================================================================
+    // Server: the delivery must be ARRIVED and assigned to this driver; DELIVERED completes the booking.
+    // The photo stays on this phone as evidence (it is not uploaded yet). OTP verification is not
+    // implemented on the server, so it is not asked for; the recipient's name is required instead.
+    // =====================================================================================
+
+    private BookingRecord currentRecord;
+    private MaterialButton confirmButton;
+    private CharSequence confirmLabel;
+    private boolean submitting;
+
+    private int bookingNumber() {
+        try {
+            return Integer.parseInt(deliveryCode.replace("#", "").trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private void loadFromServer(TextView tvProofCustomerInfo, TextInputEditText etRecipientName) {
+        int id = bookingNumber();
+        if (id <= 0) {
+            Toast.makeText(this, "Delivery not found. Please reopen an assigned delivery.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        TrimaxApi.get(this).getDriverDelivery(id, new TrimaxApi.Callback<BookingRecord>() {
+            @Override
+            public void onSuccess(BookingRecord record) {
+                if (SessionGuard.isGone(DriverProofActivity.this)) return;
+                currentRecord = record;
+                currentDelivery = record.toDelivery(true);
+                if (tvProofCustomerInfo != null) {
+                    tvProofCustomerInfo.setText(String.format("Booking #%s • Customer: %s", record.idText(), record.customerName));
+                }
+                if (etRecipientName != null) etRecipientName.setText(record.customerName);
+                updateConfirmButton();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(DriverProofActivity.this)) return;
+                if (SessionGuard.handle(DriverProofActivity.this, error)) return;
+                Toast.makeText(DriverProofActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                finish();
+            }
+        });
+    }
+
+    private void updateConfirmButton() {
+        if (confirmButton == null || currentRecord == null) return;
+        String code = currentRecord.deliveryStatus;
+        if (DeliveryProgress.DELIVERED.equals(code) || DeliveryProgress.COMPLETED.equals(currentRecord.status)) {
+            confirmButton.setEnabled(false);
+            confirmButton.setText("DELIVERY COMPLETED");
+        } else if (!DeliveryProgress.ARRIVED.equals(code) || DeliveryProgress.CANCELLED.equals(currentRecord.status)) {
+            confirmButton.setEnabled(false);
+            confirmButton.setText("MARK ARRIVED FIRST");
+        } else {
+            confirmButton.setText(confirmLabel);
+            confirmButton.setEnabled(!submitting);
+        }
+    }
+
+    private void confirmDelivered() {
+        if (currentRecord == null || submitting) return;
+        if (!photoCaptured) {
+            Toast.makeText(this, "Take the drop-off photo first.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        final android.widget.EditText recipient = new android.widget.EditText(this);
+        recipient.setHint("Name of the person who received it");
+        recipient.setText(currentRecord.customerName != null ? currentRecord.customerName : "");
+        recipient.setSingleLine(true);
+        int pad = Math.round(20 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout box = new android.widget.FrameLayout(this);
+        box.setPadding(pad, pad / 2, pad, 0);
+        box.addView(recipient);
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Who received the delivery?")
+                .setView(box)
+                .setPositiveButton("Confirm delivered", (d, w) -> {
+                    String name = recipient.getText() != null ? recipient.getText().toString().trim() : "";
+                    if (name.isEmpty()) {
+                        Toast.makeText(this, "Enter the recipient's name.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    submitDelivered(name.length() > 100 ? name.substring(0, 100) : name);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void submitDelivered(String recipientName) {
+        submitting = true;
+        confirmButton.setEnabled(false);
+        confirmButton.setText("SAVING...");
+        Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
+        Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
+        TrimaxApi.get(this).updateDeliveryStatus(currentRecord.bookingId, DeliveryProgress.ARRIVED, DeliveryProgress.DELIVERED,
+                lat, lng, null, recipientName, new TrimaxApi.Callback<BookingRecord>() {
+                    @Override
+                    public void onSuccess(BookingRecord saved) {
+                        submitting = false;
+                        if (SessionGuard.isGone(DriverProofActivity.this)) return;
+                        currentRecord = saved;
+                        if (capturedPhotoPath != null && !capturedPhotoPath.isEmpty()) {
+                            dbHelper.saveDeliveryProof(saved.idText(), session.getUsername(), capturedPhotoPath, recipientName,
+                                    "", "NOT_VERIFIED", locationHelper.getLatitude(), locationHelper.getLongitude());
+                        }
+                        Toast.makeText(DriverProofActivity.this, "Booking #" + saved.idText() + " delivered and completed.",
+                                Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(DriverProofActivity.this, DriverDeliveriesActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(ApiException error) {
+                        submitting = false;
+                        if (SessionGuard.isGone(DriverProofActivity.this)) return;
+                        if (SessionGuard.handle(DriverProofActivity.this, error)) return;
+                        confirmButton.setText(confirmLabel);
+                        Toast.makeText(DriverProofActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        if (error.getKind() == ApiException.Kind.CONFLICT) {
+                            loadFromServer(null, null);
+                        } else {
+                            updateConfirmButton();
+                        }
+                    }
+                });
     }
 
     private void launchProofCamera() {

@@ -82,6 +82,10 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingV
                 tvStatusBadge.setText("CANCELLED");
                 tvStatusBadge.setBackgroundResource(R.drawable.bg_status_cancelled);
                 tvStatusBadge.setTextColor(0xFFEF4444);
+            } else if ("IN PROGRESS".equals(status)) {
+                tvStatusBadge.setText("IN PROGRESS");
+                tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
+                tvStatusBadge.setTextColor(0xFF2563EB);
             } else if ("COMPLETED".equals(status) || "DELIVERED".equals(status)) {
                 tvStatusBadge.setText("COMPLETED");
                 tvStatusBadge.setBackgroundResource(R.drawable.bg_status_completed);

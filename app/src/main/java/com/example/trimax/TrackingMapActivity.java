@@ -86,7 +86,23 @@ public class TrackingMapActivity extends AppCompatActivity {
         }
 
         showCustomerPins(subtitleTextView);
+
+        // The agent's own bookings from the server, for the booking counts in the customer sheet.
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> result) {
+                myBookings = result;
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (!SessionGuard.isGone(TrackingMapActivity.this)) SessionGuard.handle(TrackingMapActivity.this, error);
+            }
+        });
     }
+
+    /** Null until the server answers. */
+    private List<BookingRecord> myBookings;
 
     private void showCustomerPins(TextView subtitle) {
         if (mapView == null) return;
@@ -195,14 +211,50 @@ public class TrackingMapActivity extends AppCompatActivity {
     }
 
     private void showBookingDestination(String bookingId, TextView subtitle) {
-        Delivery delivery = dbHelper != null ? dbHelper.getDeliveryByCode(bookingId) : null;
-        if (delivery == null) {
+        // Booking Details passes the destination it loaded from the server.
+        String destination = getIntent().getStringExtra("DESTINATION");
+        if (destination != null) {
+            Delivery fromIntent = new Delivery();
+            fromIntent.setBookingId(bookingId);
+            fromIntent.setDestination(destination);
+            fromIntent.setDestinationLatitude(getIntent().getDoubleExtra("DEST_LAT", 0));
+            fromIntent.setDestinationLongitude(getIntent().getDoubleExtra("DEST_LNG", 0));
+            fromIntent.setCustomerName(getIntent().getStringExtra("CUSTOMER_NAME"));
+            showDeliveryPin(fromIntent, bookingId, subtitle);
+            return;
+        }
+        int id;
+        try {
+            id = Integer.parseInt(bookingId.replace("#", "").trim());
+        } catch (NumberFormatException e) {
+            id = 0;
+        }
+        if (id <= 0) {
             if (subtitle != null) subtitle.setText("Booking #" + bookingId + " was not found.");
             mapView.getController().setZoom(4.0);
             mapView.invalidate();
             return;
         }
+        if (subtitle != null) subtitle.setText("Loading booking #" + bookingId + "...");
+        TrimaxApi.get(this).getMyBooking(id, new TrimaxApi.Callback<BookingRecord>() {
+            @Override
+            public void onSuccess(BookingRecord record) {
+                if (SessionGuard.isGone(TrackingMapActivity.this)) return;
+                showDeliveryPin(record.toDelivery(false), bookingId, subtitle);
+            }
 
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(TrackingMapActivity.this)) return;
+                if (SessionGuard.handle(TrackingMapActivity.this, error)) return;
+                if (subtitle != null) subtitle.setText("Booking #" + bookingId + ": " + error.getMessage());
+                mapView.getController().setZoom(4.0);
+                mapView.invalidate();
+            }
+        });
+    }
+
+    private void showDeliveryPin(Delivery delivery, String bookingId, TextView subtitle) {
         double lat = delivery.getDestinationLatitude();
         double lng = delivery.getDestinationLongitude();
         String address = delivery.getDestination();
@@ -323,9 +375,15 @@ public class TrackingMapActivity extends AppCompatActivity {
         }
 
         // Bookings Count & History Preview
-        List<Delivery> bookings = dbHelper != null ? dbHelper.getBookingsForCustomer(customer.getPhone(), customer.getName()) : new ArrayList<>();
+        List<Delivery> bookings = new ArrayList<>();
+        if (myBookings != null) {
+            for (BookingRecord r : BookingFilter.forCustomer(myBookings, customer.getPhone(), customer.getName())) {
+                bookings.add(r.toDelivery(false));
+            }
+        }
         TextView tvBookingsHeader = new TextView(this);
-        tvBookingsHeader.setText("📦 Bookings: " + (bookings != null ? bookings.size() : customer.getBookingCount()) + " order(s)");
+        tvBookingsHeader.setText(myBookings == null ? "📦 Bookings: still loading..."
+                : "📦 Bookings: " + bookings.size() + " order(s)");
         tvBookingsHeader.setTextColor(getColor(R.color.primary_blue));
         tvBookingsHeader.setTextSize(14);
         tvBookingsHeader.setTypeface(null, android.graphics.Typeface.BOLD);

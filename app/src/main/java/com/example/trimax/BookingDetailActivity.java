@@ -125,7 +125,7 @@ public class BookingDetailActivity extends AppCompatActivity {
             }
         });
 
-        loadBookingDetails();
+        // The booking is loaded in onResume, which always follows onCreate.
 
         // Phone Dial Action
         if (tvPhone != null) {
@@ -163,60 +163,13 @@ public class BookingDetailActivity extends AppCompatActivity {
             });
         }
 
-        // Confirm Booking Action
-        if (btnConfirmBooking != null) {
-            btnConfirmBooking.setOnClickListener(v -> {
-                if (currentDelivery == null) return;
-                String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
-                if (!"PENDING".equals(currentStatus)) {
-                    Toast.makeText(this, "Only PENDING bookings can be confirmed", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                btnConfirmBooking.setEnabled(false);
-                boolean success = dbHelper.confirmBooking(currentDelivery.getBookingId());
-                btnConfirmBooking.setEnabled(true);
-
-                if (success) {
-                    dbHelper.addNotification(session.getUsername(), "Booking Confirmed", "Booking #" + currentDelivery.getBookingId() + " was confirmed.");
-                    Toast.makeText(this, "Booking confirmed successfully!", Toast.LENGTH_SHORT).show();
-                    loadBookingDetails();
-                } else {
-                    Toast.makeText(this, "Failed to update booking status in database", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-        // Cancel Booking Action
-        if (btnCancelBooking != null) {
-            btnCancelBooking.setOnClickListener(v -> {
-                if (currentDelivery == null) return;
-                String currentStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "";
-                if (!"PENDING".equals(currentStatus) && !"CONFIRMED".equals(currentStatus)) {
-                    Toast.makeText(this, "Only pending or confirmed bookings can be cancelled", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                new AlertDialog.Builder(this)
-                        .setTitle("Cancel Booking")
-                        .setMessage(String.format("Are you sure you want to cancel Booking #%s?", currentDelivery.getBookingId()))
-                        .setPositiveButton("Confirm Cancellation", (dialog, which) -> {
-                            btnCancelBooking.setEnabled(false);
-                            boolean success = dbHelper.cancelBooking(currentDelivery.getBookingId());
-                            btnCancelBooking.setEnabled(true);
-
-                            if (success) {
-                                dbHelper.addNotification(session.getUsername(), "Booking Cancelled", "Booking #" + currentDelivery.getBookingId() + " was cancelled.");
-                                Toast.makeText(this, "Booking cancelled successfully", Toast.LENGTH_SHORT).show();
-                                loadBookingDetails();
-                            } else {
-                                Toast.makeText(this, "Failed to cancel booking in database", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .setNegativeButton("Keep Booking", null)
-                        .show();
-            });
-        }
+        // Confirming and cancelling happen on the desktop (an administrator decides, and cancelling returns the
+        // stock). The buttons stay hidden; if a layout ever shows them, they explain instead of changing data.
+        View.OnClickListener adminOnly = v -> Toast.makeText(this,
+                "Bookings are confirmed or cancelled by the administrator in the TRIMAX desktop app.",
+                Toast.LENGTH_LONG).show();
+        if (btnConfirmBooking != null) btnConfirmBooking.setOnClickListener(adminOnly);
+        if (btnCancelBooking != null) btnCancelBooking.setOnClickListener(adminOnly);
     }
 
     @Override
@@ -225,16 +178,46 @@ public class BookingDetailActivity extends AppCompatActivity {
         loadBookingDetails();
     }
 
-    private void loadBookingDetails() {
-        if (!TextUtils.isEmpty(currentBookingId)) {
-            currentDelivery = dbHelper.getDeliveryByCode(currentBookingId);
-        }
+    /** The booking as the TRIMAX server has it (the agent's own bookings only). */
+    private BookingRecord currentRecord;
 
-        if (currentDelivery == null) {
-            showErrorState("Booking Not Found", "The requested booking ID (" + (currentBookingId != null ? currentBookingId : "None") + ") was not found in database records.");
+    private void loadBookingDetails() {
+        int id = 0;
+        try {
+            id = Integer.parseInt(currentBookingId != null ? currentBookingId.replace("#", "").trim() : "");
+        } catch (NumberFormatException ignored) {
+            // Older local bookings used codes like BK-2026-00125; they were never sent to the server.
+        }
+        if (id <= 0) {
+            showErrorState("Booking Not Found", "Booking " + (currentBookingId != null ? currentBookingId : "")
+                    + " was only saved on this phone by an older version of the app and is not on the TRIMAX server.");
             return;
         }
+        if (currentDelivery == null && tvHeaderTitle != null) tvHeaderTitle.setText("Loading booking...");
+        TrimaxApi.get(this).getMyBooking(id, new TrimaxApi.Callback<BookingRecord>() {
+            @Override
+            public void onSuccess(BookingRecord record) {
+                if (SessionGuard.isGone(BookingDetailActivity.this)) return;
+                currentRecord = record;
+                currentDelivery = record.toDelivery(false);
+                bindBooking();
+            }
 
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(BookingDetailActivity.this)) return;
+                if (SessionGuard.handle(BookingDetailActivity.this, error)) return;
+                if (currentDelivery == null) {
+                    showErrorState(error.getKind() == ApiException.Kind.NOT_FOUND ? "Booking Not Found" : "Could Not Load Booking",
+                            error.getMessage());
+                } else {
+                    Toast.makeText(BookingDetailActivity.this, "Could not refresh: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void bindBooking() {
         hideErrorState();
 
         if (tvHeaderTitle != null) {
@@ -301,6 +284,11 @@ public class BookingDetailActivity extends AppCompatActivity {
                 tvAssignedDriverValue.setText("Not yet assigned");
                 tvAssignedDriverValue.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary));
             } else {
+                if (currentRecord != null) {
+                    String progress = currentRecord.deliveryStatus == null ? ""
+                            : " \u2022 " + DeliveryProgress.driverDisplayStatus(currentRecord.status, currentRecord.deliveryStatus);
+                    driver = driver + (currentRecord.vehicleId != null ? " \u2022 " + currentRecord.vehicleId : "") + progress;
+                }
                 tvAssignedDriverValue.setText(driver);
                 tvAssignedDriverValue.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_primary));
             }
@@ -318,12 +306,15 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         String upperStatus = status != null ? status.trim().toUpperCase(Locale.US) : "PENDING";
 
+        // Confirming, assigning and cancelling are done by the administrator in the desktop app (cancelling
+        // also returns the stock), so this screen only shows the booking.
+        if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.GONE);
+
         if ("PENDING".equals(upperStatus) || upperStatus.isEmpty()) {
             tvStatusBadge.setText("PENDING");
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
             tvStatusBadge.setTextColor(0xFFD97706);
             if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
-            if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -350,9 +341,6 @@ public class BookingDetailActivity extends AppCompatActivity {
         tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
         tvStatusBadge.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.primary_blue));
         if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
-        if (btnCancelBooking != null) {
-            btnCancelBooking.setVisibility("CONFIRMED".equals(upperStatus) ? View.VISIBLE : View.GONE);
-        }
     }
 
     private void showErrorState(String title, String message) {
