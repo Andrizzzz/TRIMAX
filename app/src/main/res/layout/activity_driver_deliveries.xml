@@ -34,7 +34,8 @@
             android:minHeight="48dp"
             android:maxLines="1"
             android:ellipsize="end"
-            android:text="Assigned Deliveries"            android:textColor="@color/text_primary"
+            android:text="Assigned Deliveries"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
