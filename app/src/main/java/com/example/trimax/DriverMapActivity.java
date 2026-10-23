@@ -1,7 +1,9 @@
 package com.example.trimax;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -10,7 +12,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -29,12 +34,28 @@ public class DriverMapActivity extends AppCompatActivity {
     private MockMapView mockMapView;
     private Delivery currentDelivery;
     private boolean hasCenteredOnLiveFix = false;
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_map);
+
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> {
+                    boolean fineGranted = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_FINE_LOCATION));
+                    boolean coarseGranted = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_COARSE_LOCATION));
+                    if (fineGranted || coarseGranted) {
+                        startDriverLocationTracking();
+                    } else {
+                        Toast.makeText(this,
+                                "Location permission is needed to show your live GPS location on the driver map.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
 
         View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
         if (root != null) {
@@ -102,40 +123,77 @@ public class DriverMapActivity extends AppCompatActivity {
                 tvDestAddress.setText(currentDelivery.getDestination());
             }
 
-            // Track real GPS; center on the first valid fix instead of the hard-coded hub.
-            locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                if (mockMapView != null) {
-                    mockMapView.updateDriverLocation(latitude, longitude);
-                    if (!hasCenteredOnLiveFix) {
-                        hasCenteredOnLiveFix = true;
-                        mockMapView.recenter();
-                    }
-                }
-            });
-            if (locationHelper.hasValidLocationFix()) {
-                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-                mockMapView.recenter();
-                hasCenteredOnLiveFix = true;
-            }
+            // Request runtime location permission before starting live GPS tracking.
+            ensureLocationPermissionAndStartTracking();
         }
 
         if (btnZoomIn != null && mockMapView != null) btnZoomIn.setOnClickListener(v -> mockMapView.zoomIn());
         if (btnZoomOut != null && mockMapView != null) btnZoomOut.setOnClickListener(v -> mockMapView.zoomOut());
         if (btnMyLocation != null && mockMapView != null) {
             btnMyLocation.setOnClickListener(v -> {
-                locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                    if (mockMapView != null) mockMapView.updateDriverLocation(latitude, longitude);
-                });
+                if (!hasLocationPermission()) {
+                    requestLocationPermission();
+                    return;
+                }
+                startDriverLocationTracking();
                 if (locationHelper.hasValidLocationFix()) {
                     mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
                     mockMapView.recenter();
                     Toast.makeText(this, "Map centered on current GPS location", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(this, "Waiting for a valid GPS fix. Check location permission and GPS.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Waiting for a valid GPS fix. Make sure device Location is enabled.", Toast.LENGTH_LONG).show();
                 }
             });
         }
         if (btnStartNavigation != null) btnStartNavigation.setOnClickListener(v -> startTurnByTurnNavigation());
+    }
+
+
+    private boolean hasLocationPermission() {
+        boolean fineGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean coarseGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        return fineGranted || coarseGranted;
+    }
+
+    private void requestLocationPermission() {
+        if (hasLocationPermission()) {
+            startDriverLocationTracking();
+            return;
+        }
+        locationPermissionLauncher.launch(new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        });
+    }
+
+    private void ensureLocationPermissionAndStartTracking() {
+        if (hasLocationPermission()) {
+            startDriverLocationTracking();
+        } else {
+            requestLocationPermission();
+        }
+    }
+
+    private void startDriverLocationTracking() {
+        if (locationHelper == null || mockMapView == null || !hasLocationPermission()) return;
+
+        locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+            if (mockMapView != null) {
+                mockMapView.updateDriverLocation(latitude, longitude);
+                if (!hasCenteredOnLiveFix) {
+                    hasCenteredOnLiveFix = true;
+                    mockMapView.recenter();
+                }
+            }
+        });
+
+        if (locationHelper.hasValidLocationFix()) {
+            mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+            mockMapView.recenter();
+            hasCenteredOnLiveFix = true;
+        }
     }
 
     private void startTurnByTurnNavigation() {
@@ -219,17 +277,10 @@ public class DriverMapActivity extends AppCompatActivity {
         if (mockMapView != null) {
             mockMapView.onResume();
             if (locationHelper != null) {
-                locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                    mockMapView.updateDriverLocation(latitude, longitude);
-                    if (!hasCenteredOnLiveFix) {
-                        hasCenteredOnLiveFix = true;
-                        mockMapView.recenter();
-                    }
-                });
-                if (locationHelper.hasValidLocationFix()) {
-                    mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-                    mockMapView.recenter();
-                    hasCenteredOnLiveFix = true;
+                if (hasLocationPermission()) {
+                    startDriverLocationTracking();
+                } else {
+                    requestLocationPermission();
                 }
             }
         }
