@@ -314,7 +314,7 @@ public class DashboardActivity extends AppCompatActivity {
 
         if (btnQuickNewBooking != null) {
             btnQuickNewBooking.setOnClickListener(v -> {
-                boolean isClockedIn = session.isDutyOnline() || dbHelper.getActiveAttendance(session.getUsername()) != null;
+                boolean isClockedIn = session.isDutyOnline();
                 if (!isClockedIn) {
                     new AlertDialog.Builder(DashboardActivity.this)
                             .setTitle("Attendance Required")
