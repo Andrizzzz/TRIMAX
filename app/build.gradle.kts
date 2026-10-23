@@ -46,6 +46,8 @@ dependencies {
     implementation("com.facebook.android:facebook-login:17.0.0")
 
     testImplementation(libs.junit)
+    // Real org.json for local unit tests (android.jar only has stubs); the app uses Android's built-in copy.
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
 }
