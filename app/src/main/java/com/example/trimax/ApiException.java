@@ -68,6 +68,9 @@ public final class ApiException extends Exception {
         return kind == Kind.SESSION_EXPIRED || kind == Kind.NOT_LINKED;
     }
 
+    static final String BAD_CREDENTIALS_MESSAGE = "Wrong email or password. If you have not used the mobile app "
+            + "before, ask your administrator to set up your mobile sign-in (your desktop password does not work here).";
+
     static ApiException network() {
         return new ApiException(Kind.NETWORK, "No internet connection. Check your connection and try again.");
     }
@@ -109,7 +112,9 @@ public final class ApiException extends Exception {
         if (authEndpoint) {
             String lower = message == null ? "" : message.toLowerCase(java.util.Locale.ROOT);
             if (lower.contains("invalid login credentials")) {
-                return new ApiException(Kind.BAD_CREDENTIALS, "Wrong email or password.", code, null);
+                // Supabase gives the same answer for a wrong password and for an email that has no mobile
+                // sign-in yet (accounts made on the desktop do not get one automatically), so mention both.
+                return new ApiException(Kind.BAD_CREDENTIALS, BAD_CREDENTIALS_MESSAGE, code, null);
             }
             if (lower.contains("email not confirmed")) {
                 return new ApiException(Kind.INVALID, "This email address has not been confirmed yet. Ask your administrator.", code, null);

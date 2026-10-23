@@ -56,7 +56,17 @@ public class ApiExceptionTest {
         ApiException bad = ApiException.fromResponse(400,
                 "{\"code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}", true);
         assertEquals(ApiException.Kind.BAD_CREDENTIALS, bad.getKind());
-        assertEquals("Wrong email or password.", bad.getMessage());
+        assertTrue(bad.getMessage().startsWith("Wrong email or password."));
+        assertTrue("explains that desktop accounts need a mobile sign-in", bad.getMessage().contains("administrator"));
+        // Current Supabase Auth shape: numeric "code", text "error_code". Same for an unknown email.
+        ApiException noSuchUser = ApiException.fromResponse(400,
+                "{\"code\":400,\"error_code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}", true);
+        assertEquals(ApiException.Kind.BAD_CREDENTIALS, noSuchUser.getKind());
+        assertEquals(bad.getMessage(), noSuchUser.getMessage());
+        ApiException unconfirmed = ApiException.fromResponse(400,
+                "{\"code\":400,\"error_code\":\"email_not_confirmed\",\"msg\":\"Email not confirmed\"}", true);
+        assertEquals(ApiException.Kind.INVALID, unconfirmed.getKind());
+        assertTrue(unconfirmed.getMessage().contains("not been confirmed"));
         assertEquals(ApiException.Kind.SESSION_EXPIRED, ApiException.fromResponse(400,
                 "{\"code\":\"refresh_token_not_found\",\"msg\":\"Invalid Refresh Token: Refresh Token Not Found\"}", true).getKind());
         assertEquals(ApiException.Kind.SERVER, ApiException.fromResponse(429, "{\"msg\":\"rate limit\"}", true).getKind());
