@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_main"
-    android:fitsSystemWindows="true"
+    android:fitsSystemWindows="false"
     tools:context=".DriverProfileActivity">
 
     <!-- Top Left Accent Shape -->
@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="20dp"
-        android:paddingTop="28dp"
+        android:paddingTop="16dp"
         android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -38,10 +38,11 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:overScrollMode="never"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
         app:layout_constraintBottom_toTopOf="@+id/cardBottomNavContainer"
         app:layout_constraintTop_toBottomOf="@+id/topBar">
 
@@ -50,8 +51,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="140dp">
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
 
             <!-- Profile Info Card -->
             <androidx.cardview.widget.CardView
@@ -65,12 +66,12 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="12dp">
 
                     <ImageView
                         android:id="@+id/ivDriverProfilePhoto"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:background="@drawable/bg_icon_badge"
                         android:clickable="true"
                         android:contentDescription="Driver profile picture. Tap to change."
@@ -90,7 +91,7 @@
                         android:id="@+id/tvDriverName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="6dp"
                         android:text="Test Driver"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
@@ -121,8 +122,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="4dp"
                 android:text="Assigned Vehicle Details"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
@@ -138,7 +139,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -182,7 +183,7 @@
                 android:id="@+id/cardEditProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="6dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
@@ -192,7 +193,7 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp">
+                    android:padding="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -217,7 +218,7 @@
                 android:id="@+id/cardChangePassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
@@ -253,7 +254,7 @@
                 android:id="@+id/btnLogout"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="44dp"
                 android:text="Logout"
                 android:textAllCaps="false"
                 android:textColor="#EF4444"
@@ -262,7 +263,7 @@
                 app:strokeColor="#EF4444" />
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
     <!-- BOTTOM NAVIGATION CONTAINER -->
     <androidx.cardview.widget.CardView
