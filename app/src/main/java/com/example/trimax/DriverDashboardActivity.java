@@ -540,20 +540,15 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
         tvHeroSpecialInstructions.setText("⚠️ " + instructions);
 
-        String status = currentHeroDelivery.getStatus();
         if (currentHeroRecord != null && DeliveryProgress.PENDING.equals(currentHeroRecord.status)) {
             tvHeroStatusPill.setBackgroundResource(R.drawable.bg_status_pending);
             tvHeroStatusPill.setTextColor(0xFFD97706);
             tvHeroStatusPill.setText("AWAITING ADMIN");
             btnHeroStartDelivery.setText("VIEW DETAILS");
-        } else if ("ASSIGNED".equalsIgnoreCase(status)) {
-            tvHeroStatusPill.setBackgroundResource(R.drawable.bg_status_pending);
-            tvHeroStatusPill.setTextColor(0xFF2563EB);
-            btnHeroStartDelivery.setText("START DELIVERY");
         } else {
             tvHeroStatusPill.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvHeroStatusPill.setTextColor(0xFF059669);
-            btnHeroStartDelivery.setText("OPEN NAVIGATION");
+            btnHeroStartDelivery.setText("START NAVIGATION");
         }
     }
 
