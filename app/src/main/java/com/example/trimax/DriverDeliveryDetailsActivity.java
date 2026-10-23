@@ -431,7 +431,9 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
             boolean updated = dbHelper.updateDepositStatus(currentDelivery.getBookingId(), session.getUsername(), amt, chosenStatus, reason);
             if (updated) {
-                Toast.makeText(this, "Deposit updated to " + chosenStatus, Toast.LENGTH_SHORT).show();
+                // Deposits are not on the TRIMAX server yet: say so instead of implying the office was told.
+                Toast.makeText(this, "Deposit noted as " + chosenStatus + " on this phone only. Tell the office.",
+                        Toast.LENGTH_LONG).show();
                 loadDeliveryData();
             } else {
                 Toast.makeText(this, "Failed to update deposit", Toast.LENGTH_SHORT).show();
@@ -487,7 +489,9 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
             boolean saved = dbHelper.addOrderAdjustment(currentDelivery.getBookingId(), session.getUsername(), "DAMAGE_CHARGE", chargeAmt, damageType + ": " + item, desc);
             if (saved) {
-                Toast.makeText(this, "Damage report submitted. Additional charge ₱" + chargeAmt + " applied.", Toast.LENGTH_LONG).show();
+                // Damage charges are not on the TRIMAX server yet: the booking total there is unchanged.
+                Toast.makeText(this, "Damage report saved on this phone only (₱" + chargeAmt
+                        + " not charged). Call the office.", Toast.LENGTH_LONG).show();
                 loadDeliveryData();
             } else {
                 Toast.makeText(this, "Failed to submit damage report", Toast.LENGTH_SHORT).show();

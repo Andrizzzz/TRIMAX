@@ -680,7 +680,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
             boolean saved = dbHelper.saveProblemReport(bookingId, session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
             if (saved) {
-                Toast.makeText(this, "Problem report sent to Admin! Admin will review and process.", Toast.LENGTH_LONG).show();
+                // Problem reports are not on the TRIMAX server yet, so the admin does not receive them.
+                Toast.makeText(this, "Problem report saved on this phone only. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
             } else {
                 Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
             }
