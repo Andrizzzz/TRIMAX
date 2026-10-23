@@ -328,7 +328,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         // Whenever a driver screen closes and returns here, restore the Dashboard tab highlight.
         LinearLayout bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
-            highlightBottomNavItem(R.id.nav_home, bottomNavigation);
+            highlightBottomNavItem(R.id.nav_home);
         }
     }
 
@@ -547,62 +547,92 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(LinearLayout bottomNavigation) {
-        if (bottomNavigation == null) return;
-
-        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
-        for (int id : ids) {
-            View item = findViewById(id);
-            if (item != null) {
-                item.setOnClickListener(v -> {
-                    highlightBottomNavItem(id, bottomNavigation);
-                    if (id == R.id.nav_home) {
-                        refreshDriverDashboard();
-                    } else if (id == R.id.nav_bookings) {
-                        startActivity(new Intent(this, DriverDeliveriesActivity.class));
-                    } else if (id == R.id.nav_clients) {
-                        startActivity(new Intent(this, DriverNotificationsActivity.class));
-                    } else if (id == R.id.nav_packages) {
-                        startActivity(new Intent(this, DriverHistoryActivity.class));
-                    } else if (id == R.id.nav_profile) {
-                        startActivity(new Intent(this, DriverProfileActivity.class));
-                    }
-                });
-            }
-        }
-        highlightBottomNavItem(R.id.nav_home, bottomNavigation);
+    private void navigateToTab(Class<?> targetClass) {
+        Intent intent = new Intent(this, targetClass);
+        intent.putExtra("PREV_TAB_INDEX", 0);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
     }
 
-    private void highlightBottomNavItem(int activeId, LinearLayout navContainer) {
+    private void setupBottomNavigation(LinearLayout bottomNavigation) {
+        highlightBottomNavItem(R.id.nav_home);
+
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        if (home != null) home.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_home));
+        if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(DriverDeliveriesActivity.class));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(DriverHistoryActivity.class));
+        if (clients != null) clients.setOnClickListener(v -> navigateToTab(DriverNotificationsActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(DriverProfileActivity.class));
+    }
+
+    private void highlightBottomNavItem(int activeId) {
         int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
         int activeIndex = 0;
         for (int i = 0; i < ids.length; i++) {
-            View item = findViewById(ids[i]);
-            boolean active = ids[i] == activeId;
-            if (active) activeIndex = i;
-            if (item != null) item.setSelected(active);
+            if (ids[i] == activeId) {
+                activeIndex = i;
+                break;
+            }
         }
 
-        View indicator = findViewById(R.id.slidingIndicator);
-        if (indicator == null) return;
-
-        final int index = activeIndex;
-        final int margin = Math.round(4 * getResources().getDisplayMetrics().density);
-        navContainer.post(() -> {
-            int availableWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
-            if (availableWidth <= 0) return;
-            int tabWidth = availableWidth / ids.length;
-            ViewGroup.LayoutParams params = indicator.getLayoutParams();
-            if (params != null) {
-                params.width = tabWidth - margin * 2;
-                indicator.setLayoutParams(params);
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                boolean isActive = (id == activeId);
+                v.setSelected(isActive);
             }
-            float targetX = navContainer.getPaddingLeft() + index * tabWidth + margin;
-            indicator.animate()
-                    .translationX(targetX)
-                    .setDuration(180)
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .start();
-        });
+        }
+
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        getIntent().removeExtra("PREV_TAB_INDEX");
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        LinearLayout navContainer = findViewById(R.id.bottomNavigation);
+        if (indicator != null) {
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
+
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 5};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
+
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
+
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 5;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
+
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(140)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .start();
+                });
+            }
+        }
     }
 }

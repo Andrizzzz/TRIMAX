@@ -721,10 +721,11 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Delivery History"
+                            android:text="History"
                             android:textColor="@color/bottom_nav_text_color"
                             android:duplicateParentState="true"
                             android:textSize="10sp"
+                            android:includeFontPadding="false"
                             android:maxLines="1" />
                     </LinearLayout>
 
@@ -749,10 +750,11 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Notifications"
+                            android:text="Alerts"
                             android:textColor="@color/bottom_nav_text_color"
                             android:duplicateParentState="true"
                             android:textSize="10sp"
+                            android:includeFontPadding="false"
                             android:maxLines="1" />
                     </LinearLayout>
 
