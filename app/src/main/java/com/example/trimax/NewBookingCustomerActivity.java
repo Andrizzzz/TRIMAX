@@ -44,10 +44,23 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        directoryOnly = getIntent().getBooleanExtra("CUSTOMER_DIRECTORY_ONLY", false);
+
+        // Prevent bypassing the dashboard's duty check through direct navigation.
+        SessionManager dutySession = new SessionManager(this);
+        if (!directoryOnly && !dutySession.isDutyOnline()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Attendance Required")
+                    .setMessage("You must be clocked in and on duty before creating a new booking. Please start duty first.")
+                    .setPositiveButton("OK", (dialog, which) -> finish())
+                    .setOnCancelListener(dialog -> finish())
+                    .show();
+            return;
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_new_booking_customer);
         dbHelper = new DatabaseHelper(this);
-        directoryOnly = getIntent().getBooleanExtra("CUSTOMER_DIRECTORY_ONLY", false);
 
         addCustomerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(), result -> {
