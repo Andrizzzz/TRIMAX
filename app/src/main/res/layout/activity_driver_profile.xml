@@ -38,10 +38,11 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:overScrollMode="never"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
         app:layout_constraintBottom_toTopOf="@+id/cardBottomNavContainer"
         app:layout_constraintTop_toBottomOf="@+id/topBar">
 
@@ -51,7 +52,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingTop="12dp"
-            android:paddingBottom="140dp">
+            android:paddingBottom="16dp">
 
             <!-- Profile Info Card -->
             <androidx.cardview.widget.CardView
@@ -262,7 +263,7 @@
                 app:strokeColor="#EF4444" />
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
     <!-- BOTTOM NAVIGATION CONTAINER -->
     <androidx.cardview.widget.CardView
