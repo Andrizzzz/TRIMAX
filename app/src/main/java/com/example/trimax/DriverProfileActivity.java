@@ -144,45 +144,56 @@ public class DriverProfileActivity extends AppCompatActivity {
         }
 
         for (int id : ids) {
-            View item = findViewById(id);
-            if (item != null) item.setSelected(id == activeId);
+            View v = findViewById(id);
+            if (v != null) {
+                boolean isActive = (id == activeId);
+                v.setSelected(isActive);
+            }
         }
 
-        int previousIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
         getIntent().removeExtra("PREV_TAB_INDEX");
 
         View indicator = findViewById(R.id.slidingIndicator);
         LinearLayout navContainer = findViewById(R.id.bottomNavigation);
-        if (indicator == null || navContainer == null) return;
+        if (indicator != null) {
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
 
-        final int targetIndex = activeIndex;
-        final boolean animate = previousIndex >= 0 && previousIndex != targetIndex;
-        navContainer.post(() -> {
-            int availableWidth = navContainer.getWidth()
-                    - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
-            if (availableWidth <= 0) return;
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 5};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
 
-            int tabWidth = availableWidth / ids.length;
-            int sideInset = dp(4);
-            ViewGroup.LayoutParams params = indicator.getLayoutParams();
-            if (params != null) {
-                params.width = Math.max(0, tabWidth - sideInset * 2);
-                indicator.setLayoutParams(params);
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
             }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
 
-            float targetX = navContainer.getPaddingLeft()
-                    + targetIndex * tabWidth + sideInset;
-            indicator.animate().cancel();
-            if (animate) {
-                indicator.animate()
-                        .translationX(targetX)
-                        .setDuration(140)
-                        .setInterpolator(new FastOutSlowInInterpolator())
-                        .start();
-            } else {
-                indicator.setTranslationX(targetX);
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 5;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
+
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(140)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .start();
+                });
             }
-        });
+        }
     }
 
     private int dp(int value) {
