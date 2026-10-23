@@ -19,6 +19,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private TextInputEditText etEmail, etPassword;
     private Button btnLogin;
+    private CharSequence loginLabel;
     private DatabaseHelper dbHelper;
     private SessionManager session;
 
@@ -43,6 +44,7 @@ public class LoginActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
+        loginLabel = btnLogin != null ? btnLogin.getText() : "Login";
         TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
         if (tvForgotPassword != null) {
@@ -55,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
         if (btnLogin != null) {
             btnLogin.setOnClickListener(v -> {
                 String usernameInput = etEmail != null && etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
-                String passwordInput = etPassword != null && etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+                String passwordInput = etPassword != null && etPassword.getText() != null ? etPassword.getText().toString() : "";
 
                 if (usernameInput.isEmpty()) {
                     if (etEmail != null) {
@@ -72,28 +74,38 @@ public class LoginActivity extends AppCompatActivity {
                     return;
                 }
 
-                btnLogin.setEnabled(false);
-
-                // Authenticate with local SQLite database
-                User authenticatedUser = dbHelper.authenticateUser(usernameInput, passwordInput);
-
-                if (authenticatedUser != null) {
-                    session.createLoginSession(authenticatedUser);
-
-                    Toast.makeText(LoginActivity.this, "Welcome " + authenticatedUser.getFullName() + "!", Toast.LENGTH_SHORT).show();
-
-                    Intent intent;
-                    if ("DRIVER".equalsIgnoreCase(authenticatedUser.getRole())) {
-                        intent = new Intent(LoginActivity.this, DriverDashboardActivity.class);
-                    } else {
-                        intent = new Intent(LoginActivity.this, DashboardActivity.class);
+                // Sign-in is checked by the TRIMAX server (Supabase Auth); the role and Active status come
+                // from the account the administrator manages on the desktop, never from this phone.
+                if (!usernameInput.contains("@")) {
+                    if (etEmail != null) {
+                        etEmail.setError("Sign in with the email address on your TRIMAX account");
+                        etEmail.requestFocus();
                     }
-                    startActivity(intent);
-                    finish();
-                } else {
-                    btnLogin.setEnabled(true);
-                    Toast.makeText(LoginActivity.this, "Invalid username or password.", Toast.LENGTH_LONG).show();
+                    return;
                 }
+
+                btnLogin.setEnabled(false);
+                btnLogin.setText("Signing in...");
+                TrimaxApi.get(this).signIn(usernameInput, passwordInput, new TrimaxApi.Callback<MobileAccount>() {
+                    @Override
+                    public void onSuccess(MobileAccount account) {
+                        if (SessionGuard.isGone(LoginActivity.this)) return;
+                        session.createLoginSession(account.toUser());
+                        Toast.makeText(LoginActivity.this, "Welcome " + account.fullName + "!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(LoginActivity.this,
+                                account.isDriver() ? DriverDashboardActivity.class : DashboardActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(ApiException error) {
+                        if (SessionGuard.isGone(LoginActivity.this)) return;
+                        btnLogin.setEnabled(true);
+                        btnLogin.setText(loginLabel);
+                        Toast.makeText(LoginActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
             });
         }
     }
