@@ -80,6 +80,9 @@ public class MockMapView extends FrameLayout {
     private int sampleLocationIndex = 0;
     private boolean hasExplicitDestinationSelection = false;
     private boolean isProgrammaticMove = false;
+    private boolean liveDriverRouteOrigin = false;
+    private boolean destinationPinEnabled = true;
+    private GeoPoint lastRoutedDriverPoint;
 
     private static final GeoPoint RIDER_POINT = new GeoPoint(14.7826996, 121.0475865); // Fixed TRIMAX Hub
 
@@ -413,8 +416,17 @@ public class MockMapView extends FrameLayout {
         }
     }
 
+    public void setLiveDriverRouteOrigin(boolean enabled) {
+        liveDriverRouteOrigin = enabled;
+        if (enabled && riderMarker != null && customerMarker != null) calculateRouteAndNotify();
+    }
+
+    public void setDestinationPinEnabled(boolean enabled) {
+        destinationPinEnabled = enabled;
+    }
+
     private void onMapMoved() {
-        if (isProgrammaticMove || mapView == null) return;
+        if (!destinationPinEnabled || isProgrammaticMove || mapView == null) return;
         org.osmdroid.api.IGeoPoint center = mapView.getMapCenter();
         if (center != null) {
             GeoPoint centerPoint = new GeoPoint(center.getLatitude(), center.getLongitude());
@@ -482,10 +494,24 @@ public class MockMapView extends FrameLayout {
         GeoPoint point = new GeoPoint(lat, lng);
         if (riderMarker != null) {
             riderMarker.setPosition(point);
-            if (mapView != null) {
-                mapView.invalidate();
+            if (mapView != null) mapView.invalidate();
+
+            // Refresh route from real GPS after meaningful movement, not every GPS jitter.
+            if (liveDriverRouteOrigin && customerMarker != null
+                    && (lastRoutedDriverPoint == null || distanceKm(lastRoutedDriverPoint, point) >= 0.15)) {
+                lastRoutedDriverPoint = point;
+                calculateRouteAndNotify();
             }
         }
+    }
+
+    private double distanceKm(GeoPoint a, GeoPoint b) {
+        if (a == null || b == null) return Double.MAX_VALUE;
+        float[] result = new float[1];
+        android.location.Location.distanceBetween(
+                a.getLatitude(), a.getLongitude(),
+                b.getLatitude(), b.getLongitude(), result);
+        return result[0] / 1000.0;
     }
 
     private void updateCustomerPosition(GeoPoint point, String address) {
@@ -506,7 +532,8 @@ public class MockMapView extends FrameLayout {
     }
 
     private void calculateRouteAndNotify() {
-        GeoPoint start = RIDER_POINT;
+        GeoPoint start = liveDriverRouteOrigin && riderMarker != null
+                ? riderMarker.getPosition() : RIDER_POINT;
         GeoPoint end = customerMarker != null ? customerMarker.getPosition() : sampleGeoPoints[0];
 
         routingService.calculateRoute(start, end, new RoutingService.RouteCallback() {
