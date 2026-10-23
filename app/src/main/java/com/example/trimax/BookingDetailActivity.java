@@ -322,7 +322,7 @@ public class BookingDetailActivity extends AppCompatActivity {
             tvStatusBadge.setText("PENDING");
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
             tvStatusBadge.setTextColor(0xFFD97706);
-            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.VISIBLE);
+            if (btnConfirmBooking != null) btnConfirmBooking.setVisibility(View.GONE);
             if (btnCancelBooking != null) btnCancelBooking.setVisibility(View.VISIBLE);
             return;
         }
