@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -96,6 +97,17 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         // New Booking Button Listener
         if (btnNewBooking != null) {
             btnNewBooking.setOnClickListener(v -> {
+                SessionManager session = new SessionManager(this);
+                if (dbHelper == null) dbHelper = new DatabaseHelper(this);
+                boolean isClockedIn = session.isDutyOnline() || dbHelper.getActiveAttendance(session.getUsername()) != null;
+                if (!isClockedIn) {
+                    new AlertDialog.Builder(BookingsActivity.this)
+                            .setTitle("Attendance Required")
+                            .setMessage("You must be clocked in (Start Duty / Agent Attendance) before adding a new booking.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    return;
+                }
                 Intent intent = new Intent(BookingsActivity.this, NewBookingCustomerActivity.class);
                 startActivity(intent);
             });

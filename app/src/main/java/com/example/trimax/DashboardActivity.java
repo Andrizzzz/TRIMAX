@@ -299,7 +299,18 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (btnQuickNewBooking != null) {
-            btnQuickNewBooking.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class)));
+            btnQuickNewBooking.setOnClickListener(v -> {
+                boolean isClockedIn = session.isDutyOnline() || dbHelper.getActiveAttendance(session.getUsername()) != null;
+                if (!isClockedIn) {
+                    new AlertDialog.Builder(DashboardActivity.this)
+                            .setTitle("Attendance Required")
+                            .setMessage("You must be clocked in (Start Duty / Agent Attendance) before adding a new booking.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    return;
+                }
+                startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class));
+            });
         }
 
         // 8. BOTTOM NAVIGATION
