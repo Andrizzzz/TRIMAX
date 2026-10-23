@@ -13,8 +13,8 @@ import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +71,8 @@ public class DriverNotificationsActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        setupDriverBottomNavigation();
 
         loadNotifications();
     }
@@ -186,4 +188,67 @@ public class DriverNotificationsActivity extends AppCompatActivity {
             loadNotifications();
         }
     }
+    private void setupDriverBottomNavigation() {
+        LinearLayout bottomNavigation = findViewById(R.id.bottomNavigation);
+        if (bottomNavigation == null) return;
+
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        for (int id : ids) {
+            View item = findViewById(id);
+            if (item == null) continue;
+            item.setOnClickListener(v -> {
+                if (id == R.id.nav_home) {
+                    openDriverTab(DriverDashboardActivity.class);
+                } else if (id == R.id.nav_bookings) {
+                    openDriverTab(DriverDeliveriesActivity.class);
+                } else if (id == R.id.nav_packages) {
+                    openDriverTab(DriverHistoryActivity.class);
+                } else if (id == R.id.nav_clients) {
+                    highlightNotificationTab(bottomNavigation, R.id.nav_clients);
+                } else if (id == R.id.nav_profile) {
+                    openDriverTab(DriverProfileActivity.class);
+                }
+            });
+        }
+        highlightNotificationTab(bottomNavigation, R.id.nav_clients);
+    }
+
+    private void openDriverTab(Class<?> destination) {
+        Intent intent = new Intent(this, destination);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+    }
+
+    private void highlightNotificationTab(LinearLayout navContainer, int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            View item = findViewById(ids[i]);
+            boolean active = ids[i] == activeId;
+            if (active) activeIndex = i;
+            if (item != null) item.setSelected(active);
+        }
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        if (indicator == null) return;
+        final int index = activeIndex;
+        final int margin = Math.round(4 * getResources().getDisplayMetrics().density);
+        navContainer.post(() -> {
+            int width = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+            if (width <= 0) return;
+            int tabWidth = width / ids.length;
+            ViewGroup.LayoutParams params = indicator.getLayoutParams();
+            if (params != null) {
+                params.width = tabWidth - margin * 2;
+                indicator.setLayoutParams(params);
+            }
+            indicator.animate()
+                    .translationX(navContainer.getPaddingLeft() + index * tabWidth + margin)
+                    .setDuration(180)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .start();
+        });
+    }
+
 }
