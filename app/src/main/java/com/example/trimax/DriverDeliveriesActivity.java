@@ -188,129 +188,52 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         for (int i = 0; i < deliveries.size(); i++) {
             Delivery d = deliveries.get(i);
 
-            CardView card = new CardView(this);
-            CardView.LayoutParams cardParams = new CardView.LayoutParams(
-                    CardView.LayoutParams.MATCH_PARENT, CardView.LayoutParams.WRAP_CONTENT);
-            cardParams.setMargins(0, 0, 0, dp(16));
-            card.setLayoutParams(cardParams);
-            card.setRadius(20);
-            card.setCardElevation(4);
-            card.setClickable(true);
-            card.setFocusable(true);
+            View cardView = android.view.LayoutInflater.from(this).inflate(R.layout.item_driver_delivery_card, containerDeliveries, false);
 
-            LinearLayout layout = new LinearLayout(this);
-            layout.setOrientation(LinearLayout.VERTICAL);
-            layout.setPadding(dp(18), dp(18), dp(18), dp(18));
+            TextView tvDeliveryStage = cardView.findViewById(R.id.tvDeliveryStage);
+            TextView tvSequenceBadge = cardView.findViewById(R.id.tvSequenceBadge);
+            TextView tvBookingId = cardView.findViewById(R.id.tvBookingId);
+            TextView tvCustomerInfo = cardView.findViewById(R.id.tvCustomerInfo);
+            TextView tvPickupLocation = cardView.findViewById(R.id.tvPickupLocation);
+            TextView tvDestination = cardView.findViewById(R.id.tvDestination);
+            TextView tvSpecialInstructions = cardView.findViewById(R.id.tvSpecialInstructions);
+            TextView tvDeliveryStatus = cardView.findViewById(R.id.tvDeliveryStatus);
 
-            // Header Row: Sequence Badge & Category Tag
-            LinearLayout headerRow = new LinearLayout(this);
-            headerRow.setOrientation(LinearLayout.HORIZONTAL);
-
-            TextView tvCategory = new TextView(this);
             if (i == 0) {
-                tvCategory.setText("▶ CURRENT DELIVERY");
-                tvCategory.setTextColor(0xFF2563EB);
+                tvDeliveryStage.setText("▶ CURRENT DELIVERY");
+                tvDeliveryStage.setTextColor(0xFF2563EB);
             } else if (i == 1) {
-                tvCategory.setText("⏭ NEXT DELIVERY");
-                tvCategory.setTextColor(0xFFD97706);
+                tvDeliveryStage.setText("⏭ NEXT DELIVERY");
+                tvDeliveryStage.setTextColor(0xFFD97706);
             } else {
-                tvCategory.setText("🗓 UPCOMING DELIVERY");
-                tvCategory.setTextColor(0xFF64748B);
+                tvDeliveryStage.setText("🗓 UPCOMING DELIVERY");
+                tvDeliveryStage.setTextColor(0xFF64748B);
             }
-            tvCategory.setTextSize(12);
-            tvCategory.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvCategory.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
 
-            TextView tvSeqBadge = new TextView(this);
-            tvSeqBadge.setText(String.format("Seq #%d", d.getSequenceNumber()));
-            tvSeqBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvSeqBadge.setTextColor(0xFF059669);
-            tvSeqBadge.setTextSize(11);
-            tvSeqBadge.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvSeqBadge.setPadding(dp(12), dp(6), dp(12), dp(6));
+            tvSequenceBadge.setText(String.format("Seq #%d", d.getSequenceNumber()));
+            tvBookingId.setText(String.format("Booking #%s", d.getBookingId()));
+            tvCustomerInfo.setText(String.format("👤 %s • %s", d.getCustomerName(), d.getCustomerPhone()));
+            tvPickupLocation.setText(String.format("📍 Pickup: %s", d.getPickupLocation()));
+            tvDestination.setText(String.format("🏁 Destination: %s", d.getDestination()));
 
-            headerRow.addView(tvCategory);
-            headerRow.addView(tvSeqBadge);
-
-            // Booking ID & Customer
-            TextView tvCode = new TextView(this);
-            tvCode.setText(String.format("Booking #%s", d.getBookingId()));
-            tvCode.setTextColor(getResources().getColor(R.color.text_primary));
-            tvCode.setTextSize(18);
-            tvCode.setMaxLines(2);
-            tvCode.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            tvCode.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
-            tvCode.setPadding(0, dp(8), 0, 0);
-            tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            TextView tvCustomer = new TextView(this);
-            tvCustomer.setText(String.format("Customer: %s • %s", d.getCustomerName(), d.getCustomerPhone()));
-            tvCustomer.setTextColor(getResources().getColor(R.color.primary_blue));
-            tvCustomer.setTextSize(14);
-            tvCustomer.setMaxLines(3);
-            tvCustomer.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
-            tvCustomer.setPadding(0, dp(4), 0, 0);
-
-            TextView tvPickup = new TextView(this);
-            tvPickup.setText(String.format("Pickup: %s", d.getPickupLocation()));
-            tvPickup.setTextColor(getResources().getColor(R.color.text_secondary));
-            tvPickup.setTextSize(13);
-            tvPickup.setMaxLines(3);
-            tvPickup.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
-            tvPickup.setPadding(0, dp(6), 0, 0);
-
-            TextView tvDest = new TextView(this);
-            tvDest.setText(String.format("Destination: %s", d.getDestination()));
-            tvDest.setTextColor(getResources().getColor(R.color.text_primary));
-            tvDest.setTextSize(13);
-            tvDest.setMaxLines(3);
-            tvDest.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
-            tvDest.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvDest.setPadding(0, dp(6), 0, 0);
-
-            // Special instructions if present
             if (!TextUtils.isEmpty(d.getSpecialInstructions())) {
-                TextView tvInstructions = new TextView(this);
-                tvInstructions.setText(String.format("⚠️ Instructions: %s", d.getSpecialInstructions()));
-                tvInstructions.setTextColor(getResources().getColor(R.color.text_primary));
-                tvInstructions.setBackgroundResource(R.drawable.bg_pill_unselected);
-                tvInstructions.setTextSize(12);
-                tvInstructions.setMaxLines(4);
-                tvInstructions.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
-                tvInstructions.setPadding(dp(12), dp(8), dp(12), dp(8));
-                layout.addView(headerRow);
-                layout.addView(tvCode);
-                layout.addView(tvCustomer);
-                layout.addView(tvPickup);
-                layout.addView(tvDest);
-                layout.addView(tvInstructions);
+                tvSpecialInstructions.setVisibility(View.VISIBLE);
+                tvSpecialInstructions.setText(String.format("⚠️ Instructions: %s", d.getSpecialInstructions()));
             } else {
-                layout.addView(headerRow);
-                layout.addView(tvCode);
-                layout.addView(tvCustomer);
-                layout.addView(tvPickup);
-                layout.addView(tvDest);
+                tvSpecialInstructions.setVisibility(View.GONE);
             }
 
-            TextView tvStatus = new TextView(this);
-            tvStatus.setText(String.format("Status: %s", d.getStatus()));
-            tvStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
-            tvStatus.setTextSize(13);
-            tvStatus.setMaxLines(2);
-            tvStatus.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvStatus.setPadding(0, dp(8), 0, 0);
-            layout.addView(tvStatus);
-
-            card.addView(layout);
+            tvDeliveryStatus.setText(String.format("Status: %s", d.getStatus()));
+            tvDeliveryStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
 
             final String bookingId = d.getBookingId();
-            card.setOnClickListener(v -> {
+            cardView.setOnClickListener(v -> {
                 Intent intent = new Intent(DriverDeliveriesActivity.this, DriverDeliveryDetailsActivity.class);
                 intent.putExtra("DELIVERY_ID", bookingId);
                 startActivity(intent);
             });
 
-            containerDeliveries.addView(card);
+            containerDeliveries.addView(cardView);
         }
     }
 }
