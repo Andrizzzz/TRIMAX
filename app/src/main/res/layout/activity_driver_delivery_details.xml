@@ -40,11 +40,14 @@
             app:tint="@color/text_primary" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/llHeaderInfo"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_toEndOf="@id/btnBack"
+            android:layout_toStartOf="@id/tvStatusBadge"
+            android:layout_centerVertical="true"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvHeaderTitle"
@@ -59,7 +62,7 @@
                 android:id="@+id/tvSeqBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginTop="5dp"
                 android:background="#1A2563EB"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="2dp"
@@ -74,13 +77,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
+            android:layout_alignParentTop="true"
             android:background="@drawable/bg_status_pending"
-            android:paddingHorizontal="12dp"
+            android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
             android:text="ASSIGNED"
             android:textColor="#2563EB"
-            android:textSize="11sp"
+            android:textSize="10sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
