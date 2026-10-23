@@ -32,7 +32,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="110dp">
+                android:paddingBottom="140dp">
 
                 <!-- TOP BLUE HEADER SECTION -->
                 <RelativeLayout
@@ -40,7 +40,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_header_card"
                     android:paddingHorizontal="20dp"
-                    android:paddingTop="16dp"
+                    android:paddingTop="36dp"
                     android:paddingBottom="28dp">
 
                     <!-- Menu & Actions Top Bar -->
