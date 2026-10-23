@@ -1,5 +1,6 @@
 package com.example.trimax;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -43,7 +44,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         TextInputEditText etNewPassword = findViewById(R.id.etNewPassword);
         TextInputEditText etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
         if (btnChangePassword != null) {
             btnChangePassword.setOnClickListener(v -> {
@@ -82,5 +83,14 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

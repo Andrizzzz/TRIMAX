@@ -36,7 +36,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
     private String customerName, customerPhone, customerEmail;
     private String service, date, time, notes;
     private int quantity;
-    private String selectedCustomerAddress = "San Jose del Monte, Bulacan";
+    private double selectedPrice = 99.00;
+    private String selectedCustomerAddress = "";
 
     private LocationHelper locationHelper;
     private MockMapView mockMapView;
@@ -68,8 +69,13 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         customerName = intent.getStringExtra("CUSTOMER_NAME");
         customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
         customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
+        String savedAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
+        double savedCustomerLatitude = intent.getDoubleExtra("CUSTOMER_LAT", 0);
+        double savedCustomerLongitude = intent.getDoubleExtra("CUSTOMER_LNG", 0);
+        if (savedAddress != null && !savedAddress.trim().isEmpty()) selectedCustomerAddress = savedAddress.trim();
         service = intent.getStringExtra("SERVICE");
         quantity = intent.getIntExtra("QUANTITY", 1);
+        selectedPrice = intent.getDoubleExtra("SELECTED_PRICE", 99.00);
         date = intent.getStringExtra("DATE");
         time = intent.getStringExtra("TIME");
         notes = intent.getStringExtra("NOTES");
@@ -82,14 +88,59 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         FloatingActionButton btnZoomOut = findViewById(R.id.btnZoomOut);
         FloatingActionButton btnMyLocation = findViewById(R.id.btnMyLocation);
 
+        TextView tvCustomerName = findViewById(R.id.tvCustomerName);
+        if (tvCustomerName != null) {
+            tvCustomerName.setText(customerName != null && !customerName.trim().isEmpty() ? customerName : "Guest Customer");
+        }
+
         TextView tvCustomerAddress = findViewById(R.id.tvCustomerAddress);
+        if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
+        if (mockMapView != null && savedCustomerLatitude != 0 && savedCustomerLongitude != 0) {
+            mockMapView.setDestinationLocation(savedCustomerLatitude, savedCustomerLongitude,
+                    selectedCustomerAddress, selectedCustomerAddress);
+        }
+        if (mockMapView != null) {
+            locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                if (mockMapView != null) {
+                    mockMapView.updateDriverLocation(latitude, longitude);
+                }
+            });
+            double currentLat = locationHelper.getLatitude();
+            double currentLng = locationHelper.getLongitude();
+            if (currentLat != 0 && currentLng != 0) {
+                mockMapView.updateDriverLocation(currentLat, currentLng);
+                mockMapView.recenter();
+            }
+        }
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
 
         MaterialButton btnUseCurrentLocation = findViewById(R.id.btnUseCurrentLocation);
-        MaterialButton btnChangeCustomerLocation = findViewById(R.id.btnChangeCustomerLocation);
+        TextView btnChangeCustomerLocation = findViewById(R.id.btnChangeCustomerLocation);
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
+
+        ActivityResultLauncher<Intent> fullMapPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Intent data = result.getData();
+                        String newAddr = data.getStringExtra("SELECTED_ADDRESS");
+                        double newLat = data.getDoubleExtra("SELECTED_LAT", 0);
+                        double newLng = data.getDoubleExtra("SELECTED_LNG", 0);
+                        if (newAddr != null && !newAddr.trim().isEmpty()) {
+                            selectedCustomerAddress = newAddr.trim();
+                            if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
+                        }
+                        if (newLat != 0 && newLng != 0 && mockMapView != null) {
+                            // Preserve the coordinates returned by the full-map picker.
+                            // recenter() targets the driver's GPS and would move the map center
+                            // away from the chosen destination, causing onMapMoved() to overwrite it.
+                            mockMapView.setDestinationLocation(newLat, newLng, "Selected Location", selectedCustomerAddress);
+                        }
+                    }
+                }
+        );
 
         // Permission Launcher Setup
         locationPermissionLauncher = registerForActivityResult(
@@ -178,6 +229,34 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             });
         }
 
+        // If an older saved customer only has a typed address, try resolving it to a map pin.
+        if (savedAddress != null && !savedAddress.trim().isEmpty()
+                && (savedCustomerLatitude == 0 || savedCustomerLongitude == 0)) {
+            nominatimSearchService.searchLocation(savedAddress, new NominatimSearchService.SearchCallback() {
+                @Override
+                public void onSearchResults(List<SearchResultItem> results, String searchPattern) {
+                    if (results != null && !results.isEmpty() && mockMapView != null) {
+                        SearchResultItem result = results.get(0);
+                        selectedCustomerAddress = result.getFullAddress();
+                        if (tvCustomerAddress != null) tvCustomerAddress.setText(selectedCustomerAddress);
+                        mockMapView.setDestinationLocation(result.getLatitude(), result.getLongitude(),
+                                result.getShortName(), result.getFullAddress());
+                    } else {
+                        Toast.makeText(NewBookingLocationActivity.this,
+                                "Saved address could not be located automatically. Please search and select it on the map.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Toast.makeText(NewBookingLocationActivity.this,
+                            "Could not locate the saved address. Please select it on the map.",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
         // Wire Mock Map Location Selection Listener
         if (mockMapView != null) {
             mockMapView.setOnLocationChangeListener((address, distanceText) -> {
@@ -209,33 +288,87 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             btnUseCurrentLocation.setOnClickListener(v -> checkAndFetchGpsLocation());
         }
 
-        if (btnChangeCustomerLocation != null && mockMapView != null) {
+        if (btnChangeCustomerLocation != null) {
             btnChangeCustomerLocation.setOnClickListener(v -> {
-                mockMapView.changeCustomerLocation();
-                Toast.makeText(this, "Customer location pin updated", Toast.LENGTH_SHORT).show();
+                Intent intentMap = new Intent(this, FullMapPickerActivity.class);
+                intentMap.putExtra("INITIAL_ADDRESS", selectedCustomerAddress);
+                if (mockMapView != null && mockMapView.getDestinationGeoPoint() != null) {
+                    GeoPoint dest = mockMapView.getDestinationGeoPoint();
+                    intentMap.putExtra("INITIAL_LAT", dest.getLatitude());
+                    intentMap.putExtra("INITIAL_LNG", dest.getLongitude());
+                }
+                fullMapPickerLauncher.launch(intentMap);
             });
         }
 
-        // Confirm Location Button
-        btnConfirmLocation.setOnClickListener(v -> {
-            GeoPoint pickupPoint = mockMapView != null ? mockMapView.getPickupGeoPoint() : new GeoPoint(14.8115, 121.0453);
-            GeoPoint destPoint = mockMapView != null ? mockMapView.getDestinationGeoPoint() : new GeoPoint(14.8150, 121.0500);
+        MaterialButton btnBackStep = findViewById(R.id.btnBackStep);
+        if (btnBackStep != null) {
+            btnBackStep.setOnClickListener(v -> navigateBack());
+        }
 
-            Intent summaryIntent = new Intent(NewBookingLocationActivity.this, NewBookingSummaryActivity.class);
-            summaryIntent.putExtra("CUSTOMER_NAME", customerName);
-            summaryIntent.putExtra("CUSTOMER_PHONE", customerPhone);
-            summaryIntent.putExtra("CUSTOMER_EMAIL", customerEmail);
-            summaryIntent.putExtra("SERVICE", service);
-            summaryIntent.putExtra("QUANTITY", quantity);
-            summaryIntent.putExtra("DATE", date);
-            summaryIntent.putExtra("TIME", time);
-            summaryIntent.putExtra("NOTES", notes);
-            summaryIntent.putExtra("ADDRESS", selectedCustomerAddress);
-            summaryIntent.putExtra("PICKUP_LAT", pickupPoint.getLatitude());
-            summaryIntent.putExtra("PICKUP_LNG", pickupPoint.getLongitude());
-            summaryIntent.putExtra("DEST_LAT", destPoint.getLatitude());
-            summaryIntent.putExtra("DEST_LNG", destPoint.getLongitude());
-            startActivity(summaryIntent);
+        // Confirm Location Button
+        if (btnConfirmLocation != null) btnConfirmLocation.setOnClickListener(v -> {
+            btnConfirmLocation.setEnabled(false);
+            // Pickup is always the fixed TRIMAX Hub. Never silently use a sample destination.
+            if (mockMapView == null || !mockMapView.hasExplicitDestinationSelection()) {
+                btnConfirmLocation.setEnabled(true);
+                Toast.makeText(this,
+                        "Select the customer's real location by searching an address, using GPS, or tapping the map before continuing.",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+            GeoPoint destPoint = mockMapView.getDestinationGeoPoint();
+            if (destPoint == null || !isValidCoordinate(destPoint.getLatitude(), destPoint.getLongitude())
+                    || selectedCustomerAddress == null || selectedCustomerAddress.trim().isEmpty()) {
+                btnConfirmLocation.setEnabled(true);
+                Toast.makeText(this, "Customer destination is invalid. Please select the location again.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (getIntent().getBooleanExtra("CUSTOMER_LOCATION_PICKER_ONLY", false)) {
+                Intent result = new Intent();
+                result.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
+                result.putExtra("CUSTOMER_LAT", destPoint.getLatitude());
+                result.putExtra("CUSTOMER_LNG", destPoint.getLongitude());
+                setResult(RESULT_OK, result);
+                finish();
+                return;
+            }
+
+            Intent detailsIntent = new Intent(NewBookingLocationActivity.this, NewBookingDetailsActivity.class);
+            detailsIntent.putExtra("CUSTOMER_NAME", customerName != null ? customerName : "");
+            detailsIntent.putExtra("CUSTOMER_PHONE", customerPhone != null ? customerPhone : "");
+            detailsIntent.putExtra("CUSTOMER_EMAIL", customerEmail != null ? customerEmail : "");
+            detailsIntent.putExtra("DATE", getIntent().getStringExtra("DATE"));
+            detailsIntent.putExtra("TIME", getIntent().getStringExtra("TIME"));
+            String finalAddress = selectedCustomerAddress != null ? selectedCustomerAddress : "";
+            detailsIntent.putExtra("ADDRESS", finalAddress);
+            detailsIntent.putExtra("CUSTOMER_ADDRESS", finalAddress);
+            detailsIntent.putExtra("SELECTED_PRICE", selectedPrice);
+            if (getIntent().hasExtra("SELECTED_PACKAGE")) {
+                detailsIntent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
+            }
+            detailsIntent.putExtra("PICKUP_LAT", 14.7826996);
+            detailsIntent.putExtra("PICKUP_LNG", 121.0475865);
+            detailsIntent.putExtra("DEST_LAT", destPoint.getLatitude());
+            detailsIntent.putExtra("DEST_LNG", destPoint.getLongitude());
+
+            // Keep the selected customer's directory location in sync with the confirmed pin.
+            // This updates an existing customer (matched by phone) or creates the record if needed.
+            if (customerName != null && !customerName.trim().isEmpty()
+                    && customerPhone != null && !customerPhone.trim().isEmpty()) {
+                boolean customerLocationSaved = new DatabaseHelper(this).saveCustomer(
+                        customerName, customerPhone, customerEmail, finalAddress,
+                        destPoint.getLatitude(), destPoint.getLongitude());
+                if (!customerLocationSaved) {
+                    btnConfirmLocation.setEnabled(true);
+                    Toast.makeText(this,
+                            "Could not update the customer's saved location. Please try again.",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+            startActivity(detailsIntent);
         });
     }
 
@@ -244,23 +377,39 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         super.onResume();
         if (mockMapView != null) {
             mockMapView.onResume();
+            if (locationHelper != null) {
+                locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                    if (mockMapView != null) mockMapView.updateDriverLocation(latitude, longitude);
+                });
+                // Update only the driver marker. Do not recenter here: onResume can run
+                // after returning from the map picker, and recentering would override the pin. 
+                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+            }
+        }
+        MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
+        if (btnConfirmLocation != null) {
+            btnConfirmLocation.setEnabled(true);
         }
     }
 
     @Override
     protected void onPause() {
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        if (nominatimSearchService != null) nominatimSearchService.cancelPendingSearches();
+        if (mockMapView != null) mockMapView.onPause();
         super.onPause();
-        if (mockMapView != null) {
-            mockMapView.onPause();
-        }
     }
 
     @Override
     protected void onDestroy() {
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        if (nominatimSearchService != null) nominatimSearchService.cancelPendingSearches();
+        if (mockMapView != null) mockMapView.stopLiveDeliveryAnimation();
         super.onDestroy();
-        if (nominatimSearchService != null) {
-            nominatimSearchService.cancelPendingSearches();
-        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void checkAndFetchGpsLocation() {
@@ -276,16 +425,45 @@ public class NewBookingLocationActivity extends AppCompatActivity {
     }
 
     private void fetchAndApplyGpsLocation() {
+        // Explicit user action: use GPS as the destination, but wait for a real fix.
+        if (mockMapView != null) mockMapView.clearExplicitDestinationSelection();
         locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-            if (mockMapView != null) {
-                mockMapView.updateDriverLocation(latitude, longitude);
-            }
+            if (mockMapView == null || mockMapView.hasExplicitDestinationSelection()) return;
+            String gpsAddress = String.format(Locale.US, "Current Location (%.6f, %.6f)", latitude, longitude);
+            selectedCustomerAddress = gpsAddress;
+            mockMapView.setDestinationLocation(latitude, longitude, "Current Location", gpsAddress);
+            TextView addressView = findViewById(R.id.tvCustomerAddress);
+            if (addressView != null) addressView.setText(gpsAddress);
         });
 
-        if (mockMapView != null) {
-            mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-            mockMapView.recenter();
+        if (!locationHelper.hasValidLocationFix()) {
+            Toast.makeText(this, "Waiting for a real GPS fix. Keep this screen open and try again outdoors if needed.", Toast.LENGTH_LONG).show();
+            return;
         }
-        Toast.makeText(this, String.format(Locale.US, "Map centered on device GPS coordinates (%.4f, %.4f)", locationHelper.getLatitude(), locationHelper.getLongitude()), Toast.LENGTH_SHORT).show();
+        double latitude = locationHelper.getLatitude();
+        double longitude = locationHelper.getLongitude();
+        if (mockMapView != null && isValidCoordinate(latitude, longitude)) {
+            String gpsAddress = String.format(Locale.US, "Current Location (%.6f, %.6f)", latitude, longitude);
+            selectedCustomerAddress = gpsAddress;
+            mockMapView.setDestinationLocation(latitude, longitude, "Current Location", gpsAddress);
+            TextView addressView = findViewById(R.id.tvCustomerAddress);
+            if (addressView != null) addressView.setText(gpsAddress);
+            Toast.makeText(this, "Customer destination set from GPS.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean isValidCoordinate(double latitude, double longitude) {
+        return Double.isFinite(latitude) && Double.isFinite(longitude)
+                && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
+                && !(latitude == 0 && longitude == 0);
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

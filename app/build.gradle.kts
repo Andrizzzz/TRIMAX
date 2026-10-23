@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.material)
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // OpenStreetMap Android Library (OSMDroid)
     implementation("org.osmdroid:osmdroid-android:6.1.20")

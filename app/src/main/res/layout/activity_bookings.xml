@@ -4,18 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".BookingsActivity">
-
-    <!-- Top Left Accent Shape -->
-    <ImageView
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:contentDescription="Top Left Accent"
-        android:scaleType="fitStart"
-        android:src="@drawable/bg_top_left_accent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- TOP BAR -->
     <RelativeLayout
@@ -28,31 +18,37 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/btnNewBooking"
             android:layout_centerVertical="true"
-            android:text="My Bookings"
-            android:textColor="#0F172A"
-            android:textSize="22sp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/title_booking_history"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNewBooking"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:backgroundTint="#2563EB"
-            android:paddingHorizontal="12dp"
-            android:text="+ New"
+            android:backgroundTint="@color/primary_blue"
+            android:paddingHorizontal="10dp"
+            android:text="@string/btn_new_booking"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold"
-            app:cornerRadius="10dp" />
+            app:cornerRadius="18dp" />
     </RelativeLayout>
 
-    <!-- SEARCH INPUT FIELD -->
+    <!-- SEARCH INPUT FIELD (Optional/Hidden in mockup but maintained for code compatibility) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -60,33 +56,34 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="4dp"
-        android:hint="Search by Booking ID, customer or phone..."
+        android:hint="@string/hint_search_bookings"
+        app:boxBackgroundColor="@color/card_bg"
         app:boxCornerRadiusBottomEnd="14dp"
         app:boxCornerRadiusBottomStart="14dp"
         app:boxCornerRadiusTopEnd="14dp"
         app:boxCornerRadiusTopStart="14dp"
-        app:boxStrokeColor="#2563EB"
-        app:hintTextColor="#2563EB"
+        app:boxStrokeColor="@color/primary_blue"
+        app:hintTextColor="@color/primary_blue"
         app:layout_constraintTop_toBottomOf="@+id/topBar"
         app:startIconDrawable="@drawable/ic_user"
-        app:startIconTint="#64748B">
+        app:startIconTint="@color/text_secondary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearchBookings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
-            android:paddingVertical="12dp"
-            android:textColor="#0F172A"
+            android:paddingVertical="10dp"
+            android:textColor="@color/text_primary"
             android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Filter Chips Row -->
+    <!-- Filter Pills Row -->
     <HorizontalScrollView
         android:id="@+id/filterScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="12dp"
         android:paddingHorizontal="20dp"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@+id/searchLayout">
@@ -100,75 +97,85 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipAll"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:backgroundTint="#2563EB"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:backgroundTint="@color/primary_blue"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="All"
+                android:paddingHorizontal="16dp"
+                android:text="@string/filter_all"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
-                app:cornerRadius="18dp" />
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:cornerRadius="19dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipPending"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:backgroundTint="@color/surface_alt"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="Pending"
+                android:paddingHorizontal="16dp"
+                android:text="@string/filter_pending"
                 android:textAllCaps="false"
-                android:textColor="#0F172A"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:cornerRadius="19dp"
+                app:strokeWidth="0dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipConfirmed"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:backgroundTint="@color/surface_alt"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="Confirmed"
+                android:paddingHorizontal="16dp"
+                android:text="@string/filter_confirmed"
                 android:textAllCaps="false"
-                android:textColor="#0F172A"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipCancelled"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Cancelled"
-                android:textAllCaps="false"
-                android:textColor="#0F172A"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:cornerRadius="19dp"
+                app:strokeWidth="0dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipCompleted"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:backgroundTint="@color/surface_alt"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="Completed"
+                android:paddingHorizontal="16dp"
+                android:text="@string/filter_completed"
                 android:textAllCaps="false"
-                android:textColor="#0F172A"
-                android:textSize="12sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="#CBD5E1" />
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:cornerRadius="19dp"
+                app:strokeWidth="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chipCancelled"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:backgroundTint="@color/surface_alt"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="16dp"
+                android:text="@string/filter_cancelled"
+                android:textAllCaps="false"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:cornerRadius="19dp"
+                app:strokeWidth="0dp" />
 
         </LinearLayout>
     </HorizontalScrollView>
@@ -178,7 +185,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:overScrollMode="never"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+        app:layout_constraintBottom_toTopOf="@+id/cardBottomNavContainer"
         app:layout_constraintTop_toBottomOf="@+id/filterScroll">
 
         <LinearLayout
@@ -186,8 +193,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="24dp">
+            android:paddingTop="12dp"
+            android:paddingBottom="110dp">
 
             <TextView
                 android:id="@+id/tvEmptyBookings"
@@ -195,8 +202,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
                 android:gravity="center"
-                android:text="No bookings found"
-                android:textColor="#94A3B8"
+                android:text="@string/msg_no_bookings"
+                android:textColor="@color/text_secondary"
                 android:textSize="15sp"
                 android:visibility="gone" />
 
@@ -211,17 +218,187 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- BOTTOM NAVIGATION -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
+    <!-- CUSTOM BOTTOM NAVIGATION — shared with Dashboard -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardBottomNavContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        app:elevation="8dp"
-        app:itemIconTint="#64748B"
-        app:itemRippleColor="#3B82F6"
-        app:itemTextColor="#64748B"
+        android:layout_height="72dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="36dp"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_bottom_nav_glass">
+
+            <!-- Shared Sliding Pill Indicator -->
+            <View
+                android:id="@+id/slidingIndicator"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:layout_marginVertical="6dp"
+                android:background="@drawable/bg_bottom_nav_pill" />
+
+            <LinearLayout
+                android:id="@+id/bottomNavigation"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="8dp"
+                android:weightSum="5">
+
+                <LinearLayout
+                    android:id="@+id/nav_home"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Home">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_home"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Home"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_bookings"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Bookings">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_bookings"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bookings"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_packages"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Packages">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_categories"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Packages"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_clients"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Clients">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_clients"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Clients"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_profile"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Profile">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_account"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Profile"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="10sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

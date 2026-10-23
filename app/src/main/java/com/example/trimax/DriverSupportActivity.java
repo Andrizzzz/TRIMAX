@@ -3,6 +3,7 @@ package com.example.trimax;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -10,6 +11,9 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.cardview.widget.CardView;
 
 import com.google.android.material.button.MaterialButton;
@@ -28,6 +32,14 @@ public class DriverSupportActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_support);
 
+        // Keep screen content clear of the status and navigation bars.
+        View root = findViewById(android.R.id.content);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);
         locationHelper = new LocationHelper(this);
@@ -38,8 +50,15 @@ public class DriverSupportActivity extends AppCompatActivity {
         MaterialButton btnEmergencySos = findViewById(R.id.btnEmergencySos);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> handleBackNavigation());
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackNavigation();
+            }
+        });
 
         if (cardReportVehicle != null) {
             cardReportVehicle.setOnClickListener(v -> showReportVehicleDialog());
@@ -80,6 +99,15 @@ public class DriverSupportActivity extends AppCompatActivity {
                         .show();
             });
         }
+    }
+
+    private void handleBackNavigation() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DriverDashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 
     private void showReportVehicleDialog() {

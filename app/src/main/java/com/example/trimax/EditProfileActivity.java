@@ -1,5 +1,6 @@
 package com.example.trimax;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
@@ -52,7 +53,7 @@ public class EditProfileActivity extends AppCompatActivity {
         if (etEmail != null) etEmail.setText(currentEmail);
         if (etPhone != null) etPhone.setText(currentPhone);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
         if (btnSaveChanges != null) {
             btnSaveChanges.setOnClickListener(v -> {
@@ -88,5 +89,14 @@ public class EditProfileActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

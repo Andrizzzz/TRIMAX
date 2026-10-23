@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -62,13 +63,10 @@ public class MockMapView extends FrameLayout {
             "© OpenStreetMap contributors, OSM France"
     );
 
-    public interface OnLocationChangeListener {
-        void onLocationSelected(String address, String distanceText);
-    }
-
     private OnLocationChangeListener locationChangeListener;
 
     private MapView mapView;
+    private Marker hubMarker;
     private Marker riderMarker;
     private Marker customerMarker;
     private Polyline routePolyline;
@@ -80,8 +78,13 @@ public class MockMapView extends FrameLayout {
     private int animationStep = 0;
 
     private int sampleLocationIndex = 0;
+    private boolean hasExplicitDestinationSelection = false;
+    private boolean isProgrammaticMove = false;
+    private boolean liveDriverRouteOrigin = false;
+    private boolean destinationPinEnabled = true;
+    private GeoPoint lastRoutedDriverPoint;
 
-    private static final GeoPoint RIDER_POINT = new GeoPoint(14.8115, 121.0453); // SJDM Hub
+    private static final GeoPoint RIDER_POINT = new GeoPoint(14.7843353, 121.0604306); // Fixed TRIMAX Hub
 
     private final GeoPoint[] sampleGeoPoints = {
             new GeoPoint(14.8150, 121.0500), // Tungkong Mangga
@@ -145,6 +148,8 @@ public class MockMapView extends FrameLayout {
         // Use OpenStreetMap Germany (FOSSGIS e.V.) tile server: high quality, standard OSM tiles, no 403 blocks
         mapView.setTileSource(OSM_GERMANY);
         mapView.setMultiTouchControls(true);
+        mapView.setBuiltInZoomControls(false);
+        mapView.getZoomController().setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER);
         mapView.getController().setZoom(15.0);
         mapView.getController().setCenter(RIDER_POINT);
 
@@ -156,11 +161,19 @@ public class MockMapView extends FrameLayout {
 
         routingService = new OSMRoutingService();
 
-        // Setup Rider / Pickup Marker
+        // Setup Fixed TRIMAX Hub Marker (STATIC - NEVER MOVES)
+        hubMarker = new Marker(mapView);
+        hubMarker.setPosition(RIDER_POINT);
+        hubMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        hubMarker.setTitle("TRIMAX Hub — Fixed Pickup Location");
+        mapView.getOverlays().add(hubMarker);
+
+        // Setup Live Driver / GPS Marker (Hidden by default on booking maps)
         riderMarker = new Marker(mapView);
         riderMarker.setPosition(RIDER_POINT);
         riderMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        riderMarker.setTitle("🏍 Pickup / Driver (TRI-MAX Hub)");
+        riderMarker.setTitle("🛵 Driver Location");
+        riderMarker.setVisible(false);
         mapView.getOverlays().add(riderMarker);
 
         // Setup Customer Destination Marker
@@ -178,27 +191,46 @@ public class MockMapView extends FrameLayout {
 
         calculateRouteAndNotify();
 
-        // Setup Map Touch Overlay to allow tapping map to place customer pin
+        // Setup Map Touch Overlay to center map on tapped position
         MapEventsOverlay eventsOverlay = new MapEventsOverlay(new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
-                String locName = String.format(Locale.US, "Pinned Location (%.4f, %.4f)", p.getLatitude(), p.getLongitude());
-                updateCustomerPosition(p, locName);
+                if (mapView != null && p != null) {
+                    mapView.getController().animateTo(p);
+                }
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                String locName = String.format(Locale.US, "Custom Pin (%.4f, %.4f)", p.getLatitude(), p.getLongitude());
-                updateCustomerPosition(p, locName);
+                if (mapView != null && p != null) {
+                    mapView.getController().animateTo(p);
+                }
                 return true;
             }
         });
         mapView.getOverlays().add(0, eventsOverlay);
 
-        // Perform network status check and tile diagnostic test
+        // Listen for user map scroll/drag/pan to automatically update pin location at map center
+        mapView.addMapListener(new org.osmdroid.events.MapListener() {
+            @Override
+            public boolean onScroll(org.osmdroid.events.ScrollEvent event) {
+                onMapMoved();
+                return false;
+            }
+
+            @Override
+            public boolean onZoom(org.osmdroid.events.ZoomEvent event) {
+                onMapMoved();
+                return false;
+            }
+        });
+
+        // Apply Dark/Light theme map filter
+        applyMapTheme(context);
+
+        // Avoid an extra diagnostic HTTP request on every map creation; let osmdroid load/cache tiles normally.
         checkNetworkStatus(context);
-        runTileDiagnosticTest(descriptiveUserAgent);
     }
 
     public void startLiveDeliveryAnimation() {
@@ -226,6 +258,13 @@ public class MockMapView extends FrameLayout {
             }
         };
         liveAnimationHandler.postDelayed(liveAnimationRunnable, 1000);
+    }
+
+    public void setDriverMarkerVisible(boolean visible) {
+        if (riderMarker != null) {
+            riderMarker.setVisible(visible);
+            if (mapView != null) mapView.invalidate();
+        }
     }
 
     public void stopLiveDeliveryAnimation() {
@@ -285,9 +324,33 @@ public class MockMapView extends FrameLayout {
     }
 
     public void onResume() {
+        applyMapTheme(getContext());
         if (mapView != null) {
             mapView.onResume();
         }
+    }
+
+    private void applyMapTheme(Context context) {
+        if (mapView == null || context == null) return;
+        try {
+            int nightModeFlags = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            boolean isDark = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+
+            if (mapView.getOverlayManager() != null && mapView.getOverlayManager().getTilesOverlay() != null) {
+                if (isDark) {
+                    android.graphics.ColorMatrix matrix = new android.graphics.ColorMatrix(new float[]{
+                        -0.75f,  0.00f,  0.00f, 0.00f, 220.0f,
+                         0.00f, -0.75f,  0.00f, 0.00f, 225.0f,
+                         0.00f,  0.00f, -0.70f, 0.00f, 235.0f,
+                         0.00f,  0.00f,  0.00f, 1.00f,   0.0f
+                    });
+                    android.graphics.ColorMatrixColorFilter filter = new android.graphics.ColorMatrixColorFilter(matrix);
+                    mapView.getOverlayManager().getTilesOverlay().setColorFilter(filter);
+                } else {
+                    mapView.getOverlayManager().getTilesOverlay().setColorFilter(null);
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     public void onPause() {
@@ -303,7 +366,7 @@ public class MockMapView extends FrameLayout {
     }
 
     private void notifyListener() {
-        if (locationChangeListener != null) {
+        if (locationChangeListener != null && hasExplicitDestinationSelection) {
             locationChangeListener.onLocationSelected(
                     sampleAddresses[sampleLocationIndex],
                     sampleDistances[sampleLocationIndex]
@@ -331,6 +394,7 @@ public class MockMapView extends FrameLayout {
     }
 
     public void useCurrentLocation() {
+        hasExplicitDestinationSelection = true;
         sampleLocationIndex = 4; // Graceville / Near Rider Hub
         if (customerMarker != null) {
             customerMarker.setPosition(sampleGeoPoints[4]);
@@ -340,6 +404,7 @@ public class MockMapView extends FrameLayout {
     }
 
     public void changeCustomerLocation() {
+        hasExplicitDestinationSelection = true;
         sampleLocationIndex = (sampleLocationIndex + 1) % sampleAddresses.length;
         if (customerMarker != null) {
             customerMarker.setPosition(sampleGeoPoints[sampleLocationIndex]);
@@ -351,7 +416,37 @@ public class MockMapView extends FrameLayout {
         }
     }
 
+    public void setLiveDriverRouteOrigin(boolean enabled) {
+        liveDriverRouteOrigin = enabled;
+        if (enabled && riderMarker != null && customerMarker != null) calculateRouteAndNotify();
+    }
+
+    public void setDestinationPinEnabled(boolean enabled) {
+        destinationPinEnabled = enabled;
+    }
+
+    private void onMapMoved() {
+        if (!destinationPinEnabled || isProgrammaticMove || mapView == null) return;
+        org.osmdroid.api.IGeoPoint center = mapView.getMapCenter();
+        if (center != null) {
+            GeoPoint centerPoint = new GeoPoint(center.getLatitude(), center.getLongitude());
+            if (isValidCoordinate(centerPoint.getLatitude(), centerPoint.getLongitude())) {
+                hasExplicitDestinationSelection = true;
+                if (customerMarker != null) {
+                    customerMarker.setPosition(centerPoint);
+                    customerMarker.setTitle("📍 Pin Location");
+                }
+                String locName = String.format(Locale.US, "Pinned Location (%.4f, %.4f)", centerPoint.getLatitude(), centerPoint.getLongitude());
+                if (locationChangeListener != null) {
+                    locationChangeListener.onLocationSelected(locName, "Map Center Pin");
+                }
+            }
+        }
+    }
+
     public void setDestinationLocation(double lat, double lng, String name, String fullAddress) {
+        if (!isValidCoordinate(lat, lng)) return;
+        hasExplicitDestinationSelection = true;
         GeoPoint destPoint = new GeoPoint(lat, lng);
         if (customerMarker != null) {
             customerMarker.setPosition(destPoint);
@@ -361,17 +456,20 @@ public class MockMapView extends FrameLayout {
             sampleAddresses[sampleLocationIndex] = fullAddress != null ? fullAddress : (name != null ? name : "Selected Location");
         }
         if (mapView != null) {
+            isProgrammaticMove = true;
             mapView.getController().setZoom(16.0);
             mapView.getController().animateTo(destPoint);
+            mapView.postDelayed(() -> isProgrammaticMove = false, 600);
             mapView.invalidate();
         }
         calculateRouteAndNotify();
     }
 
     public void setLocationByAddress(String address) {
-        if (address == null) return;
+        if (address == null || address.trim().isEmpty()) return;
         for (int i = 0; i < sampleAddresses.length; i++) {
-            if (sampleAddresses[i].toLowerCase().contains(address.toLowerCase())) {
+            if (sampleAddresses[i].toLowerCase().contains(address.trim().toLowerCase())) {
+                hasExplicitDestinationSelection = true;
                 sampleLocationIndex = i;
                 if (customerMarker != null) {
                     customerMarker.setPosition(sampleGeoPoints[i]);
@@ -384,31 +482,41 @@ public class MockMapView extends FrameLayout {
                 return;
             }
         }
-        // Fallback default
-        sampleLocationIndex = 0;
-        if (customerMarker != null) {
-            customerMarker.setPosition(sampleGeoPoints[0]);
-            calculateRouteAndNotify();
-            if (mapView != null) {
-                mapView.getController().animateTo(sampleGeoPoints[0]);
-                mapView.invalidate();
-            }
-        }
+        // Do not silently replace an unrecognized address with a sample destination.
     }
 
     public void updateDriverLocation(double lat, double lng) {
+        if (!isValidCoordinate(lat, lng)) return;
+
+        // Live GPS updates may move only the driver marker.
+        // Never recenter the map or recalculate the customer destination from GPS:
+        // manual pin selection is based on the map center and must remain independent.
         GeoPoint point = new GeoPoint(lat, lng);
         if (riderMarker != null) {
             riderMarker.setPosition(point);
-            calculateRouteAndNotify();
-            if (mapView != null) {
-                mapView.getController().animateTo(point);
-                mapView.invalidate();
+            if (mapView != null) mapView.invalidate();
+
+            // Refresh route from real GPS after meaningful movement, not every GPS jitter.
+            if (liveDriverRouteOrigin && customerMarker != null
+                    && (lastRoutedDriverPoint == null || distanceKm(lastRoutedDriverPoint, point) >= 0.15)) {
+                lastRoutedDriverPoint = point;
+                calculateRouteAndNotify();
             }
         }
     }
 
+    private double distanceKm(GeoPoint a, GeoPoint b) {
+        if (a == null || b == null) return Double.MAX_VALUE;
+        float[] result = new float[1];
+        android.location.Location.distanceBetween(
+                a.getLatitude(), a.getLongitude(),
+                b.getLatitude(), b.getLongitude(), result);
+        return result[0] / 1000.0;
+    }
+
     private void updateCustomerPosition(GeoPoint point, String address) {
+        if (point == null || !isValidCoordinate(point.getLatitude(), point.getLongitude())) return;
+        hasExplicitDestinationSelection = true;
         if (customerMarker != null) {
             customerMarker.setPosition(point);
             customerMarker.setTitle("📍 " + address);
@@ -424,15 +532,18 @@ public class MockMapView extends FrameLayout {
     }
 
     private void calculateRouteAndNotify() {
-        GeoPoint start = riderMarker != null ? riderMarker.getPosition() : RIDER_POINT;
+        GeoPoint start = liveDriverRouteOrigin && riderMarker != null
+                ? riderMarker.getPosition() : RIDER_POINT;
         GeoPoint end = customerMarker != null ? customerMarker.getPosition() : sampleGeoPoints[0];
 
         routingService.calculateRoute(start, end, new RoutingService.RouteCallback() {
             @Override
             public void onRouteCalculated(List<GeoPoint> routePoints, double distanceKm, double durationMinutes, boolean isRealRoute) {
-                if (routePolyline != null) {
-                    routePolyline.setPoints(routePoints);
-                    if (mapView != null) mapView.invalidate();
+                if (routePolyline != null && routePoints != null && !routePoints.isEmpty()) {
+                    try {
+                        routePolyline.setPoints(routePoints);
+                        if (mapView != null) mapView.invalidate();
+                    } catch (Exception ignored) {}
                 }
 
                 String routeTypeLabel = isRealRoute ? "OSM Route" : "Est.";
@@ -443,8 +554,9 @@ public class MockMapView extends FrameLayout {
                 }
 
                 if (locationChangeListener != null) {
-                    String addr = sampleAddresses != null && sampleLocationIndex < sampleAddresses.length ?
-                            sampleAddresses[sampleLocationIndex] : "Selected Location";
+                    String addr = (customerMarker != null && customerMarker.getTitle() != null && !customerMarker.getTitle().isEmpty())
+                            ? customerMarker.getTitle().replace("📍 ", "")
+                            : (sampleAddresses != null && sampleLocationIndex < sampleAddresses.length ? sampleAddresses[sampleLocationIndex] : "Selected Location");
                     locationChangeListener.onLocationSelected(addr, distText);
                 }
             }
@@ -455,8 +567,10 @@ public class MockMapView extends FrameLayout {
                 pts.add(start);
                 pts.add(end);
                 if (routePolyline != null) {
-                    routePolyline.setPoints(pts);
-                    if (mapView != null) mapView.invalidate();
+                    try {
+                        routePolyline.setPoints(pts);
+                        if (mapView != null) mapView.invalidate();
+                    } catch (Exception ignored) {}
                 }
                 notifyListener();
             }
@@ -464,11 +578,27 @@ public class MockMapView extends FrameLayout {
     }
 
     public GeoPoint getPickupGeoPoint() {
-        return riderMarker != null ? riderMarker.getPosition() : RIDER_POINT;
+        // Never use the movable driver marker as a booking pickup coordinate.
+        return new GeoPoint(14.7843353, 121.0604306);
     }
 
     public GeoPoint getDestinationGeoPoint() {
-        return customerMarker != null ? customerMarker.getPosition() : sampleGeoPoints[0];
+        return hasExplicitDestinationSelection && customerMarker != null ? customerMarker.getPosition() : null;
+    }
+
+    public boolean hasExplicitDestinationSelection() {
+        return hasExplicitDestinationSelection;
+    }
+
+    /** Clears the previous destination only when the user explicitly chooses GPS. */
+    public void clearExplicitDestinationSelection() {
+        hasExplicitDestinationSelection = false;
+    }
+
+    private boolean isValidCoordinate(double latitude, double longitude) {
+        return Double.isFinite(latitude) && Double.isFinite(longitude)
+                && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
+                && !(latitude == 0 && longitude == 0);
     }
 
     public String getSelectedAddress() {

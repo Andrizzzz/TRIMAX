@@ -4,20 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".NewBookingLocationActivity">
 
-    <!-- Decorative Top Accent Shape -->
-    <ImageView
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:contentDescription="Top Accent"
-        android:scaleType="fitStart"
-        android:src="@drawable/bg_top_left_accent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- TOP BAR HEADER -->
+    <!-- TOP BAR HEADER WITH BACK BUTTON -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -31,96 +21,169 @@
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:contentDescription="Back Button"
             android:focusable="true"
             android:padding="8dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
 
-        <LinearLayout
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:text="New Booking"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- STEP PROGRESS INDICATOR (1 Customer -> 2 Location -> 3 Review) -->
+    <LinearLayout
+        android:id="@+id/stepProgressLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/topBar">
+
+        <!-- Step 1 Inactive -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Confirm Location"
-                android:textColor="#0F172A"
-                android:textSize="18sp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_icon_badge"
+                android:backgroundTint="#E2E8F0"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select the customer's location"
-                android:textColor="#64748B"
-                android:textSize="12sp" />
+                android:layout_marginTop="2dp"
+                android:text="Customer"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
         </LinearLayout>
 
-        <TextView
+        <View
+            android:layout_width="40dp"
+            android:layout_height="2dp"
+            android:layout_marginBottom="12dp"
+            android:background="@color/primary_blue" />
+
+        <!-- Step 2 Active -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/bg_status_pending"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="4dp"
-            android:text="Step 3 of 4"
-            android:textColor="#2563EB"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            android:gravity="center"
+            android:orientation="vertical">
 
-    <!-- Simple Booking Progress Bar -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="75"
-        android:progressTint="#2563EB"
-        app:layout_constraintTop_toBottomOf="@+id/topBar" />
+            <TextView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_icon_badge"
+                android:backgroundTint="@color/primary_blue"
+                android:gravity="center"
+                android:text="2"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-    <!-- MAIN SCROLL CONTENT AREA -->
-    <androidx.core.widget.NestedScrollView
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Location"
+                android:textColor="@color/primary_blue"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="2dp"
+            android:layout_marginBottom="12dp"
+            android:background="#CBD5E1" />
+
+        <!-- Step 3 Inactive -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_icon_badge"
+                android:backgroundTint="#E2E8F0"
+                android:gravity="center"
+                android:text="3"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Review"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
         android:overScrollMode="never"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar">
+        app:layout_constraintTop_toBottomOf="@+id/stepProgressLayout">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="18dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="36dp">
 
-            <!-- SMART LOCATION SEARCH INPUT FIELD -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Customer Location"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <!-- ADDRESS SEARCH INPUT FIELD -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/smartSearchLayout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:hint="Search location (SmartSearch)..."
+                android:layout_marginTop="12dp"
+                android:hint="Search customer address..."
                 app:boxCornerRadiusBottomEnd="14dp"
                 app:boxCornerRadiusBottomStart="14dp"
                 app:boxCornerRadiusTopEnd="14dp"
                 app:boxCornerRadiusTopStart="14dp"
-                app:boxStrokeColor="#2563EB"
-                app:hintTextColor="#2563EB"
-                app:startIconDrawable="@drawable/ic_location"
-                app:startIconTint="#2563EB">
+                app:boxStrokeColor="@color/primary_blue"
+                app:startIconDrawable="@drawable/ic_search"
+                app:startIconTint="@color/text_secondary">
 
                 <AutoCompleteTextView
                     android:id="@+id/actvSmartLocationSearch"
@@ -128,15 +191,17 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:paddingVertical="12dp"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- LARGE MAP CONTAINER CARD -->
+            <!-- MAP CARD -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardMapContainer"
                 android:layout_width="match_parent"
                 android:layout_height="260dp"
-                android:minHeight="200dp"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp">
 
@@ -144,13 +209,21 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
-                    <!-- Custom Interactive Mock Map View -->
                     <com.example.trimax.MockMapView
                         android:id="@+id/mockMapView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
 
-                    <!-- Floating Map Overlay Controls (Right Side) -->
+                    <!-- Map Overlay Pin Icon -->
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_centerInParent="true"
+                        android:contentDescription="Map Pin"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/primary_blue" />
+
+                    <!-- Map Side Controls (Zoom In, Zoom Out, Map Centered GPS) -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -160,7 +233,6 @@
                         android:gravity="center"
                         android:orientation="vertical">
 
-                        <!-- Zoom In Button -->
                         <com.google.android.material.floatingactionbutton.FloatingActionButton
                             android:id="@+id/btnZoomIn"
                             android:layout_width="wrap_content"
@@ -168,11 +240,10 @@
                             android:layout_marginBottom="8dp"
                             android:contentDescription="Zoom In"
                             android:src="@drawable/ic_add"
-                            app:backgroundTint="@android:color/white"
+                            app:backgroundTint="@color/card_bg"
                             app:fabCustomSize="42dp"
-                            app:tint="#0F172A" />
+                            app:tint="@color/text_primary" />
 
-                        <!-- Zoom Out Button -->
                         <com.google.android.material.floatingactionbutton.FloatingActionButton
                             android:id="@+id/btnZoomOut"
                             android:layout_width="wrap_content"
@@ -180,189 +251,232 @@
                             android:layout_marginBottom="8dp"
                             android:contentDescription="Zoom Out"
                             android:src="@drawable/ic_minus"
-                            app:backgroundTint="@android:color/white"
+                            app:backgroundTint="@color/card_bg"
                             app:fabCustomSize="42dp"
-                            app:tint="#0F172A" />
+                            app:tint="@color/text_primary" />
 
-                        <!-- My Location / Recenter Floating Button -->
                         <com.google.android.material.floatingactionbutton.FloatingActionButton
                             android:id="@+id/btnMyLocation"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:contentDescription="My Location"
+                            android:contentDescription="Map Centered Location"
                             android:src="@drawable/ic_gps_fixed"
-                            app:backgroundTint="#2563EB"
+                            app:backgroundTint="@color/primary_blue"
                             app:fabCustomSize="44dp"
                             app:tint="@android:color/white" />
-
                     </LinearLayout>
 
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- LOCATION INFORMATION CARD -->
+            <!-- SELECTED CUSTOMER LOCATION CARD -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="3dp">
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="16dp">
 
-                    <!-- Customer Location Item Row -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
                         <TextView
-                            android:id="@+id/tvCustomerTag"
+                            android:id="@+id/tvCustomerName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="📍 Customer Location"
-                            android:textColor="#EF4444"
-                            android:textSize="14sp"
+                            android:layout_alignParentStart="true"
+                            android:text="Customer"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/tvCustomerAddress"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/tvCustomerTag"
-                            android:layout_marginTop="4dp"
-                            android:text="San Jose del Monte, Bulacan"
-                            android:textColor="#0F172A"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvCustomerSubtitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/tvCustomerAddress"
-                            android:layout_marginTop="2dp"
-                            android:text="Selected customer location • 1.8 km away"
-                            android:textColor="#64748B"
-                            android:textSize="12sp" />
-                    </RelativeLayout>
-
-                    <!-- Divider -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="14dp"
-                        android:background="#F1F5F9" />
-
-                    <!-- Rider Location Item Row -->
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:id="@+id/tvRiderTag"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📍 Pickup / Hub Location"
-                            android:textColor="#2563EB"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvGpsStatus"
+                            android:id="@+id/btnChangeCustomerLocation"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:background="@drawable/bg_status_confirmed"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="2dp"
-                            android:text="GPS Active"
-                            android:textColor="#059669"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvRiderAddress"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/tvRiderTag"
-                            android:layout_marginTop="4dp"
-                            android:text="Your current GPS location"
-                            android:textColor="#0F172A"
-                            android:textSize="15sp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:text="Change"
+                            android:textColor="@color/primary_blue"
+                            android:textSize="13sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
 
+                    <TextView
+                        android:id="@+id/tvCustomerAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="123 Maple St., San Jose del Monte, Bulacan"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- PROTOTYPE ACTION BUTTONS -->
+            <!-- DELIVERY LOCATION TOGGLE -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="Delivery Pin"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/primary_blue" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Delivery Location"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Same as customer location"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchSameLocation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:checked="true" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Info Icon"
+                    android:src="@drawable/ic_location"
+                    app:tint="@color/primary_blue" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Only the customer's location is needed. No hub location required."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
+
+            <!-- ACTION BUTTONS ROW (BACK / NEXT) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="2">
 
-                <!-- Use My Current Location Button -->
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnUseCurrentLocation"
+                    android:id="@+id/btnBackStep"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="50dp"
+                    android:layout_height="56dp"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="Use My Location"
+                    android:text="Back"
                     android:textAllCaps="false"
-                    android:textColor="#2563EB"
-                    android:textSize="13sp"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="#2563EB" />
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/primary_blue" />
 
-                <!-- Change Customer Location Button -->
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnChangeCustomerLocation"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:id="@+id/btnConfirmLocation"
                     android:layout_width="0dp"
-                    android:layout_height="50dp"
+                    android:layout_height="56dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="Change Location"
+                    android:backgroundTint="@color/primary_blue"
+                    android:text="Next"
                     android:textAllCaps="false"
-                    android:textColor="#0F172A"
-                    android:textSize="13sp"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="#CBD5E1" />
+                    app:cornerRadius="16dp" />
             </LinearLayout>
 
-            <!-- PRIMARY CONFIRM LOCATION BUTTON -->
+            <!-- Hidden compatibility views -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnConfirmLocation"
-                android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:layout_marginTop="16dp"
-                android:backgroundTint="#2563EB"
-                android:text="Confirm Location"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                app:cornerRadius="16dp"
-                app:icon="@drawable/ic_arrow_right"
-                app:iconGravity="end"
-                app:iconPadding="12dp"
-                app:iconTint="@android:color/white" />
+                android:id="@+id/btnUseCurrentLocation"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvCustomerTag"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvCustomerSubtitle"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

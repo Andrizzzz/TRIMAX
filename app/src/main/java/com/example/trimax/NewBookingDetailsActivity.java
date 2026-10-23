@@ -1,15 +1,11 @@
 package com.example.trimax;
 
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.Spinner;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,21 +16,22 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class NewBookingDetailsActivity extends AppCompatActivity {
 
-    private Spinner spinnerService;
-    private TextView tvQuantity;
-    private MaterialButton btnSelectDate, btnSelectTime, btnContinue;
     private TextInputEditText etNotes;
-
-    private int quantity = 1;
-    private String selectedDate = "";
-    private String selectedTime = "";
+    private MaterialButton btnContinue, btnBackStep;
+    private LinearLayout containerPackageCards;
 
     private String customerName, customerPhone, customerEmail;
+    private String customerAddress;
+    private double customerLatitude, customerLongitude;
+    private double pickupLat, pickupLng, destLat, destLng;
+
+    private List<ServicePackage> servicePackages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,64 +48,137 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             });
         }
 
-        customerName = getIntent().getStringExtra("CUSTOMER_NAME");
-        customerPhone = getIntent().getStringExtra("CUSTOMER_PHONE");
-        customerEmail = getIntent().getStringExtra("CUSTOMER_EMAIL");
+        Intent intent = getIntent();
+        customerName = intent.getStringExtra("CUSTOMER_NAME");
+        customerPhone = intent.getStringExtra("CUSTOMER_PHONE");
+        customerEmail = intent.getStringExtra("CUSTOMER_EMAIL");
+        String bookingDate = intent.getStringExtra("DATE");
+        String bookingTime = intent.getStringExtra("TIME");
+        customerAddress = intent.getStringExtra("CUSTOMER_ADDRESS");
+        if (customerAddress == null || customerAddress.trim().isEmpty()) {
+            customerAddress = intent.getStringExtra("ADDRESS");
+        }
+        if (customerAddress == null) customerAddress = "";
+        customerLatitude = intent.getDoubleExtra("CUSTOMER_LAT", 0);
+        customerLongitude = intent.getDoubleExtra("CUSTOMER_LNG", 0);
+
+        pickupLat = 14.7826996;
+        pickupLng = 121.0475865;
+        destLat = intent.getDoubleExtra("DEST_LAT", 0);
+        destLng = intent.getDoubleExtra("DEST_LNG", 0);
 
         ImageView btnBack = findViewById(R.id.btnBack);
-        spinnerService = findViewById(R.id.spinnerService);
-        tvQuantity = findViewById(R.id.tvQuantity);
-        MaterialButton btnMinus = findViewById(R.id.btnMinus);
-        MaterialButton btnPlus = findViewById(R.id.btnPlus);
-        btnSelectDate = findViewById(R.id.btnSelectDate);
-        btnSelectTime = findViewById(R.id.btnSelectTime);
+        containerPackageCards = findViewById(R.id.containerPackageCards);
         etNotes = findViewById(R.id.etNotes);
         btnContinue = findViewById(R.id.btnContinue);
+        btnBackStep = findViewById(R.id.btnBackStep);
+
+        initServicePackages();
+        populatePackageCards();
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
-
-        // Setup Spinner options
-        String[] services = {"Standard Cargo Express", "Fragile Package Handler", "Bulk Commercial Cargo", "VIP Priority Delivery"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, services);
-        if (spinnerService != null) spinnerService.setAdapter(adapter);
-
-        if (btnMinus != null) {
-            btnMinus.setOnClickListener(v -> {
-                if (quantity > 1) {
-                    quantity--;
-                    if (tvQuantity != null) tvQuantity.setText(String.valueOf(quantity));
-                }
-            });
-        }
-
-        if (btnPlus != null) {
-            btnPlus.setOnClickListener(v -> {
-                quantity++;
-                if (tvQuantity != null) tvQuantity.setText(String.valueOf(quantity));
-            });
-        }
-
-        if (btnSelectDate != null) btnSelectDate.setOnClickListener(v -> showDatePicker());
-        if (btnSelectTime != null) btnSelectTime.setOnClickListener(v -> showTimePicker());
+        if (btnBackStep != null) btnBackStep.setOnClickListener(v -> finish());
 
         if (btnContinue != null) {
             btnContinue.setOnClickListener(v -> {
-                String service = (spinnerService != null && spinnerService.getSelectedItem() != null) ? spinnerService.getSelectedItem().toString() : "Standard Cargo";
-                String notes = etNotes != null && etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
+                if (!Double.isFinite(destLat) || !Double.isFinite(destLng)
+                        || destLat < -90 || destLat > 90 || destLng < -180 || destLng > 180
+                        || (destLat == 0 && destLng == 0)
+                        || customerAddress == null || customerAddress.trim().isEmpty()) {
+                    android.widget.Toast.makeText(this, "Customer destination is missing. Go back and select a valid location.", android.widget.Toast.LENGTH_LONG).show();
+                    return;
+                }
+                StringBuilder serviceBuilder = new StringBuilder();
+                double totalPrice = 0;
+                int totalQuantity = 0;
 
+                for (ServicePackage pkg : servicePackages) {
+                    if (pkg.getQuantity() > 0) {
+                        if (serviceBuilder.length() > 0) {
+                            serviceBuilder.append(", ");
+                        }
+                        serviceBuilder.append(pkg.getName()).append(" (x").append(pkg.getQuantity()).append(")");
+                        totalPrice += pkg.getStartingPrice() * pkg.getQuantity();
+                        totalQuantity += pkg.getQuantity();
+                    }
+                }
+
+                if (serviceBuilder.length() == 0) {
+                    btnContinue.setEnabled(true);
+                    android.widget.Toast.makeText(this, "Please select at least 1 package item before continuing.", android.widget.Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String notes = etNotes != null && etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
                 btnContinue.setEnabled(false);
 
-                Intent intent = new Intent(NewBookingDetailsActivity.this, NewBookingLocationActivity.class);
-                intent.putExtra("CUSTOMER_NAME", customerName);
-                intent.putExtra("CUSTOMER_PHONE", customerPhone);
-                intent.putExtra("CUSTOMER_EMAIL", customerEmail);
-                intent.putExtra("SERVICE", service);
-                intent.putExtra("QUANTITY", quantity);
-                intent.putExtra("DATE", selectedDate.isEmpty() ? "July 19, 2026" : selectedDate);
-                intent.putExtra("TIME", selectedTime.isEmpty() ? "10:00 AM" : selectedTime);
-                intent.putExtra("NOTES", notes);
-                startActivity(intent);
+                Intent summaryIntent = new Intent(NewBookingDetailsActivity.this, NewBookingSummaryActivity.class);
+                summaryIntent.putExtra("CUSTOMER_NAME", customerName);
+                summaryIntent.putExtra("CUSTOMER_PHONE", customerPhone);
+                summaryIntent.putExtra("CUSTOMER_EMAIL", customerEmail);
+                summaryIntent.putExtra("ADDRESS", customerAddress);
+                summaryIntent.putExtra("CUSTOMER_ADDRESS", customerAddress);
+                summaryIntent.putExtra("SERVICE", serviceBuilder.toString());
+                summaryIntent.putExtra("SELECTED_PRICE", totalPrice / Math.max(1, totalQuantity));
+                summaryIntent.putExtra("QUANTITY", totalQuantity);
+                summaryIntent.putExtra("DATE", bookingDate != null ? bookingDate : "ASAP");
+                summaryIntent.putExtra("TIME", bookingTime != null ? bookingTime : "");
+                summaryIntent.putExtra("NOTES", notes);
+                summaryIntent.putExtra("PICKUP_LAT", pickupLat);
+                summaryIntent.putExtra("PICKUP_LNG", pickupLng);
+                summaryIntent.putExtra("DEST_LAT", destLat);
+                summaryIntent.putExtra("DEST_LNG", destLng);
+                startActivity(summaryIntent);
             });
+        }
+    }
+
+    private void initServicePackages() {
+        servicePackages = new ArrayList<>();
+        servicePackages.add(new ServicePackage("pkg_coke", "Coke Case (24 Bottles)", "Wholesale delivery of Coca-Cola cases.", 180.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_sprite", "Sprite Case (24 Bottles)", "Wholesale delivery of Sprite cases.", 180.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_royal", "Royal Case (24 Bottles)", "Wholesale delivery of Royal orange soda cases.", 175.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_standard", "Standard Delivery", "For medium-sized packages.", 99.00, R.drawable.ic_delivery_scooter, null, "Up to 5 kg", "50x40x30 cm", "1 day"));
+        servicePackages.add(new ServicePackage("pkg_fragile", "Fragile Delivery", "For delicate and high-value items.", 499.00, R.drawable.ic_delivery_scooter, null, "Up to 10 kg", "50x40x30 cm", "1 day"));
+    }
+
+    private void populatePackageCards() {
+        if (containerPackageCards == null) return;
+        containerPackageCards.removeAllViews();
+
+        for (ServicePackage pkg : servicePackages) {
+            View cardView = getLayoutInflater().inflate(R.layout.item_booking_package, containerPackageCards, false);
+            ImageView ivImage = cardView.findViewById(R.id.ivPackageImage);
+            TextView tvName = cardView.findViewById(R.id.tvPackageName);
+            TextView tvDesc = cardView.findViewById(R.id.tvPackageDescription);
+            TextView tvPrice = cardView.findViewById(R.id.tvPackagePrice);
+            TextView tvItemQuantity = cardView.findViewById(R.id.tvItemQuantity);
+            MaterialButton btnMinus = cardView.findViewById(R.id.btnMinus);
+            MaterialButton btnPlus = cardView.findViewById(R.id.btnPlus);
+
+            if (ivImage != null) ivImage.setImageResource(pkg.getImageResId());
+            if (tvName != null) tvName.setText(pkg.getName());
+            if (tvDesc != null) tvDesc.setText(pkg.getDescription());
+            if (tvPrice != null) tvPrice.setText(String.format(Locale.US, "₱ %.2f", pkg.getStartingPrice()));
+            if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
+
+            if (btnMinus != null) {
+                btnMinus.setOnClickListener(v -> {
+                    if (pkg.getQuantity() > 0) {
+                        pkg.setQuantity(pkg.getQuantity() - 1);
+                        if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
+                    }
+                });
+            }
+
+            if (btnPlus != null) {
+                btnPlus.setOnClickListener(v -> {
+                    pkg.setQuantity(pkg.getQuantity() + 1);
+                    if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
+                });
+            }
+
+            containerPackageCards.addView(cardView);
         }
     }
 
@@ -118,23 +188,5 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         if (btnContinue != null) {
             btnContinue.setEnabled(true);
         }
-    }
-
-    private void showDatePicker() {
-        Calendar c = Calendar.getInstance();
-        DatePickerDialog dialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            selectedDate = String.format(Locale.getDefault(), "%02d/%02d/%d", dayOfMonth, month + 1, year);
-            if (btnSelectDate != null) btnSelectDate.setText(selectedDate);
-        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-        dialog.show();
-    }
-
-    private void showTimePicker() {
-        Calendar c = Calendar.getInstance();
-        TimePickerDialog dialog = new TimePickerDialog(this, (view, hourOfDay, minute) -> {
-            selectedTime = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute);
-            if (btnSelectTime != null) btnSelectTime.setText(selectedTime);
-        }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false);
-        dialog.show();
     }
 }

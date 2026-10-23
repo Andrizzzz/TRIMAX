@@ -4,15 +4,19 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.ImageView;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.List;
 
@@ -31,11 +35,127 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);
 
-        ImageView btnBack = findViewById(R.id.btnBack);
         containerDeliveries = findViewById(R.id.containerDeliveries);
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            View topBar = findViewById(R.id.topBar);
+            if (topBar != null) {
+                int baseTopPadding = dp(16);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding,
+                        topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+
+            // Keep the floating navigation above Android's gesture/3-button navigation area.
+            View bottomNav = findViewById(R.id.cardBottomNavContainer);
+            if (bottomNav != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                int desiredBottomMargin = systemBars.bottom + dp(16);
+                if (params.bottomMargin != desiredBottomMargin) {
+                    params.bottomMargin = desiredBottomMargin;
+                    bottomNav.setLayoutParams(params);
+                }
+            }
+            return insets;
+        });
+
+        setupBottomNavigation();
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(DriverDeliveriesActivity.this, DriverDashboardActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
+
+    private void navigateToTab(Class<?> targetClass) {
+        Intent intent = new Intent(this, targetClass);
+        intent.putExtra("PREV_TAB_INDEX", 1);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
+    }
+
+    private void setupBottomNavigation() {
+        highlightBottomNavItem(R.id.nav_bookings);
+
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View profile = findViewById(R.id.nav_profile);
+
+        if (home != null) home.setOnClickListener(v -> navigateToTab(DriverDashboardActivity.class));
+        if (bookings != null) bookings.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_bookings));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(DriverHistoryActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(DriverProfileActivity.class));
+    }
+
+    private void highlightBottomNavItem(int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] == activeId) {
+                activeIndex = i;
+                break;
+            }
+        }
+
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                boolean isActive = (id == activeId);
+                v.setSelected(isActive);
+            }
+        }
+
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        getIntent().removeExtra("PREV_TAB_INDEX");
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        LinearLayout navContainer = findViewById(R.id.bottomNavigation);
+        if (indicator != null) {
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
+
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 4};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
+
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
+
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 4;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
+
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(140)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .start();
+                });
+            }
         }
     }
 
@@ -44,6 +164,8 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         super.onResume();
         loadDeliveries();
     }
+
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 
     private void loadDeliveries() {
         if (containerDeliveries == null) return;
@@ -54,9 +176,9 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         if (deliveries.isEmpty()) {
             TextView tvEmpty = new TextView(this);
             tvEmpty.setText("No active assigned bookings found.");
-            tvEmpty.setTextColor(0xFF64748B);
+            tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
             tvEmpty.setTextSize(16);
-            tvEmpty.setPadding(20, 40, 20, 20);
+            tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
             containerDeliveries.addView(tvEmpty);
             return;
         }
@@ -64,118 +186,52 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         for (int i = 0; i < deliveries.size(); i++) {
             Delivery d = deliveries.get(i);
 
-            CardView card = new CardView(this);
-            CardView.LayoutParams cardParams = new CardView.LayoutParams(
-                    CardView.LayoutParams.MATCH_PARENT, CardView.LayoutParams.WRAP_CONTENT);
-            cardParams.setMargins(0, 0, 0, 28);
-            card.setLayoutParams(cardParams);
-            card.setRadius(20);
-            card.setCardElevation(4);
-            card.setClickable(true);
-            card.setFocusable(true);
+            View cardView = android.view.LayoutInflater.from(this).inflate(R.layout.item_driver_delivery_card, containerDeliveries, false);
 
-            LinearLayout layout = new LinearLayout(this);
-            layout.setOrientation(LinearLayout.VERTICAL);
-            layout.setPadding(28, 28, 28, 28);
+            TextView tvDeliveryStage = cardView.findViewById(R.id.tvDeliveryStage);
+            TextView tvSequenceBadge = cardView.findViewById(R.id.tvSequenceBadge);
+            TextView tvBookingId = cardView.findViewById(R.id.tvBookingId);
+            TextView tvCustomerInfo = cardView.findViewById(R.id.tvCustomerInfo);
+            TextView tvPickupLocation = cardView.findViewById(R.id.tvPickupLocation);
+            TextView tvDestination = cardView.findViewById(R.id.tvDestination);
+            TextView tvSpecialInstructions = cardView.findViewById(R.id.tvSpecialInstructions);
+            TextView tvDeliveryStatus = cardView.findViewById(R.id.tvDeliveryStatus);
 
-            // Header Row: Sequence Badge & Category Tag
-            LinearLayout headerRow = new LinearLayout(this);
-            headerRow.setOrientation(LinearLayout.HORIZONTAL);
-
-            TextView tvCategory = new TextView(this);
             if (i == 0) {
-                tvCategory.setText("▶ CURRENT DELIVERY");
-                tvCategory.setTextColor(0xFF2563EB);
+                tvDeliveryStage.setText("▶ CURRENT DELIVERY");
+                tvDeliveryStage.setTextColor(0xFF2563EB);
             } else if (i == 1) {
-                tvCategory.setText("⏭ NEXT DELIVERY");
-                tvCategory.setTextColor(0xFFD97706);
+                tvDeliveryStage.setText("⏭ NEXT DELIVERY");
+                tvDeliveryStage.setTextColor(0xFFD97706);
             } else {
-                tvCategory.setText("🗓 UPCOMING DELIVERY");
-                tvCategory.setTextColor(0xFF64748B);
+                tvDeliveryStage.setText("🗓 UPCOMING DELIVERY");
+                tvDeliveryStage.setTextColor(0xFF64748B);
             }
-            tvCategory.setTextSize(12);
-            tvCategory.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvCategory.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
 
-            TextView tvSeqBadge = new TextView(this);
-            tvSeqBadge.setText(String.format("Seq #%d", d.getSequenceNumber()));
-            tvSeqBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvSeqBadge.setTextColor(0xFF059669);
-            tvSeqBadge.setTextSize(11);
-            tvSeqBadge.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvSeqBadge.setPadding(16, 6, 16, 6);
+            tvSequenceBadge.setText(String.format("Seq #%d", d.getSequenceNumber()));
+            tvBookingId.setText(String.format("Booking #%s", d.getBookingId()));
+            tvCustomerInfo.setText(String.format("👤 %s • %s", d.getCustomerName(), d.getCustomerPhone()));
+            tvPickupLocation.setText(String.format("📍 Pickup: %s", d.getPickupLocation()));
+            tvDestination.setText(String.format("🏁 Destination: %s", d.getDestination()));
 
-            headerRow.addView(tvCategory);
-            headerRow.addView(tvSeqBadge);
-
-            // Booking ID & Customer
-            TextView tvCode = new TextView(this);
-            tvCode.setText(String.format("Booking #%s", d.getBookingId()));
-            tvCode.setTextColor(0xFF0F172A);
-            tvCode.setTextSize(18);
-            tvCode.setPadding(0, 8, 0, 0);
-            tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            TextView tvCustomer = new TextView(this);
-            tvCustomer.setText(String.format("Customer: %s • %s", d.getCustomerName(), d.getCustomerPhone()));
-            tvCustomer.setTextColor(0xFF2563EB);
-            tvCustomer.setTextSize(14);
-            tvCustomer.setPadding(0, 4, 0, 0);
-
-            TextView tvPickup = new TextView(this);
-            tvPickup.setText(String.format("Pickup: %s", d.getPickupLocation()));
-            tvPickup.setTextColor(0xFF475569);
-            tvPickup.setTextSize(13);
-            tvPickup.setPadding(0, 4, 0, 0);
-
-            TextView tvDest = new TextView(this);
-            tvDest.setText(String.format("Destination: %s", d.getDestination()));
-            tvDest.setTextColor(0xFF0F172A);
-            tvDest.setTextSize(13);
-            tvDest.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvDest.setPadding(0, 2, 0, 0);
-
-            // Special instructions if present
             if (!TextUtils.isEmpty(d.getSpecialInstructions())) {
-                TextView tvInstructions = new TextView(this);
-                tvInstructions.setText(String.format("⚠️ Instructions: %s", d.getSpecialInstructions()));
-                tvInstructions.setTextColor(0xFF92400E);
-                tvInstructions.setBackgroundColor(0xFFFFFBEB);
-                tvInstructions.setTextSize(12);
-                tvInstructions.setPadding(12, 8, 12, 8);
-                tvInstructions.setPadding(12, 8, 12, 8);
-                layout.addView(headerRow);
-                layout.addView(tvCode);
-                layout.addView(tvCustomer);
-                layout.addView(tvPickup);
-                layout.addView(tvDest);
-                layout.addView(tvInstructions);
+                tvSpecialInstructions.setVisibility(View.VISIBLE);
+                tvSpecialInstructions.setText(String.format("⚠️ Instructions: %s", d.getSpecialInstructions()));
             } else {
-                layout.addView(headerRow);
-                layout.addView(tvCode);
-                layout.addView(tvCustomer);
-                layout.addView(tvPickup);
-                layout.addView(tvDest);
+                tvSpecialInstructions.setVisibility(View.GONE);
             }
 
-            TextView tvStatus = new TextView(this);
-            tvStatus.setText(String.format("Status: %s", d.getStatus()));
-            tvStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
-            tvStatus.setTextSize(13);
-            tvStatus.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvStatus.setPadding(0, 8, 0, 0);
-            layout.addView(tvStatus);
-
-            card.addView(layout);
+            tvDeliveryStatus.setText(String.format("Status: %s", d.getStatus()));
+            tvDeliveryStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
 
             final String bookingId = d.getBookingId();
-            card.setOnClickListener(v -> {
+            cardView.setOnClickListener(v -> {
                 Intent intent = new Intent(DriverDeliveriesActivity.this, DriverDeliveryDetailsActivity.class);
                 intent.putExtra("DELIVERY_ID", bookingId);
                 startActivity(intent);
             });
 
-            containerDeliveries.addView(card);
+            containerDeliveries.addView(cardView);
         }
     }
 }

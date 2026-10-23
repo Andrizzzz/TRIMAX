@@ -25,9 +25,10 @@ public class LocationHelper {
     private LocationListener locationListener;
     private OnLocationUpdateListener updateListener;
 
-    private double currentLatitude = 14.8115;
-    private double currentLongitude = 121.0453;
-    private float currentAccuracy = 5.0f;
+    // Zero means no real location fix has been received yet; never expose a fake GPS coordinate.
+    private double currentLatitude = 0.0;
+    private double currentLongitude = 0.0;
+    private float currentAccuracy = 0.0f;
     private float currentSpeed = 0.0f;
     private float currentBearing = 0.0f;
     private long lastTimestamp = System.currentTimeMillis();
@@ -47,6 +48,8 @@ public class LocationHelper {
     }
 
     public void startLocationUpdates(OnLocationUpdateListener listener) {
+        // Reuse a single listener even when multiple lifecycle callbacks request tracking.
+        stopLocationUpdates();
         this.updateListener = listener;
         if (!hasLocationPermission()) {
             return;
@@ -96,10 +99,22 @@ public class LocationHelper {
             isTrackingActive = true;
 
             // Fetch last known location as initial value
-            Location lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Location lastNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            Location best = lastGps != null ? lastGps : lastNet;
-            if (best != null) {
+            Location lastGps = null;
+            Location lastNet = null;
+            try {
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                }
+                if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    lastNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+            } catch (SecurityException ignored) {
+                // Permission may have been revoked while this screen was open.
+            }
+            Location best = lastGps;
+            if (lastNet != null && (best == null || lastNet.getTime() > best.getTime())) best = lastNet;
+            // Avoid using an old cached position as if it were the current location.
+            if (best != null && System.currentTimeMillis() - best.getTime() <= 10 * 60 * 1000L) {
                 currentLatitude = best.getLatitude();
                 currentLongitude = best.getLongitude();
                 currentAccuracy = best.getAccuracy();
@@ -107,6 +122,12 @@ public class LocationHelper {
                 currentBearing = best.getBearing();
                 lastTimestamp = best.getTime();
                 hasValidLocationFix = true;
+            } else if (System.currentTimeMillis() - lastTimestamp > 10 * 60 * 1000L) {
+                // Do not keep reporting a previously valid but now stale fix as current.
+                currentLatitude = 0.0;
+                currentLongitude = 0.0;
+                currentAccuracy = 0.0f;
+                hasValidLocationFix = false;
             }
         } catch (SecurityException ignored) {
             isTrackingActive = false;
@@ -120,6 +141,8 @@ public class LocationHelper {
             } catch (SecurityException ignored) {}
         }
         isTrackingActive = false;
+        locationListener = null;
+        updateListener = null;
     }
 
     public double getLatitude() {

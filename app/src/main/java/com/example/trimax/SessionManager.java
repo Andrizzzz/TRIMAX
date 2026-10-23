@@ -17,10 +17,12 @@ public class SessionManager {
 
     private final SharedPreferences pref;
     private final SharedPreferences.Editor editor;
+    private final SharedPreferences profilePrefs;
 
     public SessionManager(Context context) {
         pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = pref.edit();
+        profilePrefs = context.getSharedPreferences("TrimaxProfilePhotos", Context.MODE_PRIVATE);
     }
 
     public void createLoginSession(User user) {
@@ -72,6 +74,14 @@ public class SessionManager {
             editor.apply();
         }
         return role;
+    }
+
+    public String getProfilePhotoUri() {
+        return profilePrefs.getString("photo_" + getUsername(), "");
+    }
+
+    public void setProfilePhotoUri(String uri) {
+        profilePrefs.edit().putString("photo_" + getUsername(), uri != null ? uri : "").apply();
     }
 
     public void updateProfile(String fullName, String email, String phone) {
