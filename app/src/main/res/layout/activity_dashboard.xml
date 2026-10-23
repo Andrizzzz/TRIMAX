@@ -180,9 +180,8 @@
                             android:layout_height="match_parent"
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
+                            android:clickable="false"
+                            android:focusable="false"
                             android:padding="12dp">
 
                             <ImageView
