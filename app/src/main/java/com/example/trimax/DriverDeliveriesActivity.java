@@ -125,7 +125,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
             int screenWidth = getResources().getDisplayMetrics().widthPixels;
             int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
-            final int[] effectiveTabWidth = {totalWidth / 5};
+            final int[] effectiveTabWidth = {totalWidth / 4};
             int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
 
             ViewGroup.LayoutParams lp = indicator.getLayoutParams();
@@ -140,7 +140,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
                 navContainer.post(() -> {
                     int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
                     if (measuredWidth > 0) {
-                        effectiveTabWidth[0] = measuredWidth / 5;
+                        effectiveTabWidth[0] = measuredWidth / 4;
                         if (lp != null) {
                             lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
                             indicator.setLayoutParams(lp);
