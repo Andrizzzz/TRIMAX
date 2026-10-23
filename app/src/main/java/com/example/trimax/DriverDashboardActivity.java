@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,12 +17,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -165,27 +166,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
             });
         }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            // This menu is shared with the agent dashboard, so label it for driver tasks.
-            if (bottomNavigation.getMenu().findItem(R.id.nav_bookings) != null) {
-                bottomNavigation.getMenu().findItem(R.id.nav_bookings).setTitle("Deliveries");
-            }
-            if (bottomNavigation.getMenu().findItem(R.id.nav_clients) != null) {
-                bottomNavigation.getMenu().findItem(R.id.nav_clients).setTitle("Notifications");
-            }
-            if (bottomNavigation.getMenu().findItem(R.id.nav_packages) != null) {
-                bottomNavigation.getMenu().findItem(R.id.nav_packages).setTitle("Delivery History");
-            }
-
-            bottomNavigation.setSelectedItemId(R.id.nav_home);
-            setupBottomNavigation(bottomNavigation);
-            bottomNavigation.setOnItemReselectedListener(item -> {
-                if (item.getItemId() == R.id.nav_home) {
-                    refreshDriverDashboard();
-                }
-            });
-        }
+        LinearLayout bottomNavigation = findViewById(R.id.bottomNavigation);
+        setupBottomNavigation(bottomNavigation);
 
         if (navigationView != null) {
             // The shared agent drawer includes Clients, which has no driver destination.
@@ -565,26 +547,62 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                refreshDriverDashboard();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, DriverDeliveriesActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, DriverNotificationsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_packages) {
-                startActivity(new Intent(this, DriverHistoryActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, DriverProfileActivity.class));
-                return true;
+    private void setupBottomNavigation(LinearLayout bottomNavigation) {
+        if (bottomNavigation == null) return;
+
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        for (int id : ids) {
+            View item = findViewById(id);
+            if (item != null) {
+                item.setOnClickListener(v -> {
+                    highlightBottomNavItem(id, bottomNavigation);
+                    if (id == R.id.nav_home) {
+                        refreshDriverDashboard();
+                    } else if (id == R.id.nav_bookings) {
+                        startActivity(new Intent(this, DriverDeliveriesActivity.class));
+                    } else if (id == R.id.nav_clients) {
+                        startActivity(new Intent(this, DriverNotificationsActivity.class));
+                    } else if (id == R.id.nav_packages) {
+                        startActivity(new Intent(this, DriverHistoryActivity.class));
+                    } else if (id == R.id.nav_profile) {
+                        startActivity(new Intent(this, DriverProfileActivity.class));
+                    }
+                });
             }
-            return false;
+        }
+        highlightBottomNavItem(R.id.nav_home, bottomNavigation);
+    }
+
+    private void highlightBottomNavItem(int activeId, LinearLayout navContainer) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            View item = findViewById(ids[i]);
+            boolean active = ids[i] == activeId;
+            if (active) activeIndex = i;
+            if (item != null) item.setSelected(active);
+        }
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        if (indicator == null) return;
+
+        final int index = activeIndex;
+        final int margin = Math.round(4 * getResources().getDisplayMetrics().density);
+        navContainer.post(() -> {
+            int availableWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+            if (availableWidth <= 0) return;
+            int tabWidth = availableWidth / ids.length;
+            ViewGroup.LayoutParams params = indicator.getLayoutParams();
+            if (params != null) {
+                params.width = tabWidth - margin * 2;
+                indicator.setLayoutParams(params);
+            }
+            float targetX = navContainer.getPaddingLeft() + index * tabWidth + margin;
+            indicator.animate()
+                    .translationX(targetX)
+                    .setDuration(180)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .start();
         });
     }
 }
