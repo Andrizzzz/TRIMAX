@@ -251,10 +251,17 @@ public class FullMapPickerActivity extends AppCompatActivity {
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fetchAndApplyGpsLocation();
         } else {
-            locationPermissionLauncher.launch(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            });
+            new AlertDialog.Builder(this)
+                    .setTitle("Location Permission Required")
+                    .setMessage("We need your location permission to center the map on your current GPS position.")
+                    .setPositiveButton("Grant Permission", (dialog, which) -> {
+                        locationPermissionLauncher.launch(new String[]{
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                        });
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
     }
 
