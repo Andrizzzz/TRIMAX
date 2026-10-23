@@ -39,14 +39,15 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
         containerHistory = findViewById(R.id.containerHistory);
 
-        View topBar = findViewById(R.id.topBar);
-        if (topBar != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), systemBars.top + (int)(12 * getResources().getDisplayMetrics().density), v.getPaddingRight(), v.getPaddingBottom());
-                return insets;
-            });
-        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            View topBar = findViewById(R.id.topBar);
+            if (topBar != null) {
+                int extraPadding = Math.round(12 * getResources().getDisplayMetrics().density);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + extraPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+            return insets;
+        });
 
         MaterialButton chipAll = findViewById(R.id.chipAll);
         MaterialButton chipCompleted = findViewById(R.id.chipCompleted);

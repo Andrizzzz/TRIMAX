@@ -70,16 +70,16 @@ public class DriverDashboardActivity extends AppCompatActivity {
         locationHelper = new LocationHelper(this);
 
         drawerLayout = findViewById(R.id.drawerLayout);
-        View mainContent = findViewById(R.id.mainContent);
 
-        if (mainContent != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                // Match Rider dashboard: apply top inset to content, but let bottom nav handle bottom inset.
-                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), 0);
-                return insets;
-            });
-        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            View topBar = findViewById(R.id.topBar);
+            if (topBar != null) {
+                int extraPadding = Math.round(12 * getResources().getDisplayMetrics().density);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + extraPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+            return insets;
+        });
 
         ImageView btnMenu = findViewById(R.id.btnMenu);
         NavigationView navigationView = findViewById(R.id.navigationView);

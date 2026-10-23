@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
@@ -28,6 +29,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_deliveries);
 
         dbHelper = new DatabaseHelper(this);
@@ -35,28 +37,15 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
         containerDeliveries = findViewById(R.id.containerDeliveries);
 
-        View topBar = findViewById(R.id.topBar);
-        if (topBar != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), systemBars.top + (int)(12 * getResources().getDisplayMetrics().density), v.getPaddingRight(), v.getPaddingBottom());
-                return insets;
-            });
-        }
-
-
-        // Keep the floating bottom navigation above the system navigation/gesture area.
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-        if (cardBottomNavContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
-                params.bottomMargin = baseMargin + systemBars.bottom;
-                v.setLayoutParams(params);
-                return insets;
-            });
-        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            View topBar = findViewById(R.id.topBar);
+            if (topBar != null) {
+                int extraPadding = Math.round(12 * getResources().getDisplayMetrics().density);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + extraPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+            return insets;
+        });
 
         setupBottomNavigation();
 
