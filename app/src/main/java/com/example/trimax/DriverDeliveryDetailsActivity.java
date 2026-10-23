@@ -281,23 +281,9 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
         } else if ("STARTED".equalsIgnoreCase(upperStatus)) {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("GO TO PICKUP");
+            btnPrimaryAction.setText("PICK UP & ON THE WAY");
             btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("GOING TO PICKUP", "En route to pickup location."));
-
-        } else if ("GOING TO PICKUP".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("ARRIVED AT PICKUP");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("ARRIVED AT PICKUP", "Arrived at pickup location!"));
-
-        } else if ("ARRIVED AT PICKUP".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("CONFIRM PICKUP");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("PICKED UP", "Package Picked Up successfully!"));
+            btnPrimaryAction.setOnClickListener(v -> advanceStatus("PICKED UP", "Package picked up! In transit to destination."));
 
         } else if ("PICKED UP".equalsIgnoreCase(upperStatus)) {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
