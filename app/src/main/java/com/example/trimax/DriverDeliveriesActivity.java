@@ -167,24 +167,65 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 
+    private boolean loading;
+    private boolean showingRows;
+
+    /**
+     * Only deliveries the TRIMAX server says are assigned to the signed-in driver. The server decides who
+     * that is from the sign-in token; this screen never sends a driver name.
+     */
     private void loadDeliveries() {
-        if (containerDeliveries == null) return;
+        if (containerDeliveries == null || loading) return;
+        loading = true;
+        if (!showingRows) showMessage("Loading your deliveries...", false);
+        TrimaxApi.get(this).listDriverDeliveries("active", new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                loading = false;
+                if (SessionGuard.isGone(DriverDeliveriesActivity.this)) return;
+                renderDeliveries(records);
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                loading = false;
+                if (SessionGuard.isGone(DriverDeliveriesActivity.this)) return;
+                if (SessionGuard.handle(DriverDeliveriesActivity.this, error)) return;
+                if (showingRows) {
+                    android.widget.Toast.makeText(DriverDeliveriesActivity.this,
+                            "Could not refresh: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                } else {
+                    showMessage(error.getMessage() + "\nTap here to try again.", true);
+                }
+            }
+        });
+    }
+
+    private void showMessage(String text, boolean retry) {
+        showingRows = false;
         containerDeliveries.removeAllViews();
+        TextView tvEmpty = new TextView(this);
+        tvEmpty.setText(text);
+        tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
+        tvEmpty.setTextSize(16);
+        tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
+        if (retry) tvEmpty.setOnClickListener(v -> loadDeliveries());
+        containerDeliveries.addView(tvEmpty);
+    }
 
-        List<Delivery> deliveries = dbHelper.getAssignedDeliveries(session.getUsername());
-
-        if (deliveries.isEmpty()) {
-            TextView tvEmpty = new TextView(this);
-            tvEmpty.setText("No active assigned bookings found.");
-            tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
-            tvEmpty.setTextSize(16);
-            tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
-            containerDeliveries.addView(tvEmpty);
+    private void renderDeliveries(List<BookingRecord> records) {
+        if (records.isEmpty()) {
+            showMessage("No active assigned bookings found.", false);
             return;
         }
+        containerDeliveries.removeAllViews();
+        showingRows = true;
+        List<Delivery> deliveries = new java.util.ArrayList<>();
+        for (BookingRecord r : records) deliveries.add(r.toDelivery(true));
 
         for (int i = 0; i < deliveries.size(); i++) {
             Delivery d = deliveries.get(i);
+            BookingRecord record = records.get(i);
 
             View cardView = android.view.LayoutInflater.from(this).inflate(R.layout.item_driver_delivery_card, containerDeliveries, false);
 
@@ -221,7 +262,9 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
                 tvSpecialInstructions.setVisibility(View.GONE);
             }
 
-            tvDeliveryStatus.setText(String.format("Status: %s", d.getStatus()));
+            boolean awaitingAdmin = DeliveryProgress.PENDING.equals(record.status);
+            tvDeliveryStatus.setText(String.format("Status: %s%s", d.getStatus(),
+                    awaitingAdmin ? " \u2022 waiting for admin confirmation" : ""));
             tvDeliveryStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
 
             final String bookingId = d.getBookingId();

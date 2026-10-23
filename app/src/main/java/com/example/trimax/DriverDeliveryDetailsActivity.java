@@ -160,6 +160,10 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                 Intent mapIntent = new Intent(this, DriverMapActivity.class);
                 mapIntent.putExtra("DELIVERY_ID", currentDelivery.getBookingId());
                 mapIntent.putExtra("BOOKING_ID", currentDelivery.getBookingId());
+                mapIntent.putExtra("DEST_ADDRESS", currentDelivery.getDestination());
+                mapIntent.putExtra("DEST_LAT", currentDelivery.getDestinationLatitude());
+                mapIntent.putExtra("DEST_LNG", currentDelivery.getDestinationLongitude());
+                mapIntent.putExtra("CUSTOMER_NAME", currentDelivery.getCustomerName());
                 try {
                     startActivity(mapIntent);
                 } catch (Exception e) {
@@ -179,8 +183,7 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
         if (btnReportDamage != null) {
             btnReportDamage.setOnClickListener(v -> showReportDamageDialog());
         }
-
-        loadDeliveryData();
+        // The delivery is loaded in onResume, which always follows onCreate.
     }
 
     @Override
@@ -189,16 +192,50 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
         loadDeliveryData();
     }
 
-    private void loadDeliveryData() {
-        if (!TextUtils.isEmpty(deliveryCode)) {
-            currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
-        }
+    /** The delivery as the TRIMAX server has it; only deliveries assigned to the signed-in driver load. */
+    private BookingRecord currentRecord;
+    private boolean updating;
 
-        if (currentDelivery == null) {
-            showErrorState("Delivery Not Found", "The requested delivery code (" + (deliveryCode != null ? deliveryCode : "None") + ") was not found in database records.");
+    private int bookingNumber() {
+        try {
+            return Integer.parseInt(deliveryCode != null ? deliveryCode.replace("#", "").trim() : "");
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private void loadDeliveryData() {
+        int id = bookingNumber();
+        if (id <= 0) {
+            showErrorState("Delivery Not Found", "Delivery " + (deliveryCode != null ? deliveryCode : "")
+                    + " is not a TRIMAX server booking. Open it again from Deliveries.");
             return;
         }
+        TrimaxApi.get(this).getDriverDelivery(id, new TrimaxApi.Callback<BookingRecord>() {
+            @Override
+            public void onSuccess(BookingRecord record) {
+                if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
+                showRecord(record);
+            }
 
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
+                if (SessionGuard.handle(DriverDeliveryDetailsActivity.this, error)) return;
+                if (currentRecord == null || error.getKind() == ApiException.Kind.NOT_FOUND) {
+                    // NOT_FOUND also covers "reassigned to another driver": stop showing it.
+                    showErrorState(error.getKind() == ApiException.Kind.NOT_FOUND ? "Delivery Not Available" : "Could Not Load Delivery",
+                            error.getMessage());
+                } else {
+                    Toast.makeText(DriverDeliveryDetailsActivity.this, "Could not refresh: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void showRecord(BookingRecord record) {
+        currentRecord = record;
+        currentDelivery = record.toDelivery(true);
         hideErrorState();
 
         if (tvHeaderTitle != null) {
@@ -262,48 +299,32 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
             tvFinalTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", currentDelivery.getCurrentTotal()));
         }
 
-        updateStatusAndButtons(currentDelivery.getStatus());
+        updateStatusAndButtons();
     }
 
-    private void updateStatusAndButtons(String status) {
-        if (tvStatusBadge == null || btnPrimaryAction == null) return;
+    private void updateStatusAndButtons() {
+        if (tvStatusBadge == null || btnPrimaryAction == null || currentRecord == null) return;
 
-        String upperStatus = status != null ? status.toUpperCase(Locale.US) : "ASSIGNED";
-        tvStatusBadge.setText(upperStatus);
-
-        if ("ASSIGNED".equalsIgnoreCase(upperStatus)) {
+        String upperStatus = currentDelivery.getStatus() != null ? currentDelivery.getStatus().toUpperCase(Locale.US) : "ASSIGNED";
+        tvStatusBadge.setText(DeliveryProgress.PENDING.equals(currentRecord.status) ? upperStatus + " \u2022 AWAITING ADMIN" : upperStatus);
+        if ("ASSIGNED".equals(upperStatus)) {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
             tvStatusBadge.setTextColor(0xFF2563EB);
-            btnPrimaryAction.setText("START DELIVERY");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("STARTED", "Delivery Started! En route to pickup."));
-
-        } else if ("STARTED".equalsIgnoreCase(upperStatus)) {
+        } else if ("DELIVERED".equals(upperStatus) || "COMPLETED".equals(upperStatus)) {
+            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_completed);
+            tvStatusBadge.setTextColor(0xFF2563EB);
+        } else if ("FAILED".equals(upperStatus) || "CANCELLED".equals(upperStatus)) {
+            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_cancelled);
+            tvStatusBadge.setTextColor(0xFFEF4444);
+        } else {
             tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("PICK UP & ON THE WAY");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("PICKED UP", "Package picked up! In transit to destination."));
+        }
 
-        } else if ("PICKED UP".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("START TRANSPORT / ON THE WAY");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("ON THE WAY", "Delivery in transit to customer!"));
-
-        } else if ("ON THE WAY".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("ARRIVED AT DESTINATION");
-            btnPrimaryAction.setEnabled(true);
-            btnPrimaryAction.setOnClickListener(v -> advanceStatus("ARRIVED AT DESTINATION", "Arrived at destination location!"));
-
-        } else if ("ARRIVED AT DESTINATION".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
-            tvStatusBadge.setTextColor(0xFF059669);
-            btnPrimaryAction.setText("DROP-OFF PHOTO & PROOF OF DELIVERY");
-            btnPrimaryAction.setEnabled(true);
+        DeliveryProgress.NextStep step = DeliveryProgress.nextStep(currentRecord.status, currentRecord.deliveryStatus);
+        btnPrimaryAction.setText(step.label);
+        btnPrimaryAction.setEnabled(step.enabled && !updating);
+        if (step.opensProof) {
             btnPrimaryAction.setOnClickListener(v -> {
                 Intent proofIntent = new Intent(this, DriverProofActivity.class);
                 proofIntent.putExtra("DELIVERY_ID", currentDelivery.getBookingId());
@@ -313,34 +334,54 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                     Toast.makeText(this, "Unable to open proof of delivery", Toast.LENGTH_SHORT).show();
                 }
             });
-
-        } else if ("DELIVERED".equalsIgnoreCase(upperStatus) || "COMPLETED".equalsIgnoreCase(upperStatus)) {
-            tvStatusBadge.setBackgroundResource(R.drawable.bg_status_completed);
-            tvStatusBadge.setTextColor(0xFF2563EB);
-            btnPrimaryAction.setText("✓ DELIVERY COMPLETED");
-            btnPrimaryAction.setEnabled(false);
-
+        } else if (step.target != null) {
+            btnPrimaryAction.setOnClickListener(v -> advanceStatus(step.target, null, null));
         } else {
-            tvStatusBadge.setText(upperStatus);
-            btnPrimaryAction.setText("STATUS: " + upperStatus);
-            btnPrimaryAction.setEnabled(false);
+            btnPrimaryAction.setOnClickListener(null);
         }
     }
 
-    private void advanceStatus(String newStatus, String toastMsg) {
-        if (currentDelivery == null) return;
+    /**
+     * Sends one step to the server together with the status this screen is showing. The screen then shows
+     * what the server saved; nothing is assumed. If someone else changed the booking meanwhile (e.g. the
+     * administrator cancelled it), the server refuses and the screen reloads.
+     */
+    private void advanceStatus(String target, String note, Runnable onSaved) {
+        if (currentRecord == null || updating) return;
+        String expected = currentRecord.deliveryStatus != null ? currentRecord.deliveryStatus : DeliveryProgress.ASSIGNED;
+        updating = true;
         btnPrimaryAction.setEnabled(false);
+        CharSequence label = btnPrimaryAction.getText();
+        btnPrimaryAction.setText("UPDATING...");
+        Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
+        Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
+        TrimaxApi.get(this).updateDeliveryStatus(currentRecord.bookingId, expected, target, lat, lng, note, null,
+                new TrimaxApi.Callback<BookingRecord>() {
+                    @Override
+                    public void onSuccess(BookingRecord saved) {
+                        updating = false;
+                        if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
+                        dbHelper.logLocation(session.getUsername(), saved.idText(), locationHelper.getLatitude(),
+                                locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                        Toast.makeText(DriverDeliveryDetailsActivity.this, "Saved: "
+                                + DeliveryProgress.driverDisplayStatus(saved.status, saved.deliveryStatus), Toast.LENGTH_SHORT).show();
+                        showRecord(saved);
+                        if (onSaved != null) onSaved.run();
+                    }
 
-        boolean updated = dbHelper.updateDeliveryStatus(currentDelivery.getBookingId(), newStatus, locationHelper.getLatitude(), locationHelper.getLongitude());
-        btnPrimaryAction.setEnabled(true);
-
-        if (updated) {
-            dbHelper.logLocation(session.getUsername(), currentDelivery.getBookingId(), locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
-            Toast.makeText(this, toastMsg, Toast.LENGTH_SHORT).show();
-            loadDeliveryData();
-        } else {
-            Toast.makeText(this, "Failed to update delivery status in database", Toast.LENGTH_SHORT).show();
-        }
+                    @Override
+                    public void onError(ApiException error) {
+                        updating = false;
+                        if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
+                        if (SessionGuard.handle(DriverDeliveryDetailsActivity.this, error)) return;
+                        btnPrimaryAction.setText(label);
+                        btnPrimaryAction.setEnabled(true);
+                        Toast.makeText(DriverDeliveryDetailsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND) {
+                            loadDeliveryData();   // show what the server has now
+                        }
+                    }
+                });
     }
 
     private void showDepositDialog() {
@@ -491,11 +532,27 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
             boolean saved = dbHelper.saveProblemReport(currentDelivery.getBookingId(), session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
             if (saved) {
-                Toast.makeText(this, "Problem report sent to Admin! Admin will review and process.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Problem report saved on this phone. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
             } else {
                 Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
             }
         });
+        // A delivery that cannot be finished is reported to the server; the administrator then decides
+        // whether to cancel the booking (which returns the stock) from the desktop.
+        if (currentRecord != null && DeliveryProgress.isUnderWay(currentRecord.deliveryStatus)) {
+            builder.setNeutralButton("Mark delivery failed", (dialog, which) -> {
+                String desc = etDescription.getText().toString().trim();
+                String reason = problemTypes[selectedIndex[0]] + (desc.isEmpty() ? "" : ": " + desc);
+                new AlertDialog.Builder(this)
+                        .setTitle("Mark delivery failed?")
+                        .setMessage("Booking #" + currentRecord.bookingId + " will be reported as FAILED (" + reason
+                                + "). You cannot continue it afterwards; the administrator will review it.")
+                        .setPositiveButton("Mark failed", (d2, w2) -> advanceStatus(DeliveryProgress.FAILED,
+                                reason.length() > 480 ? reason.substring(0, 480) : reason, null))
+                        .setNegativeButton("Back", null)
+                        .show();
+            });
+        }
 
         builder.setNegativeButton("Cancel", null);
         builder.show();
