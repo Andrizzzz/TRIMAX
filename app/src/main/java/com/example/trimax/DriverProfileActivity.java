@@ -185,6 +185,10 @@ public class DriverProfileActivity extends AppCompatActivity {
         });
     }
 
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
     private void updateProfileHeader() {
         TextView tvDriverName = findViewById(R.id.tvDriverName);
         TextView tvDriverEmail = findViewById(R.id.tvDriverEmail);
