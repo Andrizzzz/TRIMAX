@@ -455,16 +455,6 @@ public class DashboardActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        NavigationView dashboardDrawer = findViewById(R.id.navigationView);
-        if (dashboardDrawer != null) {
-            dashboardDrawer.setCheckedItem(R.id.drawer_home);
-        }
-        refreshDashboardContent();
-    }
-
     private void updateHeaderUI() {
         if (session == null) return;
         String agentName = session.getFullName();

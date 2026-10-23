@@ -159,6 +159,31 @@ public final class TrimaxApi {
         }, cb);
     }
 
+    // ------------------------------------------------------------------ live location
+
+    /**
+     * Pushes live GPS coordinates to Supabase for the signed-in Agent or Driver.
+     * The server updates user_locations for Admin map tracking.
+     */
+    public void updateLiveLocation(double latitude, double longitude, Float accuracy, Float speed, Float bearing,
+                                   boolean isOnDuty, Callback<Boolean> cb) {
+        run(() -> {
+            boolean hasFix = Double.isFinite(latitude) && Double.isFinite(longitude) && !(latitude == 0 && longitude == 0);
+            if (!hasFix) {
+                throw new ApiException(ApiException.Kind.INVALID, "Invalid GPS fix");
+            }
+            JSONObject args = new JSONObject();
+            args.put("p_latitude", latitude);
+            args.put("p_longitude", longitude);
+            args.put("p_accuracy", accuracy != null ? accuracy : JSONObject.NULL);
+            args.put("p_speed", speed != null ? speed : JSONObject.NULL);
+            args.put("p_bearing", bearing != null ? bearing : JSONObject.NULL);
+            args.put("p_is_on_duty", isOnDuty);
+            client.rpc("trimax_update_location", args);
+            return Boolean.TRUE;
+        }, cb);
+    }
+
     // ------------------------------------------------------------------ plumbing
 
     private <T> void run(Call<T> call, Callback<T> cb) {

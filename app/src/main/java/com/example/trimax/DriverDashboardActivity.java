@@ -119,11 +119,13 @@ public class DriverDashboardActivity extends AppCompatActivity {
                                     session.setDutyOnline(true);
                                     locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
                                         dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
+                                        locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
                                         updateDutyUI();
                                     });
                                     updateDutyUI();
                                     Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Started.", Toast.LENGTH_LONG).show();
                                     dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                                    locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
                                 }
                             } else {
                                 Toast.makeText(DriverDashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
