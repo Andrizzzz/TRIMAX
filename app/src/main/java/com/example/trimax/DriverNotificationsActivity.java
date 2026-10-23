@@ -214,23 +214,21 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     }
 
     private void setupDriverBottomNavigation() {
-        highlightBottomNavItem(R.id.nav_clients);
+        highlightBottomNavItem(R.id.nav_home);
 
         View home = findViewById(R.id.nav_home);
         View bookings = findViewById(R.id.nav_bookings);
         View packages = findViewById(R.id.nav_packages);
-        View clients = findViewById(R.id.nav_clients);
         View profile = findViewById(R.id.nav_profile);
 
         if (home != null) home.setOnClickListener(v -> navigateToTab(DriverDashboardActivity.class));
         if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(DriverDeliveriesActivity.class));
         if (packages != null) packages.setOnClickListener(v -> navigateToTab(DriverHistoryActivity.class));
-        if (clients != null) clients.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_clients));
         if (profile != null) profile.setOnClickListener(v -> navigateToTab(DriverProfileActivity.class));
     }
 
     private void highlightBottomNavItem(int activeId) {
-        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_profile};
         int activeIndex = 0;
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] == activeId) {
