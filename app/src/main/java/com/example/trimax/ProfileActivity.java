@@ -73,7 +73,6 @@ public class ProfileActivity extends AppCompatActivity {
         ImageView ivProfilePhoto = findViewById(R.id.ivProfilePhoto);
         if (ivProfilePhoto != null) ivProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
         View cardEditProfile = findViewById(R.id.cardEditProfile);
-        View cardSettings = findViewById(R.id.cardSettings);
         View cardDeliveryHistory = findViewById(R.id.cardDeliveryHistory);
         View cardHelpSupport = findViewById(R.id.cardHelpSupport);
         View cardReports = findViewById(R.id.cardReports);
@@ -81,7 +80,6 @@ public class ProfileActivity extends AppCompatActivity {
         setupBottomNavigation();
 
         if (cardEditProfile != null) cardEditProfile.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, EditProfileActivity.class)));
-        if (cardSettings != null) cardSettings.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, SettingsActivity.class)));
         if (cardDeliveryHistory != null) cardDeliveryHistory.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, BookingsActivity.class)));
         if (cardHelpSupport != null) {
             cardHelpSupport.setOnClickListener(v -> showHelpSupportDialog());
