@@ -300,7 +300,7 @@
                                 android:layout_height="32dp"
                                 android:background="@drawable/bg_pill_unselected"
                                 android:padding="6dp"
-                                android:src="@drawable/calendar"
+                                android:src="@drawable/ic_categories"
                                 app:tint="@color/primary_blue" />
 
                             <LinearLayout
