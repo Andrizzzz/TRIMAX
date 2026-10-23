@@ -1383,6 +1383,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return rows > 0;
     }
 
+    public boolean endDutyWithPhoto(String agentId, String photoPath, double lat, double lng) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("duty_status", "OFF_DUTY");
+        cv.put("end_time", String.valueOf(System.currentTimeMillis()));
+        cv.put("photo_path", photoPath != null ? photoPath : "");
+        cv.put("latitude", lat);
+        cv.put("longitude", lng);
+
+        int rows = db.update(TABLE_ATTENDANCE, cv, "agent_id=? AND duty_status='ON_DUTY'", new String[]{agentId != null ? agentId : ""});
+        return rows > 0;
+    }
+
     public AttendanceRecord getActiveAttendance(String agentId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_ATTENDANCE + " WHERE agent_id=? AND duty_status='ON_DUTY' ORDER BY id DESC LIMIT 1",

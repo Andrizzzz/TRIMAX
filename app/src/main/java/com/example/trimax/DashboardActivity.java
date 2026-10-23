@@ -48,6 +48,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private boolean isEndingDuty = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,20 +126,33 @@ public class DashboardActivity extends AppCompatActivity {
                             );
 
                             String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            boolean saved;
+                            if (isEndingDuty) {
+                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            } else {
+                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            }
 
                             if (saved) {
-                                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
-                                String startTimeStr = sdf.format(new Date());
+                                if (isEndingDuty) {
+                                    session.setDutyOnline(false);
+                                    session.setDutyStartTime("");
+                                    updateAttendanceUI();
+                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
+                                } else {
+                                    SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
+                                    String startTimeStr = sdf.format(new Date());
 
-                                session.setDutyOnline(true);
-                                session.setDutyStartTime(startTimeStr);
+                                    session.setDutyOnline(true);
+                                    session.setDutyStartTime(startTimeStr);
 
-                                updateAttendanceUI();
-                                Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                                    updateAttendanceUI();
+                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                                }
                             } else {
                                 Toast.makeText(DashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
                             }
+                            isEndingDuty = false;
                         } else {
                             Toast.makeText(DashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
@@ -355,19 +369,22 @@ public class DashboardActivity extends AppCompatActivity {
         if (session.isDutyOnline()) {
             new AlertDialog.Builder(this)
                     .setTitle("End Duty Shift")
-                    .setMessage("Are you sure you want to end your active duty shift?")
-                    .setPositiveButton("End Duty Shift", (dialog, which) -> {
-                        dbHelper.endDuty(session.getUsername());
-                        session.setDutyOnline(false);
-                        session.setDutyStartTime("");
-                        updateAttendanceUI();
-                        Toast.makeText(this, "Agent Duty shift ended.", Toast.LENGTH_SHORT).show();
+                    .setMessage("Photo verification is required to end your active duty shift.")
+                    .setPositiveButton("Take Photo & End Duty", (dialog, which) -> {
+                        isEndingDuty = true;
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            launchAttendanceCamera();
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+                        }
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
         } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            isEndingDuty = false;
             launchAttendanceCamera();
         } else {
+            isEndingDuty = false;
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
     }
