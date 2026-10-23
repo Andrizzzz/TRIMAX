@@ -361,7 +361,16 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
         final EditText etReason = new EditText(this);
         etReason.setHint("Reason / Notes...");
-        etReason.setPadding(0, 16, 0, 0);
+        etReason.setSingleLine(false);
+        etReason.setMinLines(2);
+        etReason.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        etReason.setPadding(12, 12, 12, 12);
+        LinearLayout.LayoutParams reasonParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        reasonParams.topMargin = 12;
+        etReason.setLayoutParams(reasonParams);
         container.addView(etReason);
 
         builder.setView(container);
