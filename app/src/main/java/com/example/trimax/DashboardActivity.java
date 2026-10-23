@@ -219,6 +219,9 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (navigationView != null) {
+            if (navigationView.getMenu().findItem(R.id.drawer_notifications) != null) {
+                navigationView.getMenu().findItem(R.id.drawer_notifications).setVisible(false);
+            }
             View headerView = navigationView.getHeaderView(0);
             if (headerView != null) {
                 TextView tvNavName = headerView.findViewById(R.id.tvNavHeaderName);
@@ -244,9 +247,6 @@ public class DashboardActivity extends AppCompatActivity {
                     return true;
                 } else if (itemId == R.id.drawer_clients) {
                     startActivity(new Intent(DashboardActivity.this, ClientsActivity.class));
-                    return true;
-                } else if (itemId == R.id.drawer_notifications) {
-                    startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class));
                     return true;
                 } else if (itemId == R.id.drawer_reports) {
                     startActivity(new Intent(DashboardActivity.this, ReportsActivity.class));
