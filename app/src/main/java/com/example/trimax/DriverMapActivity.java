@@ -206,25 +206,25 @@ public class DriverMapActivity extends AppCompatActivity {
             return;
         }
 
-        // Always target the pinned customer destination coordinates chosen during booking creation
-        double lat = isValidCoordinate(currentDelivery.getDestinationLatitude(), currentDelivery.getDestinationLongitude())
-                ? currentDelivery.getDestinationLatitude() : 14.7826996;
-        double lng = isValidCoordinate(currentDelivery.getDestinationLatitude(), currentDelivery.getDestinationLongitude())
-                ? currentDelivery.getDestinationLongitude() : 121.0475865;
-        String destination = currentDelivery.getDestination() != null && !currentDelivery.getDestination().trim().isEmpty()
-                ? currentDelivery.getDestination() : "Customer Destination";
-
+        // Navigate to the saved customer destination. Do not use the TRIMAX Hub
+        // coordinates as a fallback destination, because that sends the driver to the wrong place.
+        double lat = currentDelivery.getDestinationLatitude();
+        double lng = currentDelivery.getDestinationLongitude();
         boolean hasValidCoords = isValidCoordinate(lat, lng);
-        boolean hasValidAddress = destination != null && !destination.trim().isEmpty();
+        String destination = currentDelivery.getDestination() != null
+                ? currentDelivery.getDestination().trim() : "";
+        boolean hasValidAddress = !destination.isEmpty();
 
         if (!hasValidCoords && !hasValidAddress) {
-            Toast.makeText(this, "This delivery has no saved destination coordinates or address.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "This delivery has no saved destination. Please check the booking's pinned location.",
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
         String destinationQuery = hasValidCoords
                 ? String.format(Locale.US, "%.6f,%.6f", lat, lng)
-                : destination.trim();
+                : destination;
 
         Toast.makeText(this, "Navigating to pinned customer destination: " + destination,
                 Toast.LENGTH_SHORT).show();
