@@ -7,25 +7,26 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
-
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** SupabaseClient against a local stand-in for Supabase's /auth/v1 and /rest/v1 endpoints. */
+import okhttp3.mockwebserver.Dispatcher;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
+
+/**
+ * SupabaseClient against a local MockWebServer that imitates Supabase's /auth/v1 and /rest/v1 endpoints.
+ * Nothing here talks to the real Supabase project.
+ */
 public class SupabaseClientTest {
 
     static final String KEY = "sb_publishable_test";
@@ -51,7 +52,8 @@ public class SupabaseClientTest {
         }
     }
 
-    private HttpServer server;
+    private MockWebServer server;
+    private boolean serverStopped;
     private String base;
     private final List<Seen> requests = Collections.synchronizedList(new ArrayList<>());
     private final MemoryStore store = new MemoryStore();
@@ -63,50 +65,54 @@ public class SupabaseClientTest {
 
     @Before
     public void start() throws Exception {
-        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/", this::handle);
-        server.start();
-        base = "http://127.0.0.1:" + server.getAddress().getPort();
+        server = new MockWebServer();
+        server.setDispatcher(new Dispatcher() {
+            @Override
+            public MockResponse dispatch(RecordedRequest request) {
+                return handle(request);
+            }
+        });
+        // Bind to the loopback address and build the URL from it. (MockWebServer.url() uses the canonical
+        // host name, which some Windows setups resolve to a name other than localhost.)
+        server.start(InetAddress.getByName("127.0.0.1"), 0);
+        base = "http://127.0.0.1:" + server.getPort();
     }
 
     @After
-    public void stop() {
-        server.stop(0);
+    public void stop() throws Exception {
+        if (!serverStopped) server.shutdown();
     }
 
-    private void handle(HttpExchange ex) throws java.io.IOException {
-        String body = read(ex.getRequestBody());
-        String path = ex.getRequestURI().toString();
-        requests.add(new Seen(ex.getRequestMethod(), path, ex.getRequestHeaders().getFirst("apikey"),
-                ex.getRequestHeaders().getFirst("Authorization"), body));
+    /** Stands in for Supabase: records every request, then answers like GoTrue / PostgREST would. */
+    private MockResponse handle(RecordedRequest request) {
+        String body = request.getBody().readUtf8();
+        String path = request.getPath();
+        String auth = request.getHeader("Authorization");
+        requests.add(new Seen(request.getMethod(), path, request.getHeader("apikey"), auth, body));
         try {
-            if (path.equals("/auth/v1/token?grant_type=password")) {
+            if ("/auth/v1/token?grant_type=password".equals(path)) {
                 JSONObject in = new JSONObject(body);
                 if (!"secret-pw".equals(in.getString("password"))) {
-                    reply(ex, 400, "{\"code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}");
-                } else {
-                    reply(ex, 200, session(in.getString("email")));
+                    return reply(400, "{\"code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}");
                 }
-            } else if (path.equals("/auth/v1/token?grant_type=refresh_token")) {
-                if (refreshBroken) reply(ex, 400, "{\"code\":\"refresh_token_not_found\",\"msg\":\"Invalid Refresh Token\"}");
-                else reply(ex, 200, session("ana@example.test"));
-            } else if (path.equals("/auth/v1/logout")) {
-                reply(ex, 204, "");
-            } else if (path.startsWith("/rest/v1/rpc/")) {
-                String auth = ex.getRequestHeaders().getFirst("Authorization");
+                return reply(200, session(in.getString("email")));
+            } else if ("/auth/v1/token?grant_type=refresh_token".equals(path)) {
+                if (refreshBroken) return reply(400, "{\"code\":\"refresh_token_not_found\",\"msg\":\"Invalid Refresh Token\"}");
+                return reply(200, session("ana@example.test"));
+            } else if ("/auth/v1/logout".equals(path)) {
+                return reply(204, null);
+            } else if (path != null && path.startsWith("/rest/v1/rpc/")) {
                 String token = auth == null ? "" : auth.replace("Bearer ", "");
                 if (!validTokens.contains(token)) {
-                    reply(ex, 401, "{\"code\":\"PGRST301\",\"message\":\"JWT expired\"}");
+                    return reply(401, "{\"code\":\"PGRST301\",\"message\":\"JWT expired\"}");
                 } else if (path.endsWith("/trimax_fail")) {
-                    reply(ex, 400, "{\"code\":\"TM409\",\"details\":\"STARTED\",\"hint\":null,\"message\":\"Changed meanwhile.\"}");
-                } else {
-                    reply(ex, 200, "{\"echo\":" + body + "}");
+                    return reply(400, "{\"code\":\"TM409\",\"details\":\"STARTED\",\"hint\":null,\"message\":\"Changed meanwhile.\"}");
                 }
-            } else {
-                reply(ex, 404, "{}");
+                return reply(200, "{\"echo\":" + body + "}");
             }
+            return reply(404, "{}");
         } catch (Exception e) {
-            reply(ex, 500, "{}");
+            return reply(500, "{}");
         }
     }
 
@@ -125,24 +131,14 @@ public class SupabaseClientTest {
         return s.toString();
     }
 
-    private static void reply(HttpExchange ex, int status, String body) throws java.io.IOException {
-        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
-        ex.getResponseHeaders().set("Content-Type", "application/json");
-        ex.sendResponseHeaders(status, status == 204 ? -1 : bytes.length);
-        if (status != 204) {
-            try (OutputStream out = ex.getResponseBody()) {
-                out.write(bytes);
-            }
+    /** A JSON response; a null body means no content (used for 204). */
+    private static MockResponse reply(int status, String body) {
+        MockResponse response = new MockResponse().setResponseCode(status);
+        if (body != null) {
+            response.setHeader("Content-Type", "application/json");
+            response.setBody(body);
         }
-        ex.close();
-    }
-
-    private static String read(InputStream in) throws java.io.IOException {
-        ByteArrayOutputStream b = new ByteArrayOutputStream();
-        byte[] chunk = new byte[4096];
-        int n;
-        while ((n = in.read(chunk)) != -1) b.write(chunk, 0, n);
-        return new String(b.toByteArray(), StandardCharsets.UTF_8);
+        return response;
     }
 
     private SupabaseClient client() {
@@ -261,7 +257,8 @@ public class SupabaseClientTest {
     @Test
     public void unreachableServerIsANetworkError() throws Exception {
         store.save(new AuthSession("a", "r", now + 3600, "u", "e"));
-        server.stop(0);
+        server.shutdown();                      // nothing listens on that port any more
+        serverStopped = true;
         try {
             client().rpc("trimax_my_account", new JSONObject());
             fail();
