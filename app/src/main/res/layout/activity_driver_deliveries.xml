@@ -99,7 +99,7 @@
                 android:background="@android:color/transparent"
                 android:paddingHorizontal="2dp"
                 android:paddingVertical="5dp"
-                android:weightSum="5">
+                android:weightSum="4">
 
                 <LinearLayout
                     android:id="@+id/nav_home"
@@ -183,36 +183,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="History"
-                        android:textColor="@color/bottom_nav_text_color"
-                        android:duplicateParentState="true"
-                        android:textSize="9sp"
-                        android:includeFontPadding="false"
-                        android:maxLines="1"
-                        android:singleLine="true" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/nav_clients"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:contentDescription="Alerts">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_clients"
-                        app:tint="@color/bottom_nav_icon_color"
-                        android:duplicateParentState="true"
-                        android:contentDescription="@null" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Notifications"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
                         android:textSize="9sp"
