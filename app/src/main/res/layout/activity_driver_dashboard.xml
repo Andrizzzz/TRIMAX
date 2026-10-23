@@ -12,7 +12,8 @@
         android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/bg_main">
+        android:background="@color/bg_main"
+        android:fitsSystemWindows="true">
 
         <!-- SCROLLABLE BODY -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
