@@ -41,8 +41,20 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             View topBar = findViewById(R.id.topBar);
             if (topBar != null) {
-                int baseTopPadding = Math.round(16 * getResources().getDisplayMetrics().density);
-                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
+                int baseTopPadding = dp(16);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding,
+                        topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+
+            // Keep the floating navigation above Android's gesture/3-button navigation area.
+            View bottomNav = findViewById(R.id.cardBottomNavContainer);
+            if (bottomNav != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                int desiredBottomMargin = systemBars.bottom + dp(16);
+                if (params.bottomMargin != desiredBottomMargin) {
+                    params.bottomMargin = desiredBottomMargin;
+                    bottomNav.setLayoutParams(params);
+                }
             }
             return insets;
         });
