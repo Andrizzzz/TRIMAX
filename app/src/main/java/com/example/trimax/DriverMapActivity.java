@@ -34,6 +34,7 @@ public class DriverMapActivity extends AppCompatActivity {
     private MockMapView mockMapView;
     private Delivery currentDelivery;
     private boolean hasCenteredOnLiveFix = false;
+    private boolean permissionRequestInProgress = false;
     private ActivityResultLauncher<String[]> locationPermissionLauncher;
 
     @Override
@@ -45,6 +46,7 @@ public class DriverMapActivity extends AppCompatActivity {
         locationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
+                    permissionRequestInProgress = false;
                     boolean fineGranted = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_FINE_LOCATION));
                     boolean coarseGranted = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_COARSE_LOCATION));
                     if (fineGranted || coarseGranted) {
@@ -162,6 +164,8 @@ public class DriverMapActivity extends AppCompatActivity {
             startDriverLocationTracking();
             return;
         }
+        if (permissionRequestInProgress) return;
+        permissionRequestInProgress = true;
         locationPermissionLauncher.launch(new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
