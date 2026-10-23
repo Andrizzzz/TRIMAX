@@ -304,10 +304,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Alerts"
+                        android:text="Notifications"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
                         android:textSize="10sp"
+                        android:includeFontPadding="false"
                         android:maxLines="1" />
                 </LinearLayout>
 

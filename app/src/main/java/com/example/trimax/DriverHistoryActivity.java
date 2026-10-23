@@ -39,11 +39,11 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
         containerHistory = findViewById(R.id.containerHistory);
 
-        View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
-        if (root != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+        View topBar = findViewById(R.id.topBar);
+        if (topBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), systemBars.bottom);
+                v.setPadding(v.getPaddingLeft(), systemBars.top + (int)(12 * getResources().getDisplayMetrics().density), v.getPaddingRight(), v.getPaddingBottom());
                 return insets;
             });
         }

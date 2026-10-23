@@ -35,14 +35,11 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
         containerDeliveries = findViewById(R.id.containerDeliveries);
 
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-        if (cardBottomNavContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
+        View topBar = findViewById(R.id.topBar);
+        if (topBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
-                params.bottomMargin = baseMargin + systemBars.bottom;
-                v.setLayoutParams(params);
+                v.setPadding(v.getPaddingLeft(), systemBars.top + (int)(12 * getResources().getDisplayMetrics().density), v.getPaddingRight(), v.getPaddingBottom());
                 return insets;
             });
         }

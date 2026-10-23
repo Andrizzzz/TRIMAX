@@ -39,11 +39,11 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         session = new SessionManager(this);
         dbHelper = new DatabaseHelper(this);
 
-        View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
-        if (root != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+        View topBar = findViewById(R.id.topBar);
+        if (topBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+                v.setPadding(v.getPaddingLeft(), systemBars.top + (int)(12 * getResources().getDisplayMetrics().density), v.getPaddingRight(), v.getPaddingBottom());
                 return insets;
             });
         }
