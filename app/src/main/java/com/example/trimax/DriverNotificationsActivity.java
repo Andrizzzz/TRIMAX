@@ -46,6 +46,16 @@ public class DriverNotificationsActivity extends AppCompatActivity {
                 int baseTopPadding = Math.round(16 * getResources().getDisplayMetrics().density);
                 topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
             }
+            // Match the shared driver-screen layout: keep the floating navigation clear of system bars.
+            View bottomNav = findViewById(R.id.cardBottomNavContainer);
+            if (bottomNav != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
+                if (params.bottomMargin != desiredBottomMargin) {
+                    params.bottomMargin = desiredBottomMargin;
+                    bottomNav.setLayoutParams(params);
+                }
+            }
             return insets;
         });
 
