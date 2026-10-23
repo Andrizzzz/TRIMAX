@@ -23,9 +23,9 @@
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="12dp"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="28dp"
+        android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -54,7 +54,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingTop="12dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="110dp">
 
             <!-- Item 1 -->
             <androidx.cardview.widget.CardView
@@ -166,7 +166,7 @@
         android:id="@+id/cardBottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:layout_marginHorizontal="12dp"
+        android:layout_marginHorizontal="20dp"
         android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="36dp"
@@ -225,6 +225,7 @@
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
                         android:textSize="9sp"
+                        android:includeFontPadding="false"
                         android:maxLines="1"
                         android:singleLine="true" />
                 </LinearLayout>
@@ -239,7 +240,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
                     android:focusable="true"
-                    android:contentDescription="Bookings">
+                    android:contentDescription="Deliveries">
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
@@ -254,6 +255,7 @@
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
                         android:textSize="9sp"
+                        android:includeFontPadding="false"
                         android:maxLines="1"
                         android:singleLine="true" />
                 </LinearLayout>
@@ -268,7 +270,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
                     android:focusable="true"
-                    android:contentDescription="Packages">
+                    android:contentDescription="History">
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
@@ -283,6 +285,7 @@
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
                         android:textSize="9sp"
+                        android:includeFontPadding="false"
                         android:maxLines="1"
                         android:singleLine="true" />
                 </LinearLayout>
@@ -297,7 +300,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
                     android:focusable="true"
-                    android:contentDescription="Clients">
+                    android:contentDescription="Alerts">
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
@@ -342,6 +345,7 @@
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
                         android:textSize="9sp"
+                        android:includeFontPadding="false"
                         android:maxLines="1"
                         android:singleLine="true" />
                 </LinearLayout>
