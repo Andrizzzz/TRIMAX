@@ -28,6 +28,7 @@ public class DriverMapActivity extends AppCompatActivity {
     private String deliveryCode;
     private MockMapView mockMapView;
     private Delivery currentDelivery;
+    private boolean hasCenteredOnLiveFix = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +88,8 @@ public class DriverMapActivity extends AppCompatActivity {
 
         if (mockMapView != null) {
             mockMapView.setDriverMarkerVisible(true);
+            mockMapView.setLiveDriverRouteOrigin(true);
+            mockMapView.setDestinationPinEnabled(false);
             mockMapView.setOnLocationChangeListener((address, distanceText) -> {
                 if (tvDestAddress != null) tvDestAddress.setText(address);
                 if (tvEstTime != null) tvEstTime.setText(distanceText);
@@ -99,14 +102,21 @@ public class DriverMapActivity extends AppCompatActivity {
                 tvDestAddress.setText(currentDelivery.getDestination());
             }
 
-            // Automatically start live GPS tracking and center map on driver location
+            // Track real GPS; center on the first valid fix instead of the hard-coded hub.
             locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
                 if (mockMapView != null) {
                     mockMapView.updateDriverLocation(latitude, longitude);
+                    if (!hasCenteredOnLiveFix) {
+                        hasCenteredOnLiveFix = true;
+                        mockMapView.recenter();
+                    }
                 }
             });
-            mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-            mockMapView.recenter();
+            if (locationHelper.hasValidLocationFix()) {
+                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+                mockMapView.recenter();
+                hasCenteredOnLiveFix = true;
+            }
         }
 
         if (btnZoomIn != null && mockMapView != null) btnZoomIn.setOnClickListener(v -> mockMapView.zoomIn());
@@ -116,9 +126,13 @@ public class DriverMapActivity extends AppCompatActivity {
                 locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
                     if (mockMapView != null) mockMapView.updateDriverLocation(latitude, longitude);
                 });
-                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-                mockMapView.recenter();
-                Toast.makeText(this, "Map centered on driver location", Toast.LENGTH_SHORT).show();
+                if (locationHelper.hasValidLocationFix()) {
+                    mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+                    mockMapView.recenter();
+                    Toast.makeText(this, "Map centered on current GPS location", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Waiting for a valid GPS fix. Check location permission and GPS.", Toast.LENGTH_LONG).show();
+                }
             });
         }
         if (btnStartNavigation != null) btnStartNavigation.setOnClickListener(v -> startTurnByTurnNavigation());
@@ -207,9 +221,16 @@ public class DriverMapActivity extends AppCompatActivity {
             if (locationHelper != null) {
                 locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
                     mockMapView.updateDriverLocation(latitude, longitude);
+                    if (!hasCenteredOnLiveFix) {
+                        hasCenteredOnLiveFix = true;
+                        mockMapView.recenter();
+                    }
                 });
-                mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
-                mockMapView.recenter();
+                if (locationHelper.hasValidLocationFix()) {
+                    mockMapView.updateDriverLocation(locationHelper.getLatitude(), locationHelper.getLongitude());
+                    mockMapView.recenter();
+                    hasCenteredOnLiveFix = true;
+                }
             }
         }
     }
