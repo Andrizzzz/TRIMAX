@@ -293,13 +293,35 @@ public class DashboardActivity extends AppCompatActivity {
         }
         View supportCard = findViewById(R.id.cardAgentAttendance);
         if (supportCard != null) {
-            supportCard.setOnClickListener(v -> new AlertDialog.Builder(DashboardActivity.this)
-                    .setTitle("TRIMAX Support")
-                    .setMessage("Need help with a booking or delivery? Open Notifications for the latest updates, or contact your TRIMAX administrator for assistance.")
-                    .setPositiveButton("Open Notifications", (dialog, which) ->
-                            startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class)))
-                    .setNegativeButton("Close", null)
-                    .show());
+            supportCard.setOnClickListener(v -> {
+                View supportView = getLayoutInflater().inflate(R.layout.dialog_help_support, null);
+                AlertDialog supportDialog = new AlertDialog.Builder(DashboardActivity.this)
+                        .setView(supportView)
+                        .create();
+                supportDialog.show();
+
+                View closeSupport = supportView.findViewById(R.id.btnCloseSupport);
+                View callSupport = supportView.findViewById(R.id.cardSupportCall);
+                View emailSupport = supportView.findViewById(R.id.cardSupportEmail);
+
+                if (closeSupport != null) {
+                    closeSupport.setOnClickListener(close -> supportDialog.dismiss());
+                }
+                if (callSupport != null) {
+                    callSupport.setOnClickListener(call -> {
+                        supportDialog.dismiss();
+                        startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:0281234567")));
+                    });
+                }
+                if (emailSupport != null) {
+                    emailSupport.setOnClickListener(email -> {
+                        supportDialog.dismiss();
+                        Intent mail = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:support@trimax.ph"));
+                        mail.putExtra(Intent.EXTRA_SUBJECT, "TRIMAX Help & Support");
+                        startActivity(Intent.createChooser(mail, "Contact TRIMAX Support"));
+                    });
+                }
+            });
         }
 
         // 4. DASHBOARD STATS CARDS
