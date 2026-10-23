@@ -25,10 +25,11 @@
     <string name="cd_trimax_logo">TRI-MAX Logo</string>
     <string name="login_subtitle">Smarter Deliveries.\nBetter Connections.</string>
     <string name="cd_delivery_vehicle">Delivery Vehicle Illustration</string>
-    <string name="hint_username">Username</string>
+    <string name="hint_username">Email address for mobile sign-in</string>
     <string name="hint_password">Password</string>
     <string name="btn_login">Login</string>
     <string name="forgot_password">Forgot Password?</string>
+    <string name="mobile_login_help">Use your confirmed Supabase mobile email and password. Desktop usernames and one-time setup codes do not work here. If you have not been set up for mobile access, contact your TRIMAX administrator.</string>
     <string name="create_account">Create Account</string>
     <string name="prompt_register">Don\'t have an account? Register</string>
 
