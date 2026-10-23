@@ -1,6 +1,7 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -12,9 +13,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
@@ -26,7 +30,11 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DriverDashboardActivity extends AppCompatActivity {
 
@@ -50,6 +58,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
     private Delivery currentHeroDelivery;
 
+    private ActivityResultLauncher<Intent> attendanceCameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private boolean isEndingDuty = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +82,83 @@ public class DriverDashboardActivity extends AppCompatActivity {
         locationHelper = new LocationHelper(this);
 
         drawerLayout = findViewById(R.id.drawerLayout);
+
+        attendanceCameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Bitmap photoBitmap = null;
+                        if (result.getData() != null && result.getData().getExtras() != null) {
+                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
+                        }
+
+                        if (photoBitmap != null) {
+                            File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
+                                    DriverDashboardActivity.this,
+                                    photoBitmap,
+                                    "DRIVER_DUTY_ATTENDANCE",
+                                    locationHelper.getLatitude(),
+                                    locationHelper.getLongitude()
+                            );
+
+                            String path = savedFile != null ? savedFile.getAbsolutePath() : "";
+                            boolean saved;
+                            if (isEndingDuty) {
+                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            } else {
+                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            }
+
+                            if (saved) {
+                                if (isEndingDuty) {
+                                    session.setDutyOnline(false);
+                                    locationHelper.stopLocationUpdates();
+                                    updateDutyUI();
+                                    Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
+                                } else {
+                                    session.setDutyOnline(true);
+                                    locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+                                        dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
+                                        updateDutyUI();
+                                    });
+                                    updateDutyUI();
+                                    Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Started.", Toast.LENGTH_LONG).show();
+                                    dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                                }
+                            } else {
+                                Toast.makeText(DriverDashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
+                            }
+                            isEndingDuty = false;
+                        } else {
+                            Toast.makeText(DriverDashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(DriverDashboardActivity.this, "Attendance photo capture cancelled.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (granted) {
+                        launchAttendanceCamera();
+                    } else {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Camera Permission Required")
+                                .setMessage("Camera access is needed to take your attendance verification photo. Enable Camera permission in App Settings.")
+                                .setPositiveButton("Open Settings", (dialog, which) -> {
+                                    try {
+                                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                        intent.setData(android.net.Uri.fromParts("package", getPackageName(), null));
+                                        startActivity(intent);
+                                    } catch (Exception ignored) {}
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    }
+                }
+        );
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -437,19 +526,36 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 Toast.makeText(this, "Cannot end duty while you have an active delivery in progress!", Toast.LENGTH_LONG).show();
                 return;
             }
-            session.setDutyOnline(false);
-            locationHelper.stopLocationUpdates();
-            Toast.makeText(this, "Driver Duty ended. You are now OFFLINE.", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setTitle("End Duty Shift")
+                    .setMessage("Photo verification is required to end your active duty shift.")
+                    .setPositiveButton("Take Photo & End Duty", (dialog, which) -> {
+                        isEndingDuty = true;
+                        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            launchAttendanceCamera();
+                        } else {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         } else {
-            session.setDutyOnline(true);
-            locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
-                updateDutyUI();
-            });
-            Toast.makeText(this, "Driver Duty started! GPS tracking active.", Toast.LENGTH_SHORT).show();
-            dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+            isEndingDuty = false;
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                launchAttendanceCamera();
+            } else {
+                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+            }
         }
-        updateDutyUI();
+    }
+
+    private void launchAttendanceCamera() {
+        Intent takePictureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            attendanceCameraLauncher.launch(takePictureIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateDutyUI() {
