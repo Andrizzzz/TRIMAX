@@ -46,6 +46,16 @@ public class DriverHistoryActivity extends AppCompatActivity {
                 int baseTopPadding = Math.round(16 * getResources().getDisplayMetrics().density);
                 topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
             }
+            // Match the shared driver-screen layout: keep the floating navigation clear of system bars.
+            View bottomNav = findViewById(R.id.cardBottomNavContainer);
+            if (bottomNav != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
+                if (params.bottomMargin != desiredBottomMargin) {
+                    params.bottomMargin = desiredBottomMargin;
+                    bottomNav.setLayoutParams(params);
+                }
+            }
             return insets;
         });
 
@@ -71,19 +81,6 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
         updateFilterChipStyles();
         loadHistory();
-
-        // Keep the floating bottom navigation above the system navigation/gesture area.
-        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
-        if (cardBottomNavContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
-                params.bottomMargin = baseMargin + systemBars.bottom;
-                v.setLayoutParams(params);
-                return insets;
-            });
-        }
 
         setupBottomNavigation();
     }
