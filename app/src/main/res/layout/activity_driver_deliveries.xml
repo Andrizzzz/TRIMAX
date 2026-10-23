@@ -64,7 +64,7 @@
         android:id="@+id/cardBottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:layout_marginHorizontal="20dp"
+        android:layout_marginHorizontal="12dp"
         android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="36dp"
@@ -94,8 +94,8 @@
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:background="@android:color/transparent"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="8dp"
+                android:paddingHorizontal="2dp"
+                android:paddingVertical="5dp"
                 android:weightSum="5">
 
                 <LinearLayout
@@ -110,8 +110,8 @@
                     android:focusable="true"
                     android:contentDescription="Home">
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/ic_home"
                         app:tint="@color/bottom_nav_icon_color"
                         android:duplicateParentState="true"
@@ -122,9 +122,10 @@
                         android:text="Home"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:includeFontPadding="false"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:singleLine="true" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -139,8 +140,8 @@
                     android:focusable="true"
                     android:contentDescription="Deliveries">
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/ic_bookings"
                         app:tint="@color/bottom_nav_icon_color"
                         android:duplicateParentState="true"
@@ -151,9 +152,10 @@
                         android:text="Deliveries"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:includeFontPadding="false"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:singleLine="true" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -168,8 +170,8 @@
                     android:focusable="true"
                     android:contentDescription="History">
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/ic_categories"
                         app:tint="@color/bottom_nav_icon_color"
                         android:duplicateParentState="true"
@@ -180,9 +182,10 @@
                         android:text="History"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:includeFontPadding="false"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:singleLine="true" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -197,8 +200,8 @@
                     android:focusable="true"
                     android:contentDescription="Alerts">
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/ic_clients"
                         app:tint="@color/bottom_nav_icon_color"
                         android:duplicateParentState="true"
@@ -209,9 +212,10 @@
                         android:text="Notifications"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:includeFontPadding="false"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:singleLine="true" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -226,8 +230,8 @@
                     android:focusable="true"
                     android:contentDescription="Profile">
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/ic_account"
                         app:tint="@color/bottom_nav_icon_color"
                         android:duplicateParentState="true"
@@ -238,9 +242,10 @@
                         android:text="Profile"
                         android:textColor="@color/bottom_nav_text_color"
                         android:duplicateParentState="true"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:includeFontPadding="false"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:singleLine="true" />
                 </LinearLayout>
 
             </LinearLayout>
