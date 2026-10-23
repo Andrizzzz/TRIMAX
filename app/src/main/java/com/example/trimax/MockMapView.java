@@ -84,7 +84,7 @@ public class MockMapView extends FrameLayout {
     private boolean destinationPinEnabled = true;
     private GeoPoint lastRoutedDriverPoint;
 
-    private static final GeoPoint RIDER_POINT = new GeoPoint(14.7843468, 121.0579425); // Fixed TRIMAX Hub
+    private static final GeoPoint RIDER_POINT = new GeoPoint(14.7843353, 121.0604306); // Fixed TRIMAX Hub
 
     private final GeoPoint[] sampleGeoPoints = {
             new GeoPoint(14.8150, 121.0500), // Tungkong Mangga
@@ -579,7 +579,7 @@ public class MockMapView extends FrameLayout {
 
     public GeoPoint getPickupGeoPoint() {
         // Never use the movable driver marker as a booking pickup coordinate.
-        return new GeoPoint(14.7843468, 121.0579425);
+        return new GeoPoint(14.7843353, 121.0604306);
     }
 
     public GeoPoint getDestinationGeoPoint() {
