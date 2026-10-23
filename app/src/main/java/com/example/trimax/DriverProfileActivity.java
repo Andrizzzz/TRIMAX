@@ -37,8 +37,20 @@ public class DriverProfileActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             View topBar = findViewById(R.id.topBar);
             if (topBar != null) {
-                int baseTopPadding = Math.round(16 * getResources().getDisplayMetrics().density);
-                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
+                int extraPadding = Math.round(16 * getResources().getDisplayMetrics().density);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + extraPadding,
+                        topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+
+            // Keep the floating navigation visible above the system navigation area.
+            View bottomNav = findViewById(R.id.cardBottomNavContainer);
+            if (bottomNav != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
+                if (params.bottomMargin != desiredBottomMargin) {
+                    params.bottomMargin = desiredBottomMargin;
+                    bottomNav.setLayoutParams(params);
+                }
             }
             return insets;
         });
@@ -66,15 +78,7 @@ public class DriverProfileActivity extends AppCompatActivity {
         CardView cardChangePassword = findViewById(R.id.cardChangePassword);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            View topBar = findViewById(R.id.topBar);
-            if (topBar != null) {
-                int extraPadding = Math.round(12 * getResources().getDisplayMetrics().density);
-                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + extraPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
-            }
-            return insets;
-        });
+
 
         setupBottomNavigation();
 
