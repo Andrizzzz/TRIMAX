@@ -378,38 +378,47 @@ public class DriverDashboardActivity extends AppCompatActivity {
             btnHeroStartDelivery.setOnClickListener(v -> {
                 if (currentHeroDelivery == null || currentHeroRecord == null) return;
                 final String id = currentHeroDelivery.getBookingId();
-                DeliveryProgress.NextStep step = DeliveryProgress.nextStep(currentHeroRecord.status, currentHeroRecord.deliveryStatus);
-                if (!DeliveryProgress.STARTED.equals(step.target)) {
-                    // Already under way (or waiting for the admin): continue on the details screen.
-                    Intent intent = new Intent(this, DriverDeliveryDetailsActivity.class);
-                    intent.putExtra("DELIVERY_ID", id);
-                    startActivity(intent);
-                    return;
-                }
-                btnHeroStartDelivery.setEnabled(false);
-                Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
-                Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-                TrimaxApi.get(this).updateDeliveryStatus(currentHeroRecord.bookingId, DeliveryProgress.ASSIGNED,
-                        DeliveryProgress.STARTED, lat, lng, null, null, new TrimaxApi.Callback<BookingRecord>() {
-                            @Override
-                            public void onSuccess(BookingRecord saved) {
-                                if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
-                                dbHelper.logLocation(session.getUsername(), id, locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
-                                Toast.makeText(DriverDashboardActivity.this, "Delivery #" + id + " STARTED! GPS Tracking Active.", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(DriverDashboardActivity.this, DriverDeliveryDetailsActivity.class);
-                                intent.putExtra("DELIVERY_ID", id);
-                                startActivity(intent);
-                            }
+                String status = currentHeroDelivery.getStatus();
 
-                            @Override
-                            public void onError(ApiException error) {
-                                if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
-                                if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
-                                btnHeroStartDelivery.setEnabled(true);
-                                Toast.makeText(DriverDashboardActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                                loadAssignedHeroDelivery();
-                            }
-                        });
+                if ("ASSIGNED".equalsIgnoreCase(status)) {
+                    btnHeroStartDelivery.setEnabled(false);
+                    Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
+                    Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
+                    TrimaxApi.get(this).updateDeliveryStatus(currentHeroRecord.bookingId, DeliveryProgress.ASSIGNED,
+                            DeliveryProgress.STARTED, lat, lng, null, null, new TrimaxApi.Callback<BookingRecord>() {
+                                @Override
+                                public void onSuccess(BookingRecord saved) {
+                                    if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                                    dbHelper.logLocation(session.getUsername(), id, locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                                    Toast.makeText(DriverDashboardActivity.this, "Delivery #" + id + " STARTED! Opening Navigation...", Toast.LENGTH_SHORT).show();
+
+                                    Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
+                                    intent.putExtra("DELIVERY_ID", id);
+                                    intent.putExtra("DEST_ADDRESS", currentHeroDelivery.getDestination());
+                                    intent.putExtra("DEST_LAT", currentHeroDelivery.getDestinationLatitude());
+                                    intent.putExtra("DEST_LNG", currentHeroDelivery.getDestinationLongitude());
+                                    intent.putExtra("CUSTOMER_NAME", currentHeroDelivery.getCustomerName());
+                                    startActivity(intent);
+                                }
+
+                                @Override
+                                public void onError(ApiException error) {
+                                    if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                                    if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
+                                    btnHeroStartDelivery.setEnabled(true);
+                                    Toast.makeText(DriverDashboardActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                                    loadAssignedHeroDelivery();
+                                }
+                            });
+                } else {
+                    Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
+                    intent.putExtra("DELIVERY_ID", id);
+                    intent.putExtra("DEST_ADDRESS", currentHeroDelivery.getDestination());
+                    intent.putExtra("DEST_LAT", currentHeroDelivery.getDestinationLatitude());
+                    intent.putExtra("DEST_LNG", currentHeroDelivery.getDestinationLongitude());
+                    intent.putExtra("CUSTOMER_NAME", currentHeroDelivery.getCustomerName());
+                    startActivity(intent);
+                }
             });
         }
 
@@ -544,7 +553,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         } else {
             tvHeroStatusPill.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvHeroStatusPill.setTextColor(0xFF059669);
-            btnHeroStartDelivery.setText("CONTINUE DELIVERY");
+            btnHeroStartDelivery.setText("OPEN NAVIGATION");
         }
     }
 
