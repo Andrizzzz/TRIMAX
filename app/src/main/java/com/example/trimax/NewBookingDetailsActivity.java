@@ -32,6 +32,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
     private double pickupLat, pickupLng, destLat, destLng;
 
     private List<ServicePackage> servicePackages;
+    private final java.util.Map<String, Integer> stockByPackage = new java.util.HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,8 +74,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         btnContinue = findViewById(R.id.btnContinue);
         btnBackStep = findViewById(R.id.btnBackStep);
 
-        initServicePackages();
-        populatePackageCards();
+        servicePackages = new ArrayList<>();
+        loadProducts();
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
         if (btnBackStep != null) btnBackStep.setOnClickListener(v -> finish());
@@ -91,6 +92,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 StringBuilder serviceBuilder = new StringBuilder();
                 double totalPrice = 0;
                 int totalQuantity = 0;
+                List<ServicePackage> chosen = new ArrayList<>();
 
                 for (ServicePackage pkg : servicePackages) {
                     if (pkg.getQuantity() > 0) {
@@ -100,7 +102,15 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                         serviceBuilder.append(pkg.getName()).append(" (x").append(pkg.getQuantity()).append(")");
                         totalPrice += pkg.getStartingPrice() * pkg.getQuantity();
                         totalQuantity += pkg.getQuantity();
+                        chosen.add(pkg);
                     }
+                }
+                // Products and quantities travel to the summary; the server prices them again when saving.
+                int[] productIds = new int[chosen.size()];
+                int[] productQuantities = new int[chosen.size()];
+                for (int i = 0; i < chosen.size(); i++) {
+                    productIds[i] = productIdOf(chosen.get(i));
+                    productQuantities[i] = chosen.get(i).getQuantity();
                 }
 
                 if (serviceBuilder.length() == 0) {
@@ -128,18 +138,73 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 summaryIntent.putExtra("PICKUP_LNG", pickupLng);
                 summaryIntent.putExtra("DEST_LAT", destLat);
                 summaryIntent.putExtra("DEST_LNG", destLng);
+                summaryIntent.putExtra("PRODUCT_IDS", productIds);
+                summaryIntent.putExtra("PRODUCT_QUANTITIES", productQuantities);
+                summaryIntent.putExtra("ESTIMATED_TOTAL", totalPrice);
                 startActivity(summaryIntent);
             });
         }
     }
 
-    private void initServicePackages() {
-        servicePackages = new ArrayList<>();
-        servicePackages.add(new ServicePackage("pkg_coke", "Coke Case (24 Bottles)", "Wholesale delivery of Coca-Cola cases.", 180.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
-        servicePackages.add(new ServicePackage("pkg_sprite", "Sprite Case (24 Bottles)", "Wholesale delivery of Sprite cases.", 180.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
-        servicePackages.add(new ServicePackage("pkg_royal", "Royal Case (24 Bottles)", "Wholesale delivery of Royal orange soda cases.", 175.00, R.drawable.ic_delivery_van, null, "Up to 15 kg", "40x30x30 cm", "1 day"));
-        servicePackages.add(new ServicePackage("pkg_standard", "Standard Delivery", "For medium-sized packages.", 99.00, R.drawable.ic_delivery_scooter, null, "Up to 5 kg", "50x40x30 cm", "1 day"));
-        servicePackages.add(new ServicePackage("pkg_fragile", "Fragile Delivery", "For delicate and high-value items.", 499.00, R.drawable.ic_delivery_scooter, null, "Up to 10 kg", "50x40x30 cm", "1 day"));
+    // The products, prices and stock are the ones on the TRIMAX server (the desktop Inventory), not a list
+    // built into the app, so what the agent orders is what the warehouse actually has.
+    private void loadProducts() {
+        if (btnContinue != null) btnContinue.setEnabled(false);
+        showProductMessage("Loading products...", false);
+        TrimaxApi.get(this).listProducts(new TrimaxApi.Callback<List<Product>>() {
+            @Override
+            public void onSuccess(List<Product> products) {
+                if (SessionGuard.isGone(NewBookingDetailsActivity.this)) return;
+                servicePackages = new ArrayList<>();
+                stockByPackage.clear();
+                for (Product p : products) {
+                    ServicePackage pkg = new ServicePackage("product:" + p.id, p.name,
+                            p.stock > 0 ? "In stock: " + p.stock : "Out of stock",
+                            p.price, R.drawable.ic_delivery_van, null, "", "", "");
+                    servicePackages.add(pkg);
+                    stockByPackage.put(pkg.getId(), p.stock);
+                }
+                if (servicePackages.isEmpty()) {
+                    showProductMessage("No products are available. Ask your administrator.", true);
+                    return;
+                }
+                populatePackageCards();
+                if (btnContinue != null) btnContinue.setEnabled(true);
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(NewBookingDetailsActivity.this)) return;
+                if (SessionGuard.handle(NewBookingDetailsActivity.this, error)) return;
+                showProductMessage(error.getMessage(), true);
+            }
+        });
+    }
+
+    private void showProductMessage(String message, boolean withRetry) {
+        if (containerPackageCards == null) return;
+        containerPackageCards.removeAllViews();
+        TextView tv = new TextView(this);
+        tv.setText(message);
+        tv.setTextSize(15);
+        tv.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary));
+        int pad = Math.round(16 * getResources().getDisplayMetrics().density);
+        tv.setPadding(pad, pad, pad, pad / 2);
+        containerPackageCards.addView(tv);
+        if (withRetry) {
+            MaterialButton retry = new MaterialButton(this);
+            retry.setText("Retry");
+            retry.setOnClickListener(v -> loadProducts());
+            containerPackageCards.addView(retry);
+        }
+    }
+
+    private static int productIdOf(ServicePackage pkg) {
+        try {
+            return Integer.parseInt(pkg.getId().substring("product:".length()));
+        } catch (RuntimeException e) {
+            return 0;
+        }
     }
 
     private void populatePackageCards() {
@@ -173,6 +238,12 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
             if (btnPlus != null) {
                 btnPlus.setOnClickListener(v -> {
+                    Integer stock = stockByPackage.get(pkg.getId());
+                    if (stock != null && pkg.getQuantity() >= stock) {
+                        android.widget.Toast.makeText(this, stock > 0 ? "Only " + stock + " in stock." : "Out of stock.",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     pkg.setQuantity(pkg.getQuantity() + 1);
                     if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
                 });
@@ -186,7 +257,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (btnContinue != null) {
-            btnContinue.setEnabled(true);
+            btnContinue.setEnabled(servicePackages != null && !servicePackages.isEmpty());
         }
     }
 }

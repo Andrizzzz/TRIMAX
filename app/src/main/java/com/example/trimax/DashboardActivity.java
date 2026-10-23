@@ -326,8 +326,7 @@ public class DashboardActivity extends AppCompatActivity {
 
         // 4. DASHBOARD STATS CARDS
 
-        // 5. RECENT BOOKING CARDS
-        loadRecentBookings();
+        // 5. RECENT BOOKING CARDS: loaded from the server in onResume (refreshDashboardContent).
 
         // 6. "VIEW ALL" & 7. "NEW BOOKING" BUTTONS
         if (tvViewAll != null) {
@@ -493,14 +492,36 @@ public class DashboardActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private void loadRecentBookings() {
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        List<Delivery> bookings = dbHelper.getAllBookings();
+    /** Tiles and the two most recent cards, from the agent's own bookings on the TRIMAX server. */
+    private void loadDashboardBookings() {
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(DashboardActivity.this)) return;
+                updateDashboardStats(records);
+                List<Delivery> bookings = new java.util.ArrayList<>();
+                for (BookingRecord r : records) bookings.add(r.toDelivery(false));
+                loadRecentBookings(bookings);
+            }
 
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(DashboardActivity.this)) return;
+                if (SessionGuard.handle(DashboardActivity.this, error)) return;
+                android.widget.Toast.makeText(DashboardActivity.this,
+                        "Could not load your bookings: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void loadRecentBookings(List<Delivery> bookings) {
         CardView card1 = findViewById(R.id.cardDashboardBooking1);
         CardView card2 = findViewById(R.id.cardDashboardBooking2);
 
-        if (bookings != null && !bookings.isEmpty()) {
+        if (bookings == null || bookings.isEmpty()) {
+            if (card1 != null) card1.setVisibility(View.GONE);
+            if (card2 != null) card2.setVisibility(View.GONE);
+        } else {
             if (card1 != null) {
                 if (bookings.size() > 0) {
                     card1.setVisibility(View.VISIBLE);
@@ -526,7 +547,7 @@ public class DashboardActivity extends AppCompatActivity {
         TextView tvCustomerDate = card.findViewById(index == 1 ? R.id.tvCard1CustomerDate : R.id.tvCard2CustomerDate);
         TextView tvAmount = card.findViewById(index == 1 ? R.id.tvCard1Amount : R.id.tvCard2Amount);
 
-        if (tvId != null) tvId.setText(delivery.getBookingId());
+        if (tvId != null) tvId.setText("#" + delivery.getBookingId());
         if (tvStatus != null) {
             tvStatus.setText(delivery.getStatus());
             if ("CONFIRMED".equalsIgnoreCase(delivery.getStatus())) {
@@ -563,24 +584,22 @@ public class DashboardActivity extends AppCompatActivity {
     private void refreshDashboardContent() {
         updateHeaderUI();
         updateAttendanceUI();
-        updateDashboardStats();
-        loadRecentBookings();
+        loadDashboardBookings();
     }
 
-    private void updateDashboardStats() {
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
+    private void updateDashboardStats(List<BookingRecord> records) {
         TextView tvStatTotalCount = findViewById(R.id.tvStatTotalCount);
         TextView tvStatPendingCount = findViewById(R.id.tvStatPendingCount);
         TextView tvStatConfirmedCount = findViewById(R.id.tvStatConfirmedCount);
 
         if (tvStatTotalCount != null) {
-            tvStatTotalCount.setText(String.valueOf(dbHelper.getBookingCountByStatus("ALL")));
+            tvStatTotalCount.setText(String.valueOf(BookingFilter.count(records, "ALL")));
         }
         if (tvStatPendingCount != null) {
-            tvStatPendingCount.setText(String.valueOf(dbHelper.getBookingCountByStatus("PENDING")));
+            tvStatPendingCount.setText(String.valueOf(BookingFilter.count(records, "PENDING")));
         }
         if (tvStatConfirmedCount != null) {
-            tvStatConfirmedCount.setText(String.valueOf(dbHelper.getBookingCountByStatus("CONFIRMED")));
+            tvStatConfirmedCount.setText(String.valueOf(BookingFilter.count(records, "CONFIRMED")));
         }
     }
 
