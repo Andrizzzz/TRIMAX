@@ -9,8 +9,8 @@
 
     <!-- Top Left Accent Background Decor -->
     <ImageView
-        android:layout_width="220dp"
-        android:layout_height="220dp"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
         android:contentDescription="Background Accent"
         android:scaleType="fitStart"
         android:src="@drawable/bg_top_left_accent"
@@ -100,7 +100,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="8dp"
+            android:paddingTop="14dp"
             android:paddingBottom="36dp">
 
             <!-- 1. PACKAGE & CUSTOMER CARD -->
