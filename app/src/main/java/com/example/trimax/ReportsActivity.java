@@ -154,7 +154,6 @@ public class ReportsActivity extends AppCompatActivity {
         if (tvInsights != null) {
             int failed = failedCount;
             int completed = completedCount;
-            int completionRate = total == 0 ? 0 : Math.round(completed * 100f / total);
             List<Delivery> reportBookings = getFilteredBookings();
             Map<String, Integer> destinations = new HashMap<>();
             Map<String, Integer> drivers = new HashMap<>();
@@ -167,7 +166,7 @@ public class ReportsActivity extends AppCompatActivity {
             String topDestination = mostFrequent(destinations);
             String busiestDriver = mostFrequent(drivers);
             StringBuilder insights = new StringBuilder();
-            insights.append("Completion rate: ").append(completionRate).append("%\n");
+            insights.append(ReportText.completionRate(completed, total)).append("\n");
             if (pending > 0) insights.append("Action needed: ").append(pending).append(" booking(s) are still pending.\n");
             if (failed > 0) insights.append("Review needed: ").append(failed).append(" booking(s) have failed.\n");
             if (cancelled > 0) insights.append("Cancelled bookings: ").append(cancelled).append(". Review cancellation reasons if recorded.\n");
@@ -278,8 +277,7 @@ public class ReportsActivity extends AppCompatActivity {
     }
 
     private String csvCell(String value) {
-        String safe = value == null ? "" : value;
-        return "\"" + safe.replace("\"", "\"\"") + "\"";
+        return ReportText.csvCell(value);
     }
 
     private void requestSaveReport(byte[] bytes, String mimeType, String suggestedName, int requestCode) {
