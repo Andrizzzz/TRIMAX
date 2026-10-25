@@ -62,6 +62,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
     private boolean isEndingDuty = false;
+    /** File the camera app writes the full-size attendance photo into. */
+    private File pendingDutyCapture;
+    /** Start duty was tapped before location permission was answered: continue to the camera after. */
+    private boolean dutyStartWaitingForLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,18 +94,32 @@ public class DriverDashboardActivity extends AppCompatActivity {
                         Toast.makeText(this, "Location is off: the admin map will not show you while on duty.",
                                 Toast.LENGTH_LONG).show();
                     }
+                    if (dutyStartWaitingForLocation) {     // continue the Start duty that asked for it
+                        dutyStartWaitingForLocation = false;
+                        openAttendanceCameraWithPermission();
+                    }
                 });
+        if (savedInstanceState != null) {
+            isEndingDuty = savedInstanceState.getBoolean("duty_ending", false);
+            String pending = savedInstanceState.getString("duty_capture", null);
+            pendingDutyCapture = pending != null ? new File(pending) : null;
+        }
 
         drawerLayout = findViewById(R.id.drawerLayout);
 
         attendanceCameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    File rawCapture = pendingDutyCapture;
+                    pendingDutyCapture = null;
                     if (result.getResultCode() == RESULT_OK) {
-                        Bitmap photoBitmap = null;
-                        if (result.getData() != null && result.getData().getExtras() != null) {
-                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
+                        // Full-size photo from the file the camera wrote; the camera's small preview otherwise.
+                        Bitmap photoBitmap = CameraCapture.readUpright(rawCapture);
+                        if (photoBitmap == null && result.getData() != null && result.getData().getExtras() != null) {
+                            Object preview = result.getData().getExtras().get("data");
+                            if (preview instanceof Bitmap) photoBitmap = (Bitmap) preview;
                         }
+                        if (rawCapture != null) rawCapture.delete();   // the stamped copy below is kept
 
                         if (photoBitmap != null) {
                             File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
@@ -114,9 +132,12 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
                             onAttendancePhoto(savedFile, photoBitmap);
                         } else {
+                            stopGpsWarmUp();
                             Toast.makeText(DriverDashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        if (rawCapture != null) rawCapture.delete();
+                        stopGpsWarmUp();
                         Toast.makeText(DriverDashboardActivity.this, "Attendance photo capture cancelled.", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -585,8 +606,31 @@ public class DriverDashboardActivity extends AppCompatActivity {
             @Override
             public void onFinished() {
                 setDutyButtonBusy(false);
+                stopGpsWarmUp();
             }
         });
+    }
+
+    /**
+     * GPS for the attendance record itself: started when Start/End duty is tapped, so a position is
+     * ready by the time the photo is taken (off duty, the dashboard does not track otherwise).
+     */
+    private void warmUpGps() {
+        if (!locationHelper.isTrackingActive() && locationHelper.hasLocationPermission()) {
+            locationHelper.startLocationUpdates(null);
+        }
+    }
+
+    /** Off duty again (or the start did not happen): stop the GPS the attendance step started. */
+    private void stopGpsWarmUp() {
+        if (!session.isDutyOnline()) locationHelper.stopLocationUpdates();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("duty_ending", isEndingDuty);
+        if (pendingDutyCapture != null) outState.putString("duty_capture", pendingDutyCapture.getAbsolutePath());
     }
 
     private void applyDutyChange(boolean nowOnDuty, String photoPath, double lat, double lng) {
@@ -673,19 +717,37 @@ public class DriverDashboardActivity extends AppCompatActivity {
                     .show();
         } else {
             isEndingDuty = false;
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                launchAttendanceCamera();
-            } else {
-                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+            // The start record should carry where the driver is: ask for location once, before the camera.
+            if (!locationHelper.hasLocationPermission() && !askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                dutyStartWaitingForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION});
+                return;
             }
+            openAttendanceCameraWithPermission();
+        }
+    }
+
+    private void openAttendanceCameraWithPermission() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            launchAttendanceCamera();
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
         }
     }
 
     private void launchAttendanceCamera() {
-        Intent takePictureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        warmUpGps();
+        pendingDutyCapture = CameraCapture.newTargetFile(this, "DUTY");
+        Intent takePictureIntent = CameraCapture.intent(this, pendingDutyCapture);
         try {
             attendanceCameraLauncher.launch(takePictureIntent);
         } catch (Exception e) {
+            if (pendingDutyCapture != null) pendingDutyCapture.delete();
+            pendingDutyCapture = null;
+            stopGpsWarmUp();
             Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
         }
     }

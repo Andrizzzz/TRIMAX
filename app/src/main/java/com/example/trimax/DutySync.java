@@ -32,6 +32,9 @@ final class DutySync {
 
     private DutySync() {}
 
+    /** How long a start/end waits for a first GPS position (GPS was started when the button was tapped). */
+    private static final long GPS_WAIT_MS = 8000;
+
     static void record(Activity activity, boolean start, File photo, Bitmap fallback,
                        LocationHelper location, Listener listener) {
         byte[] jpeg = readJpeg(photo, fallback);
@@ -40,6 +43,29 @@ final class DutySync {
             listener.onFinished();
             return;
         }
+        // The admin's Attendance screen shows where the person was: give the GPS a few seconds if it is
+        // running but has no position yet. Without permission or GPS, the record is sent without one.
+        if (location != null && !location.hasValidLocationFix() && location.isTrackingActive()) {
+            android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
+            long until = android.os.SystemClock.uptimeMillis() + GPS_WAIT_MS;
+            Runnable poll = new Runnable() {
+                @Override
+                public void run() {
+                    if (SessionGuard.isGone(activity)) return;
+                    if (location.hasValidLocationFix() || android.os.SystemClock.uptimeMillis() >= until) {
+                        send(activity, start, jpeg, location, listener);
+                    } else {
+                        main.postDelayed(this, 400);
+                    }
+                }
+            };
+            main.postDelayed(poll, 400);
+            return;
+        }
+        send(activity, start, jpeg, location, listener);
+    }
+
+    private static void send(Activity activity, boolean start, byte[] jpeg, LocationHelper location, Listener listener) {
         boolean fix = location != null && location.hasValidLocationFix();
         Double lat = fix ? location.getLatitude() : null;
         Double lng = fix ? location.getLongitude() : null;
