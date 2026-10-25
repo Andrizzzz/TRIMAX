@@ -21,7 +21,6 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -791,8 +790,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
                     indicator.animate()
                             .translationX(targetX)
-                            .setDuration(140)
-                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .setDuration(380)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.4f))
                             .start();
                 });
             }

@@ -14,7 +14,6 @@ import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -164,8 +163,8 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
                     indicator.animate()
                             .translationX(targetX)
-                            .setDuration(140)
-                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .setDuration(380)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.4f))
                             .start();
                 });
             }

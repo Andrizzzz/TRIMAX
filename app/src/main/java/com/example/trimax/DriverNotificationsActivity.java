@@ -13,7 +13,6 @@ import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 
 import java.util.ArrayList;
@@ -279,8 +278,8 @@ public class DriverNotificationsActivity extends AppCompatActivity {
 
                     indicator.animate()
                             .translationX(targetX)
-                            .setDuration(140)
-                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .setDuration(380)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.4f))
                             .start();
                 });
             }

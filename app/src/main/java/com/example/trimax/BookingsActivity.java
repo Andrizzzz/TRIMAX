@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -372,8 +371,8 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
                     indicator.animate()
                             .translationX(targetX)
-                            .setDuration(140)
-                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .setDuration(380)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.4f))
                             .start();
                 });
             }
