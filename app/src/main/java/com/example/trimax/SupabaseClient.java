@@ -222,8 +222,16 @@ public final class SupabaseClient {
             r = send("POST", path, data, "image/jpeg", session.accessToken);
         }
         if (r.ok()) return;
-        if (r.status == 413) {
+        String body = r.body == null ? "" : r.body.toLowerCase(java.util.Locale.ROOT);
+        if (r.status == 409 || body.contains("already exists") || body.contains("duplicate")) {
+            return;   // a retry of an upload that reached the server: the photo (unique name) is already there
+        }
+        if (r.status == 413 || body.contains("payload too large") || body.contains("exceeded the maximum")) {
             throw new ApiException(ApiException.Kind.INVALID, "The photo is too large to upload.");
+        }
+        if (body.contains("bucket not found")) {
+            throw new ApiException(ApiException.Kind.SERVER,
+                    "The server is not set up for these photos yet. They stay on this phone and are sent later.");
         }
         if (r.status >= 400 && r.status < 500) {
             throw new ApiException(ApiException.Kind.FORBIDDEN,

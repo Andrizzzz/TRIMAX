@@ -39,6 +39,10 @@ public class DriverProofActivity extends AppCompatActivity {
     private Delivery currentDelivery;
     private boolean photoCaptured = false;
     private String capturedPhotoPath = "";
+    /** File the camera app writes the full-size photo into (kept across a process restart). */
+    private File pendingCapture;
+    private static final String STATE_PHOTO = "proof_photo_path";
+    private static final String STATE_PENDING = "proof_pending_capture";
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
 
@@ -67,6 +71,12 @@ public class DriverProofActivity extends AppCompatActivity {
             return;
         }
         deliveryCode = deliveryCode.trim();
+        if (savedInstanceState != null) {
+            capturedPhotoPath = savedInstanceState.getString(STATE_PHOTO, "");
+            photoCaptured = !capturedPhotoPath.isEmpty() && new File(capturedPhotoPath).isFile();
+            String pending = savedInstanceState.getString(STATE_PENDING, null);
+            pendingCapture = pending != null ? new File(pending) : null;
+        }
 
         ImageView btnBack = findViewById(R.id.btnBack);
         TextView tvProofCustomerInfo = findViewById(R.id.tvProofCustomerInfo);
@@ -89,8 +99,9 @@ public class DriverProofActivity extends AppCompatActivity {
 
         confirmButton = btnConfirmDelivery;
         confirmLabel = btnConfirmDelivery != null ? btnConfirmDelivery.getText() : "OK";
-        if (btnConfirmDelivery != null) btnConfirmDelivery.setEnabled(false);   // until the server says ARRIVED
+        if (btnConfirmDelivery != null) btnConfirmDelivery.setEnabled(false);   // until the server says it is under way
         loadFromServer(tvProofCustomerInfo, etRecipientName);
+        showPhotoPreview();   // a photo taken before the screen was recreated
 
         cameraPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
@@ -116,11 +127,16 @@ public class DriverProofActivity extends AppCompatActivity {
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    File rawCapture = pendingCapture;
+                    pendingCapture = null;
                     if (result.getResultCode() == RESULT_OK) {
-                        Bitmap photoBitmap = null;
-                        if (result.getData() != null && result.getData().getExtras() != null) {
-                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
+                        // Full-size photo from the file the camera wrote; the camera's small preview otherwise.
+                        Bitmap photoBitmap = CameraCapture.readUpright(rawCapture);
+                        if (photoBitmap == null && result.getData() != null && result.getData().getExtras() != null) {
+                            Object preview = result.getData().getExtras().get("data");
+                            if (preview instanceof Bitmap) photoBitmap = (Bitmap) preview;
                         }
+                        deleteQuietly(rawCapture);   // the stamped copy below is the one kept
 
                         if (photoBitmap != null) {
                             File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
@@ -132,8 +148,12 @@ public class DriverProofActivity extends AppCompatActivity {
                             );
 
                             if (savedFile != null && savedFile.exists() && savedFile.length() > 0) {
+                                if (photoCaptured && !capturedPhotoPath.equals(savedFile.getAbsolutePath())) {
+                                    deleteQuietly(new File(capturedPhotoPath));   // retake: keep only the latest
+                                }
                                 photoCaptured = true;
                                 capturedPhotoPath = savedFile.getAbsolutePath();
+                                showPhotoPreview();
 
                                 if (tvPhotoLabel != null) {
                                     tvPhotoLabel.setText("✓ Delivery Photo Evidence Captured & Timestamped!");
@@ -147,6 +167,7 @@ public class DriverProofActivity extends AppCompatActivity {
                             Toast.makeText(this, "Failed to retrieve photo data from camera.", Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        deleteQuietly(rawCapture);
                         Toast.makeText(this, "Photo capture cancelled or failed.", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -168,9 +189,10 @@ public class DriverProofActivity extends AppCompatActivity {
     }
 
     // =====================================================================================
-    // Server: the delivery must be ARRIVED and assigned to this driver; DELIVERED completes the booking.
-    // The photo stays on this phone as evidence (it is not uploaded yet). OTP verification is not
-    // implemented on the server, so it is not asked for; the recipient's name is required instead.
+    // Server: the delivery must be started (STARTED, or an older build's in-between step) and assigned
+    // to this driver; DELIVERED completes the booking. The photo stays on this phone and is also sent to
+    // the office in the background (ProofUploader). OTP verification is not implemented on the server,
+    // so it is not asked for; the recipient's name is required instead.
     // =====================================================================================
 
     private BookingRecord currentRecord;
@@ -225,6 +247,10 @@ public class DriverProofActivity extends AppCompatActivity {
         } else if (DeliveryProgress.CANCELLED.equals(currentRecord.status)) {
             confirmButton.setEnabled(false);
             confirmButton.setText("CANCELLED");
+        } else if (!DeliveryProgress.isUnderWay(code)) {
+            // The server only accepts DELIVERED after Start (ASSIGNED -> DELIVERED is refused).
+            confirmButton.setEnabled(false);
+            confirmButton.setText(DeliveryProgress.FAILED.equals(code) ? "DELIVERY FAILED" : "START THE DELIVERY FIRST");
         } else {
             confirmButton.setText(confirmLabel);
             confirmButton.setEnabled(!submitting);
@@ -277,9 +303,12 @@ public class DriverProofActivity extends AppCompatActivity {
                         if (capturedPhotoPath != null && !capturedPhotoPath.isEmpty()) {
                             dbHelper.saveDeliveryProof(saved.idText(), session.getUsername(), capturedPhotoPath, recipientName,
                                     "", "NOT_VERIFIED", locationHelper.getLatitude(), locationHelper.getLongitude());
+                            // Also sent to the office in the background (queued until the server has it).
+                            ProofUploader.queue(getApplicationContext(), saved.bookingId, new File(capturedPhotoPath),
+                                    recipientName, lat, lng);
                         }
-                        Toast.makeText(DriverProofActivity.this, "Booking #" + saved.idText() + " delivered and completed.",
-                                Toast.LENGTH_LONG).show();
+                        Toast.makeText(DriverProofActivity.this, "Booking #" + saved.idText()
+                                + " delivered and completed. Sending the photo to the office…", Toast.LENGTH_LONG).show();
                         Intent intent = new Intent(DriverProofActivity.this, DriverDeliveriesActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(intent);
@@ -303,12 +332,58 @@ public class DriverProofActivity extends AppCompatActivity {
     }
 
     private void launchProofCamera() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Full-size photo: the camera app writes into our file (FileProvider); see CameraCapture.
+        pendingCapture = CameraCapture.newTargetFile(this, "PROOF_" + deliveryCode);
+        Intent takePictureIntent = CameraCapture.intent(this, pendingCapture);
         try {
             cameraLauncher.launch(takePictureIntent);
         } catch (Exception e) {
+            deleteQuietly(pendingCapture);
+            pendingCapture = null;
             Toast.makeText(this, "Unable to launch camera app on this device.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** Shows the taken photo in the capture card (the card's icon and text show until then). */
+    private void showPhotoPreview() {
+        ImageView preview = findViewById(R.id.ivProofPhoto);
+        View placeholder = findViewById(R.id.layoutPhotoPlaceholder);
+        boolean has = photoCaptured && !capturedPhotoPath.isEmpty() && new File(capturedPhotoPath).isFile();
+        if (preview != null) {
+            if (has) {
+                preview.setImageURI(null);   // reload after a retake
+                preview.setImageURI(Uri.fromFile(new File(capturedPhotoPath)));
+            }
+            preview.setVisibility(has ? View.VISIBLE : View.GONE);
+        }
+        if (placeholder != null) placeholder.setVisibility(has ? View.GONE : View.VISIBLE);
+    }
+
+    private static void deleteQuietly(File f) {
+        if (f != null && f.isFile()) {
+            //noinspection ResultOfMethodCallIgnored
+            f.delete();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_PHOTO, capturedPhotoPath);
+        if (pendingCapture != null) outState.putString(STATE_PENDING, pendingCapture.getAbsolutePath());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Own GPS listener for this screen (where the photo was taken and the delivery completed).
+        if (!locationHelper.isTrackingActive()) locationHelper.startLocationUpdates(null);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationHelper.stopLocationUpdates();
     }
 
     private void handleBackNavigation() {

@@ -294,7 +294,7 @@ public class DashboardActivity extends AppCompatActivity {
                 if (callSupport != null) {
                     callSupport.setOnClickListener(call -> {
                         supportDialog.dismiss();
-                        startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:0281234567")));
+                        startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getString(R.string.office_phone))));
                     });
                 }
                 if (emailSupport != null) {

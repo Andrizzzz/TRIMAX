@@ -190,6 +190,14 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadDeliveryData();
+        // GPS for this screen: status changes and problem reports carry where the driver was.
+        if (!locationHelper.isTrackingActive()) locationHelper.startLocationUpdates(null);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationHelper.stopLocationUpdates();
     }
 
     /** The delivery as the TRIMAX server has it; only deliveries assigned to the signed-in driver load. */
@@ -499,18 +507,10 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                 String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
                 String desc = "Reported: " + selectedType + (details.isEmpty() ? "" : " - " + details);
 
-                Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
-                Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-                double dLat = lat != null ? lat : 14.8115;
-                double dLng = lng != null ? lng : 121.0453;
-
-                boolean saved = dbHelper.saveProblemReport(currentDelivery.getBookingId(), session.getUsername(), selectedType, desc, dLat, dLng);
-                if (saved) {
-                    Toast.makeText(this, "Problem report saved successfully. Admin notified.", Toast.LENGTH_LONG).show();
-                    bottomSheetDialog.dismiss();
-                } else {
-                    Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-                }
+                // Kept on this phone and sent to the admin's Notifications (queued and retried when offline).
+                // The real GPS fix is sent only when there is one; no stand-in location goes to the admin.
+                IssueReporter.send(this, false, currentDelivery.getBookingId(), selectedType, desc, locationHelper);
+                bottomSheetDialog.dismiss();
             });
         }
         bottomSheetDialog.show();

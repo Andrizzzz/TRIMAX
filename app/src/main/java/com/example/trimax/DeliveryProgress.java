@@ -8,9 +8,11 @@ import java.util.Locale;
  * Booking status (set by the administrator, stored in bookings.status):
  *   Pending -> Confirmed -> In Progress -> Completed, or Cancelled.
  * Driver progress (stored in bookings.delivery_status, changed only through the server):
- *   ASSIGNED -> STARTED -> [PICKED_UP] -> ON_THE_WAY -> ARRIVED -> DELIVERED, or FAILED once started.
+ *   ASSIGNED -> STARTED -> DELIVERED (drop-off photo + recipient), or FAILED once started.
  * STARTED needs a Confirmed booking and moves it to In Progress; DELIVERED completes it. The server
  * enforces every rule; this class only decides what to show and which button to offer.
+ * PICKED_UP, ON_THE_WAY and ARRIVED are only on rows saved by older app builds; such a delivery can
+ * still be finished (DELIVERED) or failed, but nothing moves into those steps any more.
  */
 public final class DeliveryProgress {
 
@@ -33,11 +35,14 @@ public final class DeliveryProgress {
     private DeliveryProgress() {
     }
 
-    /** Same rule as trimax_private.delivery_transition_allowed on the server. */
+    /**
+     * Same rule as trimax_private.delivery_transition_allowed on the live server: a delivery must be
+     * started before it can be delivered or failed (the server answers TM422 to ASSIGNED -> DELIVERED).
+     */
     public static boolean canTransition(String from, String to) {
         if (from == null || to == null) return false;
         switch (from) {
-            case ASSIGNED:   return STARTED.equals(to) || DELIVERED.equals(to) || FAILED.equals(to);
+            case ASSIGNED:   return STARTED.equals(to);
             case STARTED:
             case PICKED_UP:
             case ON_THE_WAY:

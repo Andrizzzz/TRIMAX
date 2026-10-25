@@ -426,6 +426,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
         // After a restart or theme change the activity is new: resume live GPS if still on duty.
         if (session.isDutyOnline() && !locationHelper.isTrackingActive()) startDutyTracking();
         syncDutyFromServer();
+        IssueReporter.flush(this);          // SOS / problem reports made while offline
+        ProofUploader.flush(this);          // drop-off photos not yet on the server
 
         NavigationView dashboardDrawer = findViewById(R.id.navigationView);
         if (dashboardDrawer != null) {
@@ -748,18 +750,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
                 String desc = "Reported: " + selectedType + (details.isEmpty() ? "" : " - " + details);
 
-                Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
-                Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-                double dLat = lat != null ? lat : 14.8115;
-                double dLng = lng != null ? lng : 121.0453;
-
-                boolean saved = dbHelper.saveProblemReport(bookingId, session.getUsername(), selectedType, desc, dLat, dLng);
-                if (saved) {
-                    Toast.makeText(this, "Problem report saved successfully. Admin notified.", Toast.LENGTH_LONG).show();
-                    bottomSheetDialog.dismiss();
-                } else {
-                    Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-                }
+                // Kept on this phone and sent to the admin's Notifications (queued and retried when offline).
+                // The real GPS fix is sent only when there is one; no stand-in location goes to the admin.
+                IssueReporter.send(this, false, bookingId, selectedType, desc, locationHelper);
+                bottomSheetDialog.dismiss();
             });
         }
         bottomSheetDialog.show();

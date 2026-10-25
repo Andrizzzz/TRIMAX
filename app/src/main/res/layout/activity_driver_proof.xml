@@ -99,7 +99,17 @@
                 app:cardCornerRadius="20dp"
                 app:cardElevation="3dp">
 
+                <!-- The taken photo (hidden until there is one); tap the card again to retake -->
+                <ImageView
+                    android:id="@+id/ivProofPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Drop-off photo"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
                 <RelativeLayout
+                    android:id="@+id/layoutPhotoPlaceholder"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center">

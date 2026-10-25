@@ -62,6 +62,9 @@ public class SupabaseClientTest {
     /** Access tokens the fake REST endpoint accepts. */
     private final List<String> validTokens = Collections.synchronizedList(new ArrayList<>());
     private volatile boolean refreshBroken;
+    /** Storage: object paths already stored, and whether the bucket exists. */
+    private final java.util.Set<String> storedObjects = Collections.synchronizedSet(new java.util.HashSet<>());
+    private volatile boolean bucketMissing;
 
     @Before
     public void start() throws Exception {
@@ -109,6 +112,15 @@ public class SupabaseClientTest {
                     return reply(400, "{\"code\":\"TM409\",\"details\":\"STARTED\",\"hint\":null,\"message\":\"Changed meanwhile.\"}");
                 }
                 return reply(200, "{\"echo\":" + body + "}");
+            } else if (path != null && path.startsWith("/storage/v1/object/")) {
+                // Supabase Storage answers 400 with the real status inside the JSON body.
+                if (bucketMissing) {
+                    return reply(400, "{\"statusCode\":\"404\",\"error\":\"Bucket not found\",\"message\":\"Bucket not found\"}");
+                }
+                if (!storedObjects.add(path)) {
+                    return reply(400, "{\"statusCode\":\"409\",\"error\":\"Duplicate\",\"message\":\"The resource already exists\"}");
+                }
+                return reply(200, "{\"Key\":\"" + path + "\"}");
             }
             return reply(404, "{}");
         } catch (Exception e) {
@@ -266,6 +278,32 @@ public class SupabaseClientTest {
             assertEquals(ApiException.Kind.NETWORK, e.getKind());
         }
         assertTrue("going offline does not sign the user out", store.load() != null);
+    }
+
+    @Test
+    public void retryOfAnAlreadyStoredPhotoIsNotAnError() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        byte[] jpeg = {(byte) 0xFF, (byte) 0xD8, 1, (byte) 0xFF, (byte) 0xD9};
+        c.uploadJpeg("delivery-proofs", "00000000-0000-0000-0000-00000000a0a0/proof_12_1_abcd1234.jpg", jpeg);
+        c.uploadJpeg("delivery-proofs", "00000000-0000-0000-0000-00000000a0a0/proof_12_1_abcd1234.jpg", jpeg);
+        assertEquals(1, storedObjects.size());
+        Seen upload = requests.get(requests.size() - 1);
+        assertEquals("/storage/v1/object/delivery-proofs/00000000-0000-0000-0000-00000000a0a0/proof_12_1_abcd1234.jpg", upload.path);
+        assertEquals("Bearer access-1", upload.authorization);
+    }
+
+    @Test
+    public void missingBucketMeansTheServerIsNotSetUpYet() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        bucketMissing = true;
+        try {
+            c.uploadJpeg("delivery-proofs", "00000000-0000-0000-0000-00000000a0a0/p.jpg", new byte[]{1, 2, 3});
+            fail();
+        } catch (ApiException e) {
+            assertEquals("kept for a later retry, not a permission problem", ApiException.Kind.SERVER, e.getKind());
+        }
     }
 
     @Test

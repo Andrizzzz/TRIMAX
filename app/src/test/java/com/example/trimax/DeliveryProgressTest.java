@@ -17,11 +17,17 @@ public class DeliveryProgressTest {
     private static final List<String> CODES = Arrays.asList("ASSIGNED", "STARTED", "PICKED_UP", "ON_THE_WAY",
             "ARRIVED", "DELIVERED", "FAILED");
 
-    /** Exactly trimax_private.delivery_transition_allowed in the server migration. */
+    /**
+     * Exactly trimax_private.delivery_transition_allowed on the live server
+     * (TrimaxSystem1 sql/20261025_01_live_baseline.sql): Start, then Drop off / Complete or Failed.
+     * PICKED_UP, ON_THE_WAY and ARRIVED appear only on rows saved by older app builds.
+     */
     private static final Set<String> SERVER_RULE = new HashSet<>(Arrays.asList(
-            "ASSIGNED>STARTED", "STARTED>PICKED_UP", "STARTED>ON_THE_WAY", "PICKED_UP>ON_THE_WAY",
-            "ON_THE_WAY>ARRIVED", "ARRIVED>DELIVERED",
-            "STARTED>FAILED", "PICKED_UP>FAILED", "ON_THE_WAY>FAILED", "ARRIVED>FAILED"));
+            "ASSIGNED>STARTED",
+            "STARTED>DELIVERED", "STARTED>FAILED",
+            "PICKED_UP>DELIVERED", "PICKED_UP>FAILED",
+            "ON_THE_WAY>DELIVERED", "ON_THE_WAY>FAILED",
+            "ARRIVED>DELIVERED", "ARRIVED>FAILED"));
 
     @Test
     public void transitionsMatchTheServerExactly() {
@@ -57,21 +63,29 @@ public class DeliveryProgressTest {
     public void buttonsFollowTheLifecycle() {
         assertEquals("STARTED", DeliveryProgress.nextStep("Confirmed", "ASSIGNED").target);
         assertEquals("STARTED", DeliveryProgress.nextStep("Confirmed", null).target);
-        assertEquals("PICKED_UP", DeliveryProgress.nextStep("In Progress", "STARTED").target);
-        assertEquals("ON_THE_WAY", DeliveryProgress.nextStep("In Progress", "PICKED_UP").target);
-        assertEquals("ARRIVED", DeliveryProgress.nextStep("In Progress", "ON_THE_WAY").target);
-        DeliveryProgress.NextStep arrived = DeliveryProgress.nextStep("In Progress", "ARRIVED");
-        assertTrue(arrived.opensProof);
-        assertNull("DELIVERED is only sent from the proof screen", arrived.target);
+        // Once started (or left in an older build's in-between step) the only way on is the proof screen.
+        for (String code : Arrays.asList("STARTED", "PICKED_UP", "ON_THE_WAY", "ARRIVED")) {
+            DeliveryProgress.NextStep s = DeliveryProgress.nextStep("In Progress", code);
+            assertTrue(code, s.opensProof);
+            assertTrue(code, s.enabled);
+            assertNull("DELIVERED is only sent from the proof screen", s.target);
+            assertTrue(code + " can be delivered", DeliveryProgress.canTransition(code, "DELIVERED"));
+        }
         for (String done : new String[]{"DELIVERED", "FAILED"}) {
             assertFalse(DeliveryProgress.nextStep("In Progress", done).enabled);
         }
-        assertFalse(DeliveryProgress.nextStep("Cancelled", "ON_THE_WAY").enabled);
+        assertFalse(DeliveryProgress.nextStep("Cancelled", "STARTED").enabled);
         assertFalse(DeliveryProgress.nextStep("Completed", "DELIVERED").enabled);
-        // Every target the screen can send is a step the server allows.
-        for (String code : Arrays.asList("ASSIGNED", "STARTED", "PICKED_UP", "ON_THE_WAY")) {
-            String target = DeliveryProgress.nextStep("In Progress", code).target;
-            assertTrue(code + " -> " + target, DeliveryProgress.canTransition(code, target));
+        // The only status the main button sends directly is Start, and the server allows it.
+        assertTrue(DeliveryProgress.canTransition("ASSIGNED", DeliveryProgress.nextStep("Confirmed", "ASSIGNED").target));
+    }
+
+    @Test
+    public void nothingMovesIntoTheOldInBetweenSteps() {
+        for (String from : CODES) {
+            for (String old : new String[]{"PICKED_UP", "ON_THE_WAY", "ARRIVED"}) {
+                assertFalse(from + ">" + old, DeliveryProgress.canTransition(from, old));
+            }
         }
     }
 
