@@ -15,11 +15,11 @@
     <color name="bg_main">#F4F7FC</color>
     <color name="card_bg">#FFFFFF</color>
     <!-- Frosted glass navigation: translucent fill, bright top sheen, thin glass edge -->
-    <color name="nav_translucent_bg">#1AFFFFFF</color>
-    <color name="nav_glass_top">#40FFFFFF</color>
-    <color name="nav_glass_bottom">#10FFFFFF</color>
-    <color name="nav_glass_stroke">#50FFFFFF</color>
-    <color name="nav_selected_bg">#33DCEBFA</color>
+    <color name="nav_translucent_bg">#08FFFFFF</color>
+    <color name="nav_glass_top">#20FFFFFF</color>
+    <color name="nav_glass_bottom">#05FFFFFF</color>
+    <color name="nav_glass_stroke">#26FFFFFF</color>
+    <color name="nav_selected_bg">#1ADCEBFA</color>
     <color name="nav_selected_fg">#0866F5</color>
     <color name="surface_alt">#EBF2FA</color>
     <color name="border_subtle">#E2EAF5</color>

@@ -286,10 +286,10 @@ public class LiquidGlassView extends FrameLayout {
         int save = canvas.save();
         canvas.clipPath(clipPath);
 
-        // tint alpha depends on whether a real backdrop exists (ultra-low opacity for glass transparency)
+        // tint alpha depends on whether a real backdrop exists (crystal clear near-transparent glass)
         boolean night = isNightMode();
-        tintPaint.setColor(night ? Color.argb(hasBackdrop ? 35 : 90, 15, 23, 42)
-                : Color.argb(hasBackdrop ? 25 : 80, 255, 255, 255));
+        tintPaint.setColor(night ? Color.argb(hasBackdrop ? 15 : 40, 15, 23, 42)
+                : Color.argb(hasBackdrop ? 10 : 30, 255, 255, 255));
 
         if (hasBackdrop && backdrop != null && !backdrop.isRecycled()) {
             srcRect.set(0, 0, backdrop.getWidth(), backdrop.getHeight());
