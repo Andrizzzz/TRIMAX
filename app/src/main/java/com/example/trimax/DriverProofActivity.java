@@ -89,7 +89,7 @@ public class DriverProofActivity extends AppCompatActivity {
 
         confirmButton = btnConfirmDelivery;
         confirmLabel = btnConfirmDelivery != null ? btnConfirmDelivery.getText() : "OK";
-        if (btnConfirmDelivery != null) btnConfirmDelivery.setEnabled(false);   // until the server says ARRIVED
+        if (btnConfirmDelivery != null) btnConfirmDelivery.setEnabled(false);   // until the server says STARTED
         loadFromServer(tvProofCustomerInfo, etRecipientName);
 
         cameraPermissionLauncher = registerForActivityResult(
@@ -168,7 +168,8 @@ public class DriverProofActivity extends AppCompatActivity {
     }
 
     // =====================================================================================
-    // Server: the delivery must be ARRIVED and assigned to this driver; DELIVERED completes the booking.
+    // Drop Off / Complete Delivery. Server: the delivery must be STARTED (or left in an older in-progress
+    // state by an older app build) and assigned to this driver; DELIVERED completes the booking.
     // The photo stays on this phone as evidence (it is not uploaded yet). OTP verification is not
     // implemented on the server, so it is not asked for; the recipient's name is required instead.
     // =====================================================================================
@@ -222,9 +223,13 @@ public class DriverProofActivity extends AppCompatActivity {
         if (DeliveryProgress.DELIVERED.equals(code) || DeliveryProgress.COMPLETED.equals(currentRecord.status)) {
             confirmButton.setEnabled(false);
             confirmButton.setText("DELIVERY COMPLETED");
-        } else if (!DeliveryProgress.ARRIVED.equals(code) || DeliveryProgress.CANCELLED.equals(currentRecord.status)) {
+        } else if (DeliveryProgress.CANCELLED.equals(currentRecord.status)) {
             confirmButton.setEnabled(false);
-            confirmButton.setText("MARK ARRIVED FIRST");
+            confirmButton.setText("CANCELLED BY ADMIN");
+        } else if (!DeliveryProgress.isUnderWay(code)) {
+            confirmButton.setEnabled(false);
+            confirmButton.setText(DeliveryProgress.PENDING.equals(currentRecord.status)
+                    ? "WAITING FOR ADMIN CONFIRMATION" : "START THE DELIVERY FIRST");
         } else {
             confirmButton.setText(confirmLabel);
             confirmButton.setEnabled(!submitting);
@@ -261,12 +266,18 @@ public class DriverProofActivity extends AppCompatActivity {
     }
 
     private void submitDelivered(String recipientName) {
+        // The status the server last reported (STARTED, or an older in-progress state), never a guess.
+        final String expected = currentRecord.deliveryStatus;
+        if (!DeliveryProgress.isUnderWay(expected)) {
+            updateConfirmButton();
+            return;
+        }
         submitting = true;
         confirmButton.setEnabled(false);
         confirmButton.setText("SAVING...");
         Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
         Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-        TrimaxApi.get(this).updateDeliveryStatus(currentRecord.bookingId, DeliveryProgress.ARRIVED, DeliveryProgress.DELIVERED,
+        TrimaxApi.get(this).updateDeliveryStatus(currentRecord.bookingId, expected, DeliveryProgress.DELIVERED,
                 lat, lng, null, recipientName, new TrimaxApi.Callback<BookingRecord>() {
                     @Override
                     public void onSuccess(BookingRecord saved) {
@@ -291,10 +302,13 @@ public class DriverProofActivity extends AppCompatActivity {
                         if (SessionGuard.isGone(DriverProofActivity.this)) return;
                         if (SessionGuard.handle(DriverProofActivity.this, error)) return;
                         confirmButton.setText(confirmLabel);
-                        Toast.makeText(DriverProofActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(DriverProofActivity.this, error.getKind() == ApiException.Kind.INVALID
+                                ? DeliveryProgress.refusalMessage(error.getMessage()) : error.getMessage(), Toast.LENGTH_LONG).show();
                         if (error.getKind() == ApiException.Kind.CONFLICT) {
-                            loadFromServer(null, null);
+                            loadFromServer(null, null);   // show what the server has now
                         } else {
+                            // e.g. a timeout: keep the photo and let the driver tap again. If the first try was
+                            // saved after all, the server answers the repeat with the completed booking.
                             updateConfirmButton();
                         }
                     }

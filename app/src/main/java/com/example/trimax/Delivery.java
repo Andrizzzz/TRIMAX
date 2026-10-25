@@ -20,7 +20,7 @@ public class Delivery {
     private double currentTotal;
     private double depositAmount;
     private String depositStatus; // PENDING, COLLECTED, RETURNED, FORFEITED, N/A
-    private String status; // ASSIGNED, STARTED, GOING TO PICKUP, ARRIVED AT PICKUP, PICKED UP, ON THE WAY, ARRIVED AT DESTINATION, DELIVERED, CANCELLED, REASSIGNED, FAILED
+    private String status; // driver screens: ASSIGNED, STARTED, DELIVERED, FAILED, CANCELLED, COMPLETED (older rows may still say PICKED UP / ON THE WAY / ARRIVED AT DESTINATION); see DeliveryProgress
     private int sequenceNumber;
     private String scheduledTime;
     private String priority;

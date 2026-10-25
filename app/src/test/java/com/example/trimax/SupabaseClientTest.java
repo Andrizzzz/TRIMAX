@@ -62,6 +62,8 @@ public class SupabaseClientTest {
     /** Access tokens the fake REST endpoint accepts. */
     private final List<String> validTokens = Collections.synchronizedList(new ArrayList<>());
     private volatile boolean refreshBroken;
+    /** The database still has the 20261024_01 rules (ASSIGNED -> ON_THE_WAY only): the original bug. */
+    private volatile boolean oldDeliveryRules;
 
     @Before
     public void start() throws Exception {
@@ -105,6 +107,15 @@ public class SupabaseClientTest {
                 String token = auth == null ? "" : auth.replace("Bearer ", "");
                 if (!validTokens.contains(token)) {
                     return reply(401, "{\"code\":\"PGRST301\",\"message\":\"JWT expired\"}");
+                } else if (path.endsWith("/trimax_driver_update_delivery_status")) {
+                    JSONObject in = new JSONObject(body);
+                    String step = in.getString("p_expected_status") + ">" + in.getString("p_new_status");
+                    if (oldDeliveryRules || !"ASSIGNED>STARTED".equals(step)) {
+                        String[] p = step.split(">");
+                        return reply(400, "{\"code\":\"TM422\",\"details\":null,\"hint\":null,\"message\":"
+                                + "\"A delivery cannot go from " + p[0] + " to " + p[1] + ".\"}");
+                    }
+                    return reply(200, BookingRecordTest.STARTED_REPLY);
                 } else if (path.endsWith("/trimax_fail")) {
                     return reply(400, "{\"code\":\"TM409\",\"details\":\"STARTED\",\"hint\":null,\"message\":\"Changed meanwhile.\"}");
                 }
@@ -231,6 +242,50 @@ public class SupabaseClientTest {
             assertEquals("Changed meanwhile.", e.getMessage());
         }
         assertTrue("a rule error does not end the session", c.hasSession());
+    }
+
+    private static JSONObject startArgs() throws Exception {
+        JSONObject args = new JSONObject();
+        args.put("p_booking_id", 2);
+        args.put("p_expected_status", DeliveryProgress.ASSIGNED);
+        args.put("p_new_status", DeliveryProgress.nextStep("Confirmed", "ASSIGNED").target);
+        args.put("p_latitude", 14.7827);
+        args.put("p_longitude", 121.0476);
+        args.put("p_note", JSONObject.NULL);
+        args.put("p_recipient_name", JSONObject.NULL);
+        return args;
+    }
+
+    @Test
+    public void startDeliverySendsStartedAndTheScreenShowsTheServerReply() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        BookingRecord saved = BookingRecord.parse(c.rpc("trimax_driver_update_delivery_status", startArgs()));
+        Seen sent = requests.get(requests.size() - 1);
+        assertEquals("/rest/v1/rpc/trimax_driver_update_delivery_status", sent.path);
+        JSONObject in = new JSONObject(sent.body);
+        assertEquals("ASSIGNED", in.getString("p_expected_status"));
+        assertEquals("STARTED", in.getString("p_new_status"));
+        assertEquals("STARTED", saved.deliveryStatus);
+        assertEquals("STARTED", saved.toDelivery(true).getStatus());
+        assertEquals(DeliveryProgress.DROP_OFF, DeliveryProgress.nextStep(saved.status, saved.deliveryStatus).label);
+    }
+
+    @Test
+    public void oldServerRulesGiveAClearRefusal() throws Exception {
+        oldDeliveryRules = true;
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        try {
+            c.rpc("trimax_driver_update_delivery_status", startArgs());
+            fail();
+        } catch (ApiException e) {
+            assertEquals(ApiException.Kind.INVALID, e.getKind());
+            assertEquals("TM422", e.getCode());
+            assertEquals("A delivery cannot go from ASSIGNED to STARTED.", e.getMessage());
+            assertTrue(DeliveryProgress.refusalMessage(e.getMessage()).contains("Tell the office"));
+        }
+        assertTrue("a refused step does not end the session", c.hasSession());
     }
 
     @Test

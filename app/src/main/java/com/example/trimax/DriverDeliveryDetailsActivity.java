@@ -342,9 +342,12 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Sends one step to the server together with the status this screen is showing. The screen then shows
-     * what the server saved; nothing is assumed. If someone else changed the booking meanwhile (e.g. the
-     * administrator cancelled it), the server refuses and the screen reloads.
+     * Sends one step to the server together with the status this screen is showing (Start Delivery:
+     * ASSIGNED -> STARTED; "mark failed": STARTED -> FAILED). The screen then shows what the server saved;
+     * nothing is assumed. While a step is being sent the button stays disabled, and the server answers an
+     * exact repeat with the saved booking, so a double tap or a retry changes the status only once. If
+     * someone else changed the booking meanwhile (e.g. the administrator cancelled it), the server refuses
+     * and the screen reloads.
      */
     private void advanceStatus(String target, String note, Runnable onSaved) {
         if (currentRecord == null || updating) return;
@@ -375,10 +378,12 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                         if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
                         if (SessionGuard.handle(DriverDeliveryDetailsActivity.this, error)) return;
                         btnPrimaryAction.setText(label);
-                        btnPrimaryAction.setEnabled(true);
-                        Toast.makeText(DriverDeliveryDetailsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND) {
-                            loadDeliveryData();   // show what the server has now
+                        updateStatusAndButtons();
+                        Toast.makeText(DriverDeliveryDetailsActivity.this, error.getKind() == ApiException.Kind.INVALID
+                                ? DeliveryProgress.refusalMessage(error.getMessage()) : error.getMessage(), Toast.LENGTH_LONG).show();
+                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND
+                                || error.getKind() == ApiException.Kind.INVALID || error.getKind() == ApiException.Kind.TIMEOUT) {
+                            loadDeliveryData();   // show what the server has now (a timed-out step may have been saved)
                         }
                     }
                 });

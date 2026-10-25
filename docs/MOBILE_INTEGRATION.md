@@ -24,6 +24,15 @@ Supabase project; without it every server call fails with a clear message.**
 | Driver dashboard, deliveries, details, map, history, proof | `trimax_driver_list_deliveries`, `trimax_driver_get_delivery`, `trimax_driver_update_delivery_status` |
 | Change password | Supabase Auth `PUT /auth/v1/user` |
 
+Driver delivery flow: **START DELIVERY** sends ASSIGNED -> STARTED (the booking must be Confirmed by the
+administrator; it becomes In Progress), then **DROP OFF / COMPLETE DELIVERY** opens the proof screen, which
+sends STARTED -> DELIVERED with the recipient's name (the booking becomes Completed). "Mark delivery failed"
+sends STARTED -> FAILED. There are no intermediate statuses; Start/End Duty never changes a delivery. Every
+screen shows the status the server returned. The server side of this flow is
+`sql/20261025_01_driver_started_delivered.sql` in the desktop repository (branch
+`fix/driver-started-delivered`); without it the server answers "A delivery cannot go from ASSIGNED to
+STARTED" and the app says the office needs to install the update.
+
 Still only on the phone (the app says so where relevant): saved-customer list, notifications, attendance,
 driver location log, proof photos, deposits, damage charges, problem/SOS reports, profile edits.
 OTP proof of delivery is not implemented; the recipient's name is required.

@@ -263,8 +263,10 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
             }
 
             boolean awaitingAdmin = DeliveryProgress.PENDING.equals(record.status);
+            DeliveryProgress.NextStep next = DeliveryProgress.nextStep(record.status, record.deliveryStatus);
             tvDeliveryStatus.setText(String.format("Status: %s%s", d.getStatus(),
-                    awaitingAdmin ? " \u2022 waiting for admin confirmation" : ""));
+                    awaitingAdmin ? " \u2022 waiting for admin confirmation"
+                            : next.enabled ? " \u2022 next: " + next.label : ""));
             tvDeliveryStatus.setTextColor("ASSIGNED".equalsIgnoreCase(d.getStatus()) ? 0xFF2563EB : 0xFF059669);
 
             final String bookingId = d.getBookingId();

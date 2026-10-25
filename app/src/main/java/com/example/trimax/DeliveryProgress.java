@@ -8,9 +8,12 @@ import java.util.Locale;
  * Booking status (set by the administrator, stored in bookings.status):
  *   Pending -> Confirmed -> In Progress -> Completed, or Cancelled.
  * Driver progress (stored in bookings.delivery_status, changed only through the server):
- *   ASSIGNED -> STARTED -> [PICKED_UP] -> ON_THE_WAY -> ARRIVED -> DELIVERED, or FAILED once started.
- * STARTED needs a Confirmed booking and moves it to In Progress; DELIVERED completes it. The server
- * enforces every rule; this class only decides what to show and which button to offer.
+ *   ASSIGNED -> STARTED (Start Delivery) -> DELIVERED (Drop Off / Complete Delivery), or FAILED once started.
+ * STARTED needs a Confirmed booking and moves it to In Progress; DELIVERED completes it. PICKED_UP,
+ * ON_THE_WAY and ARRIVED are not steps any more: rows that older app builds left there can only be
+ * completed or failed. Duty start/end never changes a delivery. The server enforces every rule
+ * (sql/20261025_01_driver_started_delivered.sql in the desktop repository); this class only decides what
+ * to show and which button to offer.
  */
 public final class DeliveryProgress {
 
@@ -24,8 +27,11 @@ public final class DeliveryProgress {
     // Driver progress (server codes)
     public static final String ASSIGNED = "ASSIGNED";
     public static final String STARTED = "STARTED";
+    /** Older app builds only. */
     public static final String PICKED_UP = "PICKED_UP";
+    /** Older app builds only. */
     public static final String ON_THE_WAY = "ON_THE_WAY";
+    /** Older app builds only. */
     public static final String ARRIVED = "ARRIVED";
     public static final String DELIVERED = "DELIVERED";
     public static final String FAILED = "FAILED";
@@ -38,15 +44,18 @@ public final class DeliveryProgress {
         if (from == null || to == null) return false;
         switch (from) {
             case ASSIGNED:   return STARTED.equals(to);
-            case STARTED:    return PICKED_UP.equals(to) || ON_THE_WAY.equals(to) || FAILED.equals(to);
-            case PICKED_UP:  return ON_THE_WAY.equals(to) || FAILED.equals(to);
-            case ON_THE_WAY: return ARRIVED.equals(to) || FAILED.equals(to);
+            case STARTED:
+            case PICKED_UP:
+            case ON_THE_WAY:
             case ARRIVED:    return DELIVERED.equals(to) || FAILED.equals(to);
             default:         return false;
         }
     }
 
-    /** Driver has left with the goods and has not finished. */
+    /**
+     * Driver has left with the goods and has not finished: Drop Off / Complete Delivery (and "mark failed")
+     * are available, and duty cannot end yet.
+     */
     public static boolean isUnderWay(String deliveryStatus) {
         return STARTED.equals(deliveryStatus) || PICKED_UP.equals(deliveryStatus)
                 || ON_THE_WAY.equals(deliveryStatus) || ARRIVED.equals(deliveryStatus);
@@ -97,7 +106,7 @@ public final class DeliveryProgress {
         public final String label;
         /** Server code to move to, or null when the button opens another screen or is disabled. */
         public final String target;
-        /** The button opens the proof-of-delivery screen (ARRIVED -> DELIVERED). */
+        /** The button opens the proof-of-delivery screen, which sends STARTED -> DELIVERED. */
         public final boolean opensProof;
         public final boolean enabled;
 
@@ -109,7 +118,10 @@ public final class DeliveryProgress {
         }
     }
 
-    /** The button labels are the ones the delivery details screen already used. */
+    public static final String START_DELIVERY = "START DELIVERY";
+    public static final String DROP_OFF = "DROP OFF / COMPLETE DELIVERY";
+
+    /** The driver's main button: Start Delivery on an assigned delivery, Drop Off on a started one. */
     public static NextStep nextStep(String bookingStatus, String deliveryStatus) {
         if (CANCELLED.equals(bookingStatus)) return new NextStep("CANCELLED BY ADMIN", null, false, false);
         String code = deliveryStatus == null ? ASSIGNED : deliveryStatus;
@@ -121,13 +133,29 @@ public final class DeliveryProgress {
                 if (PENDING.equals(bookingStatus)) {
                     return new NextStep("WAITING FOR ADMIN CONFIRMATION", null, false, false);
                 }
-                return new NextStep("START DELIVERY", STARTED, false, true);
-            case STARTED:    return new NextStep("PICK UP & ON THE WAY", PICKED_UP, false, true);
-            case PICKED_UP:  return new NextStep("START TRANSPORT / ON THE WAY", ON_THE_WAY, false, true);
-            case ON_THE_WAY: return new NextStep("ARRIVED AT DESTINATION", ARRIVED, false, true);
-            case ARRIVED:    return new NextStep("DROP-OFF PHOTO & PROOF OF DELIVERY", null, true, true);
+                return new NextStep(START_DELIVERY, STARTED, false, true);
+            case STARTED:
+            case PICKED_UP:      // older app builds
+            case ON_THE_WAY:     // older app builds
+            case ARRIVED:        // older app builds
+                // DELIVERED is sent from the proof screen (drop-off photo + recipient's name).
+                return new NextStep(DROP_OFF, null, true, true);
             case FAILED:     return new NextStep("DELIVERY FAILED – ADMIN WILL REVIEW", null, false, false);
             default:         return new NextStep("STATUS: " + code, null, false, false);
         }
+    }
+
+    /**
+     * Text to show when the server refuses a driver step. Its messages are written for users; one case gets
+     * more help: a refused step from Start Delivery or Drop Off means the server's delivery rules do not match
+     * this app (the database update for the STARTED -> DELIVERED flow is missing), which only the office can fix.
+     */
+    public static String refusalMessage(String serverMessage) {
+        String m = serverMessage == null ? "" : serverMessage.trim();
+        if (m.startsWith("A delivery cannot go from ")) {
+            return m + " The server's delivery rules do not match this app version. Tell the office "
+                    + "(the TRIMAX database needs the latest delivery-status update).";
+        }
+        return m.isEmpty() ? "The server refused this change." : m;
     }
 }

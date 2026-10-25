@@ -17,11 +17,12 @@ public class DeliveryProgressTest {
     private static final List<String> CODES = Arrays.asList("ASSIGNED", "STARTED", "PICKED_UP", "ON_THE_WAY",
             "ARRIVED", "DELIVERED", "FAILED");
 
-    /** Exactly trimax_private.delivery_transition_allowed in the server migration. */
+    /** Exactly trimax_private.delivery_transition_allowed in sql/20261025_01_driver_started_delivered.sql. */
     private static final Set<String> SERVER_RULE = new HashSet<>(Arrays.asList(
-            "ASSIGNED>STARTED", "STARTED>PICKED_UP", "STARTED>ON_THE_WAY", "PICKED_UP>ON_THE_WAY",
-            "ON_THE_WAY>ARRIVED", "ARRIVED>DELIVERED",
-            "STARTED>FAILED", "PICKED_UP>FAILED", "ON_THE_WAY>FAILED", "ARRIVED>FAILED"));
+            "ASSIGNED>STARTED", "STARTED>DELIVERED", "STARTED>FAILED",
+            // rows left by older app builds can only finish or fail
+            "PICKED_UP>DELIVERED", "PICKED_UP>FAILED", "ON_THE_WAY>DELIVERED", "ON_THE_WAY>FAILED",
+            "ARRIVED>DELIVERED", "ARRIVED>FAILED"));
 
     @Test
     public void transitionsMatchTheServerExactly() {
@@ -40,7 +41,8 @@ public class DeliveryProgressTest {
         }
         assertEquals("ARRIVED AT DESTINATION", DeliveryProgress.driverDisplayStatus("In Progress", "ARRIVED"));
         assertEquals("ASSIGNED", DeliveryProgress.driverDisplayStatus("Confirmed", null));
-        assertEquals("CANCELLED", DeliveryProgress.driverDisplayStatus("Cancelled", "ON_THE_WAY"));
+        assertEquals("CANCELLED", DeliveryProgress.driverDisplayStatus("Cancelled", "STARTED"));
+        assertEquals("STARTED", DeliveryProgress.driverDisplayStatus("In Progress", "STARTED"));
         assertEquals("COMPLETED", DeliveryProgress.driverDisplayStatus("Completed", "ASSIGNED"));
         assertNull(DeliveryProgress.serverCode("PENDING"));
     }
@@ -54,25 +56,67 @@ public class DeliveryProgressTest {
     }
 
     @Test
-    public void buttonsFollowTheLifecycle() {
-        assertEquals("STARTED", DeliveryProgress.nextStep("Confirmed", "ASSIGNED").target);
-        assertEquals("STARTED", DeliveryProgress.nextStep("Confirmed", null).target);
-        assertEquals("PICKED_UP", DeliveryProgress.nextStep("In Progress", "STARTED").target);
-        assertEquals("ON_THE_WAY", DeliveryProgress.nextStep("In Progress", "PICKED_UP").target);
-        assertEquals("ARRIVED", DeliveryProgress.nextStep("In Progress", "ON_THE_WAY").target);
-        DeliveryProgress.NextStep arrived = DeliveryProgress.nextStep("In Progress", "ARRIVED");
-        assertTrue(arrived.opensProof);
-        assertNull("DELIVERED is only sent from the proof screen", arrived.target);
+    public void assignedShowsStartDeliveryWhichSendsStarted() {
+        for (String code : new String[]{"ASSIGNED", null}) {
+            DeliveryProgress.NextStep s = DeliveryProgress.nextStep("Confirmed", code);
+            assertEquals(DeliveryProgress.START_DELIVERY, s.label);
+            assertEquals("STARTED", s.target);
+            assertFalse(s.opensProof);
+            assertTrue(s.enabled);
+        }
+        assertTrue(DeliveryProgress.canTransition("ASSIGNED", "STARTED"));
+    }
+
+    @Test
+    public void startedShowsDropOffWhichOpensTheProofScreen() {
+        DeliveryProgress.NextStep s = DeliveryProgress.nextStep("In Progress", "STARTED");
+        assertEquals(DeliveryProgress.DROP_OFF, s.label);
+        assertTrue(s.opensProof);
+        assertTrue(s.enabled);
+        assertNull("DELIVERED is only sent from the proof screen (photo + recipient name)", s.target);
+        assertTrue(DeliveryProgress.canTransition("STARTED", "DELIVERED"));
+        // Rows left by older app builds get the same Drop Off button.
+        for (String legacy : new String[]{"PICKED_UP", "ON_THE_WAY", "ARRIVED"}) {
+            DeliveryProgress.NextStep l = DeliveryProgress.nextStep("In Progress", legacy);
+            assertEquals(legacy, DeliveryProgress.DROP_OFF, l.label);
+            assertTrue(legacy, l.opensProof);
+            assertTrue(legacy, DeliveryProgress.canTransition(legacy, "DELIVERED"));
+        }
+    }
+
+    @Test
+    public void noIntermediateStepIsEverOffered() {
+        for (String booking : new String[]{"Pending", "Confirmed", "In Progress", "Completed", "Cancelled"}) {
+            for (String code : CODES) {
+                String target = DeliveryProgress.nextStep(booking, code).target;
+                assertTrue(booking + "/" + code + " -> " + target, target == null || "STARTED".equals(target));
+            }
+        }
+        for (String from : CODES) {
+            for (String intermediate : new String[]{"PICKED_UP", "ON_THE_WAY", "ARRIVED"}) {
+                assertFalse(from + " -> " + intermediate, DeliveryProgress.canTransition(from, intermediate));
+            }
+        }
+    }
+
+    @Test
+    public void finishedOrCancelledDeliveriesOfferNothing() {
         for (String done : new String[]{"DELIVERED", "FAILED"}) {
             assertFalse(DeliveryProgress.nextStep("In Progress", done).enabled);
         }
-        assertFalse(DeliveryProgress.nextStep("Cancelled", "ON_THE_WAY").enabled);
+        assertFalse(DeliveryProgress.nextStep("Cancelled", "STARTED").enabled);
         assertFalse(DeliveryProgress.nextStep("Completed", "DELIVERED").enabled);
-        // Every target the screen can send is a step the server allows.
-        for (String code : Arrays.asList("ASSIGNED", "STARTED", "PICKED_UP", "ON_THE_WAY")) {
-            String target = DeliveryProgress.nextStep("In Progress", code).target;
-            assertTrue(code + " -> " + target, DeliveryProgress.canTransition(code, target));
-        }
+        assertFalse(DeliveryProgress.nextStep("Completed", "STARTED").enabled);
+    }
+
+    @Test
+    public void refusedStepsGetAnActionableMessage() {
+        String old = DeliveryProgress.refusalMessage("A delivery cannot go from ASSIGNED to STARTED.");
+        assertTrue(old.startsWith("A delivery cannot go from ASSIGNED to STARTED."));
+        assertTrue(old.contains("Tell the office"));
+        assertEquals("Enter the name of the person who received the delivery.",
+                DeliveryProgress.refusalMessage("Enter the name of the person who received the delivery."));
+        assertEquals("The server refused this change.", DeliveryProgress.refusalMessage(null));
     }
 
     @Test
