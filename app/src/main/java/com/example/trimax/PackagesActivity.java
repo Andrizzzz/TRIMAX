@@ -20,11 +20,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 public class PackagesActivity extends AppCompatActivity {
+
+    private final List<ServicePackage> items = new ArrayList<>();
+    private PackagesAdapter adapter;
+    private TextView tvState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,14 +49,15 @@ public class PackagesActivity extends AppCompatActivity {
         RecyclerView recyclerView = findViewById(R.id.recyclerViewPackages);
         if (recyclerView != null) {
             recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-            List<ServicePackage> packages = getServicePackages();
-            PackagesAdapter adapter = new PackagesAdapter(packages, pkg -> {
+            adapter = new PackagesAdapter(items, pkg -> {
                 Intent intent = new Intent(PackagesActivity.this, PackageDetailActivity.class);
                 intent.putExtra("SERVICE_PACKAGE", pkg);
                 startActivity(intent);
             });
             recyclerView.setAdapter(adapter);
         }
+        tvState = findViewById(R.id.tvPackagesState);
+        loadProducts();
 
         View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
         if (cardBottomNavContainer != null) {
@@ -70,64 +74,45 @@ public class PackagesActivity extends AppCompatActivity {
         setupBottomNavigation();
     }
 
-    private List<ServicePackage> getServicePackages() {
-        List<ServicePackage> list = new ArrayList<>();
-        list.add(new ServicePackage(
-                "pkg_coke",
-                "Coke Case (24 Bottles)",
-                "Wholesale Coca-Cola beverage case.",
-                180.00,
-                R.drawable.ic_delivery_van,
-                Arrays.asList("24 bottles per case", "Original Coca-Cola taste", "Wholesale price"),
-                "15 kg",
-                "40 x 30 x 30 cm",
-                "In stock"
-        ));
-        list.add(new ServicePackage(
-                "pkg_sprite",
-                "Sprite Case (24 Bottles)",
-                "Wholesale Sprite lemon-lime beverage case.",
-                180.00,
-                R.drawable.ic_delivery_van,
-                Arrays.asList("24 bottles per case", "Refreshing lemon-lime", "Wholesale price"),
-                "15 kg",
-                "40 x 30 x 30 cm",
-                "In stock"
-        ));
-        list.add(new ServicePackage(
-                "pkg_royal",
-                "Royal Case (24 Bottles)",
-                "Wholesale Royal orange soda beverage case.",
-                175.00,
-                R.drawable.ic_delivery_van,
-                Arrays.asList("24 bottles per case", "Sweet orange flavor", "Wholesale price"),
-                "15 kg",
-                "40 x 30 x 30 cm",
-                "In stock"
-        ));
-        list.add(new ServicePackage(
-                "pkg_standard",
-                "Standard Item Parcel",
-                "General merchandise or standard box item.",
-                99.00,
-                R.drawable.ic_delivery_scooter,
-                Arrays.asList("General merchandise", "Standard handling", "Secure transit"),
-                "Up to 5 kg",
-                "50 x 40 x 30 cm",
-                "Available"
-        ));
-        list.add(new ServicePackage(
-                "pkg_fragile",
-                "Fragile Item Box",
-                "Delicate items requiring careful handling.",
-                499.00,
-                R.drawable.ic_delivery_scooter,
-                Arrays.asList("Extra bubble wrap", "Fragile handling", "Priority delivery"),
-                "Up to 10 kg",
-                "50 x 40 x 30 cm",
-                "Available"
-        ));
-        return list;
+    /**
+     * The agent's item price list: the products, prices, stock and pictures the admin keeps in the
+     * Desktop inventory (public.trimax_list_products), instead of the built-in sample list.
+     */
+    private void loadProducts() {
+        showState("Loading items...", false);
+        ProductImageLoader.get(this).retryFailed();
+        TrimaxApi.get(this).listProducts(new TrimaxApi.Callback<List<Product>>() {
+            @Override
+            public void onSuccess(List<Product> products) {
+                if (SessionGuard.isGone(PackagesActivity.this)) return;
+                items.clear();
+                for (Product p : products) {
+                    ServicePackage pkg = new ServicePackage("product:" + p.id, p.name,
+                            p.stock > 0 ? "In stock: " + p.stock : "Out of stock",
+                            p.price, R.drawable.ic_delivery_van, null, null, null, null);
+                    pkg.setImageUrl(p.imageUrl());
+                    items.add(pkg);
+                }
+                if (adapter != null) adapter.notifyDataSetChanged();
+                if (items.isEmpty()) showState("No items yet. The admin adds them in the Desktop inventory.", false);
+                else showState(null, false);
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(PackagesActivity.this)) return;
+                if (SessionGuard.handle(PackagesActivity.this, error)) return;
+                showState(error.getMessage() + "  Tap to try again.", true);
+            }
+        });
+    }
+
+    private void showState(String text, boolean tapToRetry) {
+        if (tvState == null) return;
+        tvState.setVisibility(text == null ? View.GONE : View.VISIBLE);
+        tvState.setText(text == null ? "" : text);
+        tvState.setOnClickListener(tapToRetry ? v -> loadProducts() : null);
+        tvState.setClickable(tapToRetry);
     }
 
     private void navigateToTab(Class<?> targetClass) {
@@ -246,7 +231,8 @@ public class PackagesActivity extends AppCompatActivity {
             holder.tvName.setText(pkg.getName());
             holder.tvDesc.setText(pkg.getDescription());
             holder.tvPrice.setText(String.format(Locale.US, "₱%.2f", pkg.getStartingPrice()));
-            holder.ivImage.setImageResource(pkg.getImageResId());
+            ProductImageLoader.get(holder.itemView.getContext()).load(holder.ivImage, pkg.getImageUrl(),
+                    pkg.getImageResId(), Math.round(180 * holder.itemView.getResources().getDisplayMetrics().density));
 
             holder.itemView.setOnClickListener(v -> listener.onPackageClick(pkg));
             holder.btnAdd.setOnClickListener(v -> listener.onPackageClick(pkg));

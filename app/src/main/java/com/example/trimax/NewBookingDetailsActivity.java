@@ -150,6 +150,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
     // built into the app, so what the agent orders is what the warehouse actually has.
     private void loadProducts() {
         if (btnContinue != null) btnContinue.setEnabled(false);
+        ProductImageLoader.get(this).retryFailed();
         showProductMessage("Loading products...", false);
         TrimaxApi.get(this).listProducts(new TrimaxApi.Callback<List<Product>>() {
             @Override
@@ -161,12 +162,24 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                     ServicePackage pkg = new ServicePackage("product:" + p.id, p.name,
                             p.stock > 0 ? "In stock: " + p.stock : "Out of stock",
                             p.price, R.drawable.ic_delivery_van, null, "", "", "");
+                    pkg.setImageUrl(p.imageUrl());   // picture set by the admin on the Desktop, if any
                     servicePackages.add(pkg);
                     stockByPackage.put(pkg.getId(), p.stock);
                 }
                 if (servicePackages.isEmpty()) {
                     showProductMessage("No products are available. Ask your administrator.", true);
                     return;
+                }
+                // Started from an item in the price list ("Book this item"): put one of it in the order.
+                String chosen = getIntent().getStringExtra("SELECTED_PACKAGE");
+                if (chosen != null) {
+                    for (ServicePackage pkg : servicePackages) {
+                        Integer stock = stockByPackage.get(pkg.getId());
+                        if (chosen.equalsIgnoreCase(pkg.getName()) && stock != null && stock > 0 && pkg.getQuantity() == 0) {
+                            pkg.setQuantity(1);
+                            break;
+                        }
+                    }
                 }
                 populatePackageCards();
                 if (btnContinue != null) btnContinue.setEnabled(true);
@@ -221,7 +234,10 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             MaterialButton btnMinus = cardView.findViewById(R.id.btnMinus);
             MaterialButton btnPlus = cardView.findViewById(R.id.btnPlus);
 
-            if (ivImage != null) ivImage.setImageResource(pkg.getImageResId());
+            if (ivImage != null) {
+                ProductImageLoader.get(this).load(ivImage, pkg.getImageUrl(), pkg.getImageResId(),
+                        Math.round(56 * getResources().getDisplayMetrics().density));
+            }
             if (tvName != null) tvName.setText(pkg.getName());
             if (tvDesc != null) tvDesc.setText(pkg.getDescription());
             if (tvPrice != null) tvPrice.setText(String.format(Locale.US, "₱ %.2f", pkg.getStartingPrice()));

@@ -66,9 +66,27 @@ public class PackageDetailActivity extends AppCompatActivity {
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
-        if (ivImage != null) ivImage.setImageResource(servicePackage.getImageResId());
+        boolean product = servicePackage.isServerProduct();
+        if (ivImage != null) {
+            ProductImageLoader.get(this).load(ivImage, servicePackage.getImageUrl(), servicePackage.getImageResId(),
+                    getResources().getDisplayMetrics().widthPixels);
+        }
         if (tvName != null) tvName.setText(servicePackage.getName());
-        if (tvPrice != null) tvPrice.setText(String.format(Locale.US, "from ₱%.0f", servicePackage.getStartingPrice()));
+        if (tvPrice != null) {
+            tvPrice.setText(product
+                    ? String.format(Locale.US, "₱%.2f", servicePackage.getStartingPrice())
+                    : String.format(Locale.US, "from ₱%.0f", servicePackage.getStartingPrice()));
+        }
+        if (product) {
+            // A warehouse product has no service list, size limits or delivery estimate: hide those parts.
+            for (int id : new int[]{R.id.dividerIncluded, R.id.tvIncludedTitle, R.id.containerIncludedServices,
+                    R.id.dividerLimits, R.id.tvLimitsTitle, R.id.containerLimits,
+                    R.id.dividerTime, R.id.tvTimeTitle, R.id.tvEstimatedTime}) {
+                View v = findViewById(id);
+                if (v != null) v.setVisibility(View.GONE);
+            }
+            if (btnSelectPackage != null) btnSelectPackage.setText("Book this item");
+        }
         if (tvDesc != null) tvDesc.setText(servicePackage.getDescription());
         if (tvMaxWeight != null) tvMaxWeight.setText(servicePackage.getMaxWeight());
         if (tvMaxDimensions != null) tvMaxDimensions.setText(servicePackage.getMaxDimensions());

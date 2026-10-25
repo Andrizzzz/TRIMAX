@@ -14,12 +14,24 @@ public final class Product {
     public final String name;
     public final double price;
     public final int stock;
+    /** Path of the product picture in the public product-images bucket, or null (no picture / older server). */
+    public final String imagePath;
 
     public Product(int id, String name, double price, int stock) {
+        this(id, name, price, stock, null);
+    }
+
+    public Product(int id, String name, double price, int stock, String imagePath) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.stock = stock;
+        this.imagePath = imagePath;
+    }
+
+    /** Public address of the picture, or null when the product has none. */
+    public String imageUrl() {
+        return ProductImages.urlFor(imagePath);
     }
 
     public static List<Product> parseList(String json) throws JSONException {
@@ -32,7 +44,7 @@ public final class Product {
             String name = Json.text(o, "product_name");
             Double price = Json.number(o, "price");
             if (id <= 0 || name == null || price == null) continue;
-            list.add(new Product(id, name, price, Json.integer(o, "stock", 0)));
+            list.add(new Product(id, name, price, Json.integer(o, "stock", 0), Json.text(o, "image_path")));
         }
         return list;
     }
