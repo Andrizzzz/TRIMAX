@@ -513,6 +513,38 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                 bottomSheetDialog.dismiss();
             });
         }
+
+        // A started delivery that cannot be finished: end it as FAILED (the server needs a reason); the
+        // admin is alerted and decides from the desktop whether to cancel the booking (returns the stock).
+        MaterialButton btnMarkFailed = dialogView.findViewById(R.id.btnMarkFailed);
+        boolean canFail = currentRecord != null && DeliveryProgress.isUnderWay(currentRecord.deliveryStatus)
+                && !DeliveryProgress.CANCELLED.equals(currentRecord.status)
+                && !DeliveryProgress.COMPLETED.equals(currentRecord.status);
+        if (btnMarkFailed != null) {
+            btnMarkFailed.setVisibility(canFail ? View.VISIBLE : View.GONE);
+            btnMarkFailed.setOnClickListener(v -> {
+                int checkedId = rg != null ? rg.getCheckedRadioButtonId() : -1;
+                String selectedType = "Other problem";
+                if (checkedId == R.id.rbVehicle) selectedType = "Vehicle problem";
+                else if (checkedId == R.id.rbCustomer) selectedType = "Customer unreachable";
+                else if (checkedId == R.id.rbAddress) selectedType = "Incorrect address";
+                String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
+                String full = selectedType + (details.isEmpty() ? "" : ": " + details);
+                String reason = full.length() > 480 ? full.substring(0, 480) : full;
+                String bookingText = currentDelivery.getBookingId();
+                new AlertDialog.Builder(this)
+                        .setTitle("Mark delivery failed?")
+                        .setMessage("Booking #" + currentRecord.bookingId + " will be reported as FAILED (" + reason
+                                + "). You cannot continue it afterwards; the administrator will review it.")
+                        .setPositiveButton("Mark failed", (d2, w2) -> {
+                            bottomSheetDialog.dismiss();
+                            advanceStatus(DeliveryProgress.FAILED, reason, () ->
+                                    IssueReporter.send(this, false, bookingText, "Delivery failed", reason, locationHelper));
+                        })
+                        .setNegativeButton("Back", null)
+                        .show();
+            });
+        }
         bottomSheetDialog.show();
     }
 

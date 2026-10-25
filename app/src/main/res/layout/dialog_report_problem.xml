@@ -133,4 +133,20 @@
         android:textStyle="bold"
         app:cornerRadius="26dp" />
 
+    <!-- Shown only on a started delivery (delivery details): ends it as FAILED for the admin to review -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMarkFailed"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="10dp"
+        android:text="Can't complete: mark delivery as failed"
+        android:textAllCaps="false"
+        android:textColor="@color/status_cancelled"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:cornerRadius="26dp"
+        app:strokeColor="@color/status_cancelled" />
+
 </LinearLayout>
