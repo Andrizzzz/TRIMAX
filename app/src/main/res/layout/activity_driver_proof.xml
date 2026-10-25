@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Delivery Proof"
+            android:text="Drop-off &amp; Proof"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -50,106 +50,173 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="12dp"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp"
             android:paddingBottom="36dp">
 
-            <!-- Card Capture Photo Box -->
+            <!-- Which delivery -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvProofCustomerInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Loading delivery…"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvProofAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:drawablePadding="6dp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:visibility="gone"
+                        app:drawableStartCompat="@drawable/ic_location"
+                        app:drawableTint="@color/text_secondary" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Step 1: photo -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="1  Drop-off photo"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardCapturePhoto"
                 android:layout_width="match_parent"
                 android:layout_height="220dp"
-                app:cardBackgroundColor="#EBF2FA"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/surface_alt"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp">
+                app:cardElevation="0dp">
 
-                <RelativeLayout
+                <ImageView
+                    android:id="@+id/ivProofPhoto"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:gravity="center">
+                    android:contentDescription="Drop-off photo"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutPhotoPlaceholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
                     <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:layout_centerHorizontal="true"
-                        android:contentDescription="Parcel Icon"
-                        android:src="@drawable/ic_check_circle"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_camera"
                         app:tint="@color/primary_blue" />
 
                     <TextView
-                        android:id="@+id/tvPhotoLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_centerHorizontal="true"
-                        android:layout_marginTop="80dp"
-                        android:text="Photo Preview / Tap to Capture"
+                        android:layout_marginTop="10dp"
+                        android:text="Tap to take the drop-off photo"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
-                </RelativeLayout>
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Success Badge Row -->
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvPhotoLabel"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="6dp"
+                android:text="Show the items at the door, with the house or the receiver."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
 
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:contentDescription="Success"
-                    android:src="@drawable/ic_check_circle"
-                    app:tint="@color/status_confirmed" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Proof Submitted!"
-                    android:textColor="#10B981"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
+            <!-- Step 2: who received it -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Delivery completed successfully."
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:layout_marginTop="20dp"
+                android:text="2  Who received it?"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-            <!-- Action Button OK -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRecipientName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Recipient's name"
+                app:boxBackgroundMode="outline"
+                app:counterEnabled="true"
+                app:counterMaxLength="100">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRecipientName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPersonName|textCapWords"
+                    android:maxLength="100"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvProofStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConfirmDelivery"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="16dp"
                 android:backgroundTint="@color/primary_blue"
-                android:text="OK"
+                android:text="Confirm delivered"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:cornerRadius="27dp" />
 
-            <!-- Hidden compatibility views -->
             <TextView
-                android:id="@+id/tvProofCustomerInfo"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="The photo is sent to the office in the background. A weak signal will not stop you from completing the delivery."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etRecipientName"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
-
+            <!-- Hidden compatibility view (OTP is not checked by the server) -->
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etOtpCode"
                 android:layout_width="0dp"

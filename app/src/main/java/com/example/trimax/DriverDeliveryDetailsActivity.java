@@ -190,6 +190,14 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadDeliveryData();
+        // GPS for this screen: status changes and problem reports carry where the driver was.
+        if (!locationHelper.isTrackingActive()) locationHelper.startLocationUpdates(null);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationHelper.stopLocationUpdates();
     }
 
     /** The delivery as the TRIMAX server has it; only deliveries assigned to the signed-in driver load. */
@@ -534,12 +542,8 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                 desc = "Problem reported: " + selectedType;
             }
 
-            boolean saved = dbHelper.saveProblemReport(currentDelivery.getBookingId(), session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
-            if (saved) {
-                Toast.makeText(this, "Problem report saved on this phone. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-            }
+            // Kept on this phone and sent to the admin (queued and retried when offline).
+            IssueReporter.send(this, false, currentDelivery.getBookingId(), selectedType, desc, locationHelper);
         });
         // A delivery that cannot be finished is reported to the server; the administrator then decides
         // whether to cancel the booking (which returns the stock) from the desktop.

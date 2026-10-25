@@ -8,9 +8,11 @@ import java.util.Locale;
  * Booking status (set by the administrator, stored in bookings.status):
  *   Pending -> Confirmed -> In Progress -> Completed, or Cancelled.
  * Driver progress (stored in bookings.delivery_status, changed only through the server):
- *   ASSIGNED -> STARTED -> [PICKED_UP] -> ON_THE_WAY -> ARRIVED -> DELIVERED, or FAILED once started.
+ *   ASSIGNED -> STARTED -> DELIVERED (drop-off photo + recipient), or FAILED once started.
  * STARTED needs a Confirmed booking and moves it to In Progress; DELIVERED completes it. The server
  * enforces every rule; this class only decides what to show and which button to offer.
+ * PICKED_UP, ON_THE_WAY and ARRIVED are only on rows saved by older app builds; such a delivery can
+ * still be finished (DELIVERED) or failed, but nothing moves into those steps any more.
  */
 public final class DeliveryProgress {
 
@@ -33,17 +35,12 @@ public final class DeliveryProgress {
     private DeliveryProgress() {
     }
 
-    /** Same rule as trimax_private.delivery_transition_allowed on the server. */
+    /** Same rule as trimax_private.delivery_transition_allowed on the live server (Stage B baseline). */
     public static boolean canTransition(String from, String to) {
         if (from == null || to == null) return false;
-        switch (from) {
-            case ASSIGNED:   return STARTED.equals(to);
-            case STARTED:    return PICKED_UP.equals(to) || ON_THE_WAY.equals(to) || FAILED.equals(to);
-            case PICKED_UP:  return ON_THE_WAY.equals(to) || FAILED.equals(to);
-            case ON_THE_WAY: return ARRIVED.equals(to) || FAILED.equals(to);
-            case ARRIVED:    return DELIVERED.equals(to) || FAILED.equals(to);
-            default:         return false;
-        }
+        if (ASSIGNED.equals(from)) return STARTED.equals(to);
+        if (isUnderWay(from)) return DELIVERED.equals(to) || FAILED.equals(to);
+        return false;
     }
 
     /** Driver has left with the goods and has not finished. */
@@ -97,7 +94,7 @@ public final class DeliveryProgress {
         public final String label;
         /** Server code to move to, or null when the button opens another screen or is disabled. */
         public final String target;
-        /** The button opens the proof-of-delivery screen (ARRIVED -> DELIVERED). */
+        /** The button opens the proof-of-delivery screen (STARTED -> DELIVERED). */
         public final boolean opensProof;
         public final boolean enabled;
 
@@ -122,10 +119,10 @@ public final class DeliveryProgress {
                     return new NextStep("WAITING FOR ADMIN CONFIRMATION", null, false, false);
                 }
                 return new NextStep("START DELIVERY", STARTED, false, true);
-            case STARTED:    return new NextStep("PICK UP & ON THE WAY", PICKED_UP, false, true);
-            case PICKED_UP:  return new NextStep("START TRANSPORT / ON THE WAY", ON_THE_WAY, false, true);
-            case ON_THE_WAY: return new NextStep("ARRIVED AT DESTINATION", ARRIVED, false, true);
-            case ARRIVED:    return new NextStep("DROP-OFF PHOTO & PROOF OF DELIVERY", null, true, true);
+            case STARTED:
+            case PICKED_UP:      // older builds' in-between steps finish the same way
+            case ON_THE_WAY:
+            case ARRIVED:    return new NextStep("DROP OFF & COMPLETE (PHOTO PROOF)", null, true, true);
             case FAILED:     return new NextStep("DELIVERY FAILED – ADMIN WILL REVIEW", null, false, false);
             default:         return new NextStep("STATUS: " + code, null, false, false);
         }

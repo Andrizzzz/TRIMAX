@@ -426,6 +426,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
         // After a restart or theme change the activity is new: resume live GPS if still on duty.
         if (session.isDutyOnline() && !locationHelper.isTrackingActive()) startDutyTracking();
         syncDutyFromServer();
+        IssueReporter.flush(this);          // SOS / problem reports made while offline
+        ProofUploader.flush(this);          // drop-off photos not yet on the server
 
         NavigationView dashboardDrawer = findViewById(R.id.navigationView);
         if (dashboardDrawer != null) {
@@ -756,13 +758,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
                 desc = "Reported: " + selectedType;
             }
 
-            boolean saved = dbHelper.saveProblemReport(bookingId, session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
-            if (saved) {
-                // Problem reports are not on the TRIMAX server yet, so the admin does not receive them.
-                Toast.makeText(this, "Problem report saved on this phone only. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-            }
+            // Kept on this phone and sent to the admin (queued and retried when offline).
+            IssueReporter.send(this, false, bookingId, selectedType, desc, locationHelper);
         });
 
         builder.setNegativeButton("Cancel", null);

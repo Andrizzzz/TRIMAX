@@ -145,7 +145,7 @@ public class ProfileActivity extends AppCompatActivity {
         if (cardCall != null) {
             cardCall.setOnClickListener(v -> {
                 try {
-                    Intent dial = new Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:0281234567"));
+                    Intent dial = new Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + getString(R.string.office_phone)));
                     startActivity(dial);
                 } catch (Exception ignored) {
                     Toast.makeText(this, "Unable to launch dialer", Toast.LENGTH_SHORT).show();

@@ -217,6 +217,62 @@ public final class TrimaxApi {
         }, cb);
     }
 
+    // ------------------------------------------------------------------ delivery proof photos
+
+    /**
+     * Uploads a drop-off photo into the private delivery-proofs bucket (the driver's own folder) and
+     * attaches it to the booking (public.trimax_driver_attach_proof). objectName and requestId stay the
+     * same on every retry, so a retry never stores the photo twice. The result is the server's proof id.
+     */
+    public void attachDeliveryProof(int bookingId, java.io.File photo, String objectName, String recipientName,
+                                    Double latitude, Double longitude, String takenAtIso, String requestId,
+                                    Callback<Long> cb) {
+        run(() -> {
+            byte[] jpeg = DutySync.readJpeg(photo, null);      // read here, off the main thread
+            if (jpeg == null) throw new ApiException(ApiException.Kind.INVALID, "The photo is no longer on this phone.");
+            String uid = client.currentUserId();
+            if (uid == null) throw ApiException.sessionExpired();
+            String objectPath = uid + "/" + objectName;
+            client.uploadJpeg("delivery-proofs", objectPath, jpeg);
+
+            boolean hasFix = latitude != null && longitude != null && Double.isFinite(latitude)
+                    && Double.isFinite(longitude) && !(latitude == 0 && longitude == 0);
+            JSONObject args = new JSONObject();
+            args.put("p_booking_id", bookingId);
+            args.put("p_photo_path", objectPath);
+            args.put("p_recipient_name", recipientName != null && !recipientName.trim().isEmpty()
+                    ? recipientName.trim() : JSONObject.NULL);
+            args.put("p_latitude", hasFix ? latitude : JSONObject.NULL);
+            args.put("p_longitude", hasFix ? longitude : JSONObject.NULL);
+            args.put("p_taken_at", takenAtIso != null ? takenAtIso : JSONObject.NULL);
+            args.put("p_client_request_id", requestId);
+            return new JSONObject(client.rpc("trimax_driver_attach_proof", args)).getLong("proof_id");
+        }, cb);
+    }
+
+    // ------------------------------------------------------------------ SOS / problem reports
+
+    /**
+     * Sends an SOS or a problem report to the admin's Notifications (public.trimax_report_issue).
+     * requestId makes retries safe: sending the same id twice never creates a second alert.
+     * The result is the server's notification id.
+     */
+    public void reportIssue(boolean sos, String message, Integer bookingId, Double latitude, Double longitude,
+                            String requestId, Callback<Long> cb) {
+        run(() -> {
+            boolean hasFix = latitude != null && longitude != null && Double.isFinite(latitude)
+                    && Double.isFinite(longitude) && !(latitude == 0 && longitude == 0);
+            JSONObject args = new JSONObject();
+            args.put("p_kind", sos ? "SOS" : "PROBLEM");
+            args.put("p_message", message == null ? "" : message.trim());
+            args.put("p_booking_id", bookingId != null ? bookingId : JSONObject.NULL);
+            args.put("p_latitude", hasFix ? latitude : JSONObject.NULL);
+            args.put("p_longitude", hasFix ? longitude : JSONObject.NULL);
+            args.put("p_client_request_id", requestId);
+            return new JSONObject(client.rpc("trimax_report_issue", args)).getLong("notification_id");
+        }, cb);
+    }
+
     // ------------------------------------------------------------------ plumbing
 
     private <T> void run(Call<T> call, Callback<T> cb) {
