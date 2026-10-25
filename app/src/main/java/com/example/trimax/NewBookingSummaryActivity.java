@@ -66,8 +66,8 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         }
         final String address = resolvedAddress;
 
-        double pickupLat = 14.7826996;
-        double pickupLng = 121.0475865;
+        double pickupLat = BookingRecord.HUB_LATITUDE;
+        double pickupLng = BookingRecord.HUB_LONGITUDE;
         double destLat = intent.getDoubleExtra("DEST_LAT", 0);
         double destLng = intent.getDoubleExtra("DEST_LNG", 0);
 
@@ -97,10 +97,9 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 ? "Date & Time: " + resolvedDate
                 : "Date & Time: " + resolvedDate + " • " + resolvedTime;
         if (tvDateTime != null) tvDateTime.setText(dateTimeLabel);
-        if (address != null) {
-            if (tvAddress != null) tvAddress.setText(address);
-            if (tvDeliveryAddress != null) tvDeliveryAddress.setText(address);
-        }
+        // Pickup is always the fixed TRIMAX Hub; only the delivery side shows the customer's address.
+        if (tvAddress != null) tvAddress.setText(BookingRecord.HUB_NAME);
+        if (address != null && tvDeliveryAddress != null) tvDeliveryAddress.setText(address);
 
         // Estimated from the prices shown on the previous step; the server prices the booking when it is saved.
         double total = intent.getDoubleExtra("ESTIMATED_TOTAL", selectedPrice * quantity);

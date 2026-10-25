@@ -21,10 +21,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class ClientsActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
@@ -105,56 +103,6 @@ public class ClientsActivity extends AppCompatActivity {
         return etSearch != null && etSearch.getText() != null ? etSearch.getText().toString() : "";
     }
 
-    /**
-     * Customers saved on this phone plus everyone the agent has booked for on the server (from any
-     * phone), merged by phone number (or name when there is no number). Booking counts come from
-     * the server when it knows more.
-     */
-    private List<DatabaseHelper.SavedCustomer> mergedCustomers(String query) {
-        Map<String, DatabaseHelper.SavedCustomer> merged = new LinkedHashMap<>();
-        Map<String, Integer> serverCounts = new LinkedHashMap<>();
-        Map<String, BookingRecord> serverLatest = new LinkedHashMap<>();
-        if (serverBookings != null) {
-            for (BookingRecord r : serverBookings) {
-                if (r.customerName == null || r.customerName.trim().isEmpty()) continue;
-                String key = customerKey(r.customerName, r.customerContact);
-                serverCounts.put(key, serverCounts.getOrDefault(key, 0) + 1);
-                if (!serverLatest.containsKey(key)) serverLatest.put(key, r);
-            }
-        }
-        for (DatabaseHelper.SavedCustomer c : dbHelper.getSavedCustomers("")) {
-            String key = customerKey(c.getName(), c.getPhone());
-            int count = Math.max(c.getBookingCount(), serverCounts.getOrDefault(key, 0));
-            merged.put(key, new DatabaseHelper.SavedCustomer(c.getId(), c.getName(), c.getPhone(), c.getEmail(),
-                    c.getAddress(), c.getLatitude(), c.getLongitude(), count));
-        }
-        for (Map.Entry<String, BookingRecord> e : serverLatest.entrySet()) {
-            if (merged.containsKey(e.getKey())) continue;
-            BookingRecord r = e.getValue();
-            String address = r.customerAddress != null && !r.customerAddress.trim().isEmpty()
-                    ? r.customerAddress : r.deliveryAddress;
-            merged.put(e.getKey(), new DatabaseHelper.SavedCustomer(-1, r.customerName.trim(), r.customerContact, null,
-                    address, r.deliveryLatitude != null ? r.deliveryLatitude : 0, r.deliveryLongitude != null ? r.deliveryLongitude : 0,
-                    serverCounts.getOrDefault(e.getKey(), 1)));
-        }
-        String q = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
-        List<DatabaseHelper.SavedCustomer> out = new ArrayList<>();
-        for (DatabaseHelper.SavedCustomer c : merged.values()) {
-            if (q.isEmpty()
-                    || (c.getName() != null && c.getName().toLowerCase(Locale.ROOT).contains(q))
-                    || (c.getPhone() != null && c.getPhone().toLowerCase(Locale.ROOT).contains(q))
-                    || (c.getAddress() != null && c.getAddress().toLowerCase(Locale.ROOT).contains(q))) {
-                out.add(c);
-            }
-        }
-        return out;
-    }
-
-    private static String customerKey(String name, String phone) {
-        String digits = phone == null ? "" : phone.replaceAll("[^0-9]", "");
-        if (digits.length() >= 7) return "p:" + digits.substring(digits.length() - 10 > 0 ? digits.length() - 10 : 0);
-        return "n:" + (name == null ? "" : name.trim().toLowerCase(Locale.ROOT));
-    }
 
     private void renderCustomers(String query) {
         if (clientsListContainer == null || dbHelper == null) return;
@@ -185,7 +133,7 @@ public class ClientsActivity extends AppCompatActivity {
             intent.putExtra("CUSTOMER_DIRECTORY_ONLY", true);
             startActivity(intent);
         });
-        List<DatabaseHelper.SavedCustomer> customers = mergedCustomers(query);
+        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, query);
         if (customers.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText(query == null || query.trim().isEmpty()
