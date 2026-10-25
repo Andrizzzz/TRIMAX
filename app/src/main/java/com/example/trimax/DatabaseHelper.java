@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 5; // Updated for Secure Password Hashing & Migrations
+    private static final int DATABASE_VERSION = 12; // Version bumped to prevent downgrade crashes
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -415,12 +415,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "latitude REAL, "
                 + "longitude REAL, "
                 + "created_at TEXT)");
-        db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
-        if (oldVersion < 5) {
+        try {
+            db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
+        } catch (Exception ignored) {}
+        if (oldVersion < 12) {
             try {
                 seedInitialData(db);
             } catch (Exception ignored) {}
         }
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Prevent crash on database downgrade by re-initializing tables
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DELIVERIES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_LOCATION_LOGS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DELIVERY_PROOF);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ADJUSTMENTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STATUS_HISTORY);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PROBLEM_REPORTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ATTENDANCE);
+        onCreate(db);
     }
 
     // Authenticate User with Secure Password Verification & Legacy Plaintext Upgrade
