@@ -27,6 +27,7 @@ public class DriverHistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_history);
+        DriverNav.attach(this, R.id.nav_driver_history);
 
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);

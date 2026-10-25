@@ -22,7 +22,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -148,15 +147,7 @@ public class DashboardActivity extends AppCompatActivity {
             });
         }
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-
-        if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-                return insets;
-            });
-        }
+        LiquidGlassNavBar bottomNavigation = findViewById(R.id.bottomNavigation);
 
         String agentName = session.getFullName();
         String agentEmail = session.getEmail();
@@ -496,7 +487,7 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+    private void setupBottomNavigation(LiquidGlassNavBar bottomNavigation) {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {

@@ -13,7 +13,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -41,14 +40,9 @@ public class ProfileActivity extends AppCompatActivity {
         CardView cardChangePassword = findViewById(R.id.cardChangePassword);
         CardView cardReports = findViewById(R.id.cardReports);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        LiquidGlassNavBar bottomNavigation = findViewById(R.id.bottomNavigation);
 
         if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-                return insets;
-            });
             bottomNavigation.setSelectedItemId(R.id.nav_profile);
             setupBottomNavigation(bottomNavigation);
         }
@@ -93,7 +87,7 @@ public class ProfileActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+    private void setupBottomNavigation(LiquidGlassNavBar bottomNavigation) {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {

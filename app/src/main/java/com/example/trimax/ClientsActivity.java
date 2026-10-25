@@ -14,7 +14,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.List;
@@ -41,14 +40,9 @@ public class ClientsActivity extends AppCompatActivity {
         CardView cardClient1 = findViewById(R.id.cardClient1);
         CardView cardClient2 = findViewById(R.id.cardClient2);
         TextInputEditText etSearch = findViewById(R.id.etSearch);
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        LiquidGlassNavBar bottomNavigation = findViewById(R.id.bottomNavigation);
 
         if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-                return insets;
-            });
             bottomNavigation.setSelectedItemId(R.id.nav_clients);
             setupBottomNavigation(bottomNavigation);
         }
@@ -107,7 +101,7 @@ public class ClientsActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+    private void setupBottomNavigation(LiquidGlassNavBar bottomNavigation) {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {

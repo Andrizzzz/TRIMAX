@@ -15,7 +15,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -63,13 +62,8 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         chipCancelled = findViewById(R.id.chipCancelled);
         chipCompleted = findViewById(R.id.chipCompleted);
 
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+        LiquidGlassNavBar bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-                return insets;
-            });
             bottomNavigation.setSelectedItemId(R.id.nav_bookings);
             setupBottomNavigation(bottomNavigation);
         }
@@ -193,7 +187,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         startActivity(intent);
     }
 
-    private void setupBottomNavigation(BottomNavigationView bottomNavigation) {
+    private void setupBottomNavigation(LiquidGlassNavBar bottomNavigation) {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
