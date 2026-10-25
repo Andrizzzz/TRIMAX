@@ -15,6 +15,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.button.MaterialButton;
+
 public class SettingsActivity extends AppCompatActivity {
 
     private SessionManager session;
@@ -38,26 +40,31 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
-        CardView cardThemeSettings = findViewById(R.id.cardThemeSettings);
+        View cardThemeSettings = findViewById(R.id.cardThemeSettings);
         tvCurrentThemeSubtitle = findViewById(R.id.tvCurrentThemeSubtitle);
 
-        CardView cardNotificationSettings = findViewById(R.id.cardNotificationSettings);
-        CardView cardAccountSettings = findViewById(R.id.cardAccountSettings);
-        CardView cardPrivacy = findViewById(R.id.cardPrivacy);
-        CardView cardTerms = findViewById(R.id.cardTerms);
-        CardView cardRefundPolicy = findViewById(R.id.cardRefundPolicy);
-        CardView cardCookiesConsent = findViewById(R.id.cardCookiesConsent);
-        CardView cardBusinessDetails = findViewById(R.id.cardBusinessDetails);
-        CardView cardAbout = findViewById(R.id.cardAbout);
+        View cardNotificationSettings = findViewById(R.id.cardNotificationSettings);
+        View cardChangePassword = findViewById(R.id.cardChangePassword);
+        View cardAccountSettings = findViewById(R.id.cardAccountSettings);
+        View cardPrivacy = findViewById(R.id.cardPrivacy);
+        View cardTerms = findViewById(R.id.cardTerms);
+        View cardRefundPolicy = findViewById(R.id.cardRefundPolicy);
+        View cardCookiesConsent = findViewById(R.id.cardCookiesConsent);
+        View cardBusinessDetails = findViewById(R.id.cardBusinessDetails);
+        View cardAbout = findViewById(R.id.cardAbout);
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> navigateBack());
         }
 
         updateThemeSubtitle();
 
         if (cardThemeSettings != null) {
             cardThemeSettings.setOnClickListener(v -> showThemePickerDialog());
+        }
+
+        if (cardChangePassword != null) {
+            cardChangePassword.setOnClickListener(v -> startActivity(new Intent(SettingsActivity.this, ChangePasswordActivity.class)));
         }
 
         if (cardNotificationSettings != null) {
@@ -83,13 +90,16 @@ public class SettingsActivity extends AppCompatActivity {
         if (cardPrivacy != null) {
             cardPrivacy.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
-                        .setTitle("Privacy Policy & Data Protection")
-                        .setMessage("TRI-MAX Express Logistics Inc. respects your data privacy:\n\n"
-                                + "• Data Collection: We only collect necessary data (Name, Email, Phone, GPS Location for deliveries).\n"
-                                + "• Security: All customer and agent credentials are encrypted using industry-standard protocols.\n"
-                                + "• Compliance: Fully compliant with Republic Act No. 10173 (Data Privacy Act of 2012).\n"
-                                + "• No Third-Party Sharing: Your data is never sold or shared with unauthorized third parties.")
-                        .setPositiveButton("I Accept & Agree", null)
+                        .setTitle("Logout")
+                        .setMessage("Are you sure you want to logout?")
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("Logout", (dialog, which) -> {
+                            session.logoutUser();
+                            Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        })
                         .show();
             });
         }
@@ -109,16 +119,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         if (cardRefundPolicy != null) {
-            cardRefundPolicy.setOnClickListener(v -> {
-                new AlertDialog.Builder(this)
-                        .setTitle("Refund & Cancellation Policy")
-                        .setMessage("Booking Cancellation & Refund Rules:\n\n"
-                                + "• Cancellation before Dispatch: 100% full refund credited within 24 hours.\n"
-                                + "• Cancellation after Driver En Route: Partial fee may apply to cover driver transit costs.\n"
-                                + "• Failed Delivery due to Customer Unavailability: Free re-attempt within 12 hours or return refund.")
-                        .setPositiveButton("Got It", null)
-                        .show();
-            });
+            cardRefundPolicy.setOnClickListener(v -> showHelpSupportDialog());
         }
 
         if (cardCookiesConsent != null) {
@@ -152,14 +153,66 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         if (cardAbout != null) {
-            cardAbout.setOnClickListener(v -> {
-                new AlertDialog.Builder(this)
-                        .setTitle("About TRI-MAX App")
-                        .setMessage("TRI-MAX Mobile Agent System v2.4.0\n\nBOOK • TRACK • DELIVER\nOfficial logistics management application for authorized agents and drivers.")
-                        .setPositiveButton("OK", null)
-                        .show();
+            cardAbout.setOnClickListener(v -> showAboutDialog());
+        }
+    }
+
+    private void showAboutDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_about_trimax, null);
+        builder.setView(view);
+        AlertDialog dialog = builder.create();
+
+        View btnClose = view.findViewById(R.id.btnCloseAbout);
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        MaterialButton btnOk = view.findViewById(R.id.btnAboutOk);
+        if (btnOk != null) btnOk.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
+    }
+
+    private void showHelpSupportDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_help_support, null);
+        builder.setView(view);
+        AlertDialog dialog = builder.create();
+
+        View btnClose = view.findViewById(R.id.btnCloseSupport);
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        View cardCall = view.findViewById(R.id.cardSupportCall);
+        if (cardCall != null) {
+            cardCall.setOnClickListener(v -> {
+                try {
+                    Intent dial = new Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:0281234567"));
+                    startActivity(dial);
+                } catch (Exception ignored) {
+                    Toast.makeText(this, "Unable to launch dialer", Toast.LENGTH_SHORT).show();
+                }
             });
         }
+
+        View cardEmail = view.findViewById(R.id.cardSupportEmail);
+        if (cardEmail != null) {
+            cardEmail.setOnClickListener(v -> {
+                try {
+                    Intent email = new Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:support@trimax.ph"));
+                    email.putExtra(Intent.EXTRA_SUBJECT, "TRI-MAX Support Request");
+                    startActivity(email);
+                } catch (Exception ignored) {
+                    Toast.makeText(this, "Unable to launch email app", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
     }
 
     private void updateThemeSubtitle() {
@@ -195,5 +248,18 @@ public class SettingsActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    /**
+     * Return to the previous screen, or restore the agent dashboard if this
+     * screen was launched as the root of the task.
+     */
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

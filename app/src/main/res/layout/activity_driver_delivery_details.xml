@@ -7,11 +7,11 @@
     android:background="@color/bg_main"
     tools:context=".DriverDeliveryDetailsActivity">
 
-    <!-- Top Left Accent Shape -->
+    <!-- Top Left Accent Background Decor -->
     <ImageView
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:contentDescription="Top Left Accent"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
+        android:contentDescription="Background Accent"
         android:scaleType="fitStart"
         android:src="@drawable/bg_top_left_accent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="16dp"
-        android:paddingTop="16dp"
+        android:paddingTop="12dp"
         android:paddingBottom="12dp"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -31,25 +31,67 @@
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:contentDescription="Back Button"
+            android:contentDescription="Back"
             android:focusable="true"
             android:padding="8dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
 
         <TextView
             android:id="@+id/tvHeaderTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Booking TRX-1024"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:text="Booking Details"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/llHeaderBadges"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvHeaderTitle"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvSeqBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#1A2563EB"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="Seq #1"
+                android:textColor="@color/primary_blue"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_status_pending"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="ASSIGNED"
+                android:textColor="#2563EB"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </RelativeLayout>
 
+    <!-- MAIN SCROLLABLE CONTENT -->
     <ScrollView
+        android:id="@+id/scrollViewContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
@@ -58,50 +100,231 @@
         app:layout_constraintTop_toBottomOf="@+id/topBar">
 
         <LinearLayout
+            android:id="@+id/llMainContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="12dp"
+            android:paddingTop="14dp"
             android:paddingBottom="36dp">
 
-            <!-- Status & Sequence Badge Row -->
-            <RelativeLayout
+            <!-- 1. PACKAGE & CUSTOMER CARD -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
-                <TextView
-                    android:id="@+id/tvStatusBadge"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_status_pending"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="6dp"
-                    android:text="ASSIGNED"
-                    android:textColor="@color/primary_blue"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/tvSeqBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:background="@drawable/bg_status_confirmed"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="6dp"
-                    android:text="Seq #1"
-                    android:textColor="#059669"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </RelativeLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-            <!-- SPECIAL INSTRUCTIONS PROMINENT BOX -->
+                        <ImageView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="#1A2563EB"
+                            android:contentDescription="Package Icon"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_delivery_van"
+                            app:tint="@color/primary_blue" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PACKAGE &amp; CUSTOMER"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvPackageDetails"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Basic Delivery Package"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvCustomerName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Juan Dela Cruz"
+                                android:textColor="@color/primary_blue"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCallCustomer"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:text="📞 Call Customer"
+                            android:textAllCaps="false"
+                            android:textColor="@color/primary_blue"
+                            android:textSize="12sp"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="@color/primary_blue" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMessageCustomer"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="💬 Message"
+                            android:textAllCaps="false"
+                            android:textColor="@color/primary_blue"
+                            android:textSize="12sp"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="@color/primary_blue" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 2. LOCATIONS CARD (PICKUP & DESTINATION) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                app:cardBackgroundColor="#FFFBEB"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- PICKUP -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginTop="2dp"
+                            android:contentDescription="Pickup Pin"
+                            android:src="@drawable/ic_location"
+                            app:tint="#2563EB" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PICKUP LOCATION"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvPickupAddress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="123 Maple St., San Jose del Monte, Bulacan"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="#2064748B" />
+
+                    <!-- DESTINATION -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginTop="2dp"
+                            android:contentDescription="Destination Pin"
+                            android:src="@drawable/ic_location"
+                            app:tint="#059669" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DELIVERY DESTINATION"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvDestinationAddress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="456 Santos St., San Jose del Monte, Bulacan"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 3. INSTRUCTIONS CARD -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -114,9 +337,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="⚠️ SPECIAL INSTRUCTIONS"
-                        android:textColor="#D97706"
-                        android:textSize="12sp"
+                        android:text="SPECIAL INSTRUCTIONS"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -124,196 +347,58 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Handle with care. ₱500 deposit required."
-                        android:textColor="#92400E"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:text="Standard delivery procedures apply."
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Delivery Details Card -->
+            <!-- 4. FINANCIAL BREAKDOWN CARD -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="3dp">
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CUSTOMER &amp; CONTACT"
+                        android:text="FINANCIAL &amp; DEPOSIT BREAKDOWN"
                         android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvCustomerName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Juan Dela Cruz"
-                        android:textColor="@color/text_primary"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnCallCustomer"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="38dp"
-                            android:layout_marginEnd="8dp"
-                            android:text="📞 Call"
-                            android:textAllCaps="false"
-                            android:textColor="@color/primary_blue"
-                            android:textSize="12sp"
-                            app:cornerRadius="10dp"
-                            app:strokeColor="#2563EB" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnMessageCustomer"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="38dp"
-                            android:text="💬 Message"
-                            android:textAllCaps="false"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            app:cornerRadius="10dp"
-                            app:strokeColor="#CBD5E1" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="#F1F5F9" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PICKUP LOCATION"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvPickupAddress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="TRI-MAX Hub, San Jose del Monte"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="#F1F5F9" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DESTINATION LOCATION"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvDestinationAddress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="San Jose del Monte, Bulacan"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="#F1F5F9" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PACKAGE DETAILS &amp; SCHEDULE"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvPackageDetails"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Standard Freight Box (12 kg) • Today • 10:00 AM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- FINANCIAL & DEPOSIT BREAKDOWN CARD -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="3dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="FINANCIAL SUMMARY &amp; DEPOSIT"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
+                        android:layout_marginTop="10dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Original Amount:"
+                            android:text="Original Delivery Rate"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/tvOriginalAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:text="₱ 1,000.00"
+                            android:text="₱ 99.00"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="13sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
 
-                    <!-- Deposit Row -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -322,19 +407,18 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Deposit Required:"
+                            android:text="Deposit Amount"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/tvDepositSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:text="₱ 500.00 (PENDING)"
-                            android:textColor="#D97706"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:text="₱ 0.00 (N/A)"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp" />
                     </RelativeLayout>
 
                     <RelativeLayout
@@ -345,9 +429,9 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Adjustments / Charges:"
+                            android:text="Adjustments / Charges"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/tvAdjustmentsSummary"
@@ -355,16 +439,15 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:text="₱ 0.00"
-                            android:textColor="@color/primary_blue"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp" />
                     </RelativeLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="10dp"
-                        android:background="#F1F5F9" />
+                        android:background="#2064748B" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -373,9 +456,9 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="FINAL TOTAL AMOUNT:"
+                            android:text="FINAL TOTAL AMOUNT"
                             android:textColor="@color/text_primary"
-                            android:textSize="15sp"
+                            android:textSize="13sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -383,92 +466,139 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:text="₱ 1,000.00"
-                            android:textColor="#059669"
-                            android:textSize="18sp"
+                            android:text="₱ 99.00"
+                            android:textColor="@color/primary_blue"
+                            android:textSize="17sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
-
-                    <!-- Financial Action Buttons -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnManageDeposit"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_marginEnd="4dp"
-                            android:layout_weight="1"
-                            android:text="💵 Deposit"
-                            android:textAllCaps="false"
-                            android:textColor="#D97706"
-                            android:textSize="12sp"
-                            app:cornerRadius="10dp"
-                            app:strokeColor="#D97706" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnReportDamage"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="4dp"
-                            android:layout_weight="1"
-                            android:text="📦 Report Damage"
-                            android:textAllCaps="false"
-                            android:textColor="#DC2626"
-                            android:textSize="12sp"
-                            app:cornerRadius="10dp"
-                            app:strokeColor="#DC2626" />
-                    </LinearLayout>
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- DYNAMIC PRIMARY ACTION BUTTON -->
+            <!-- 5. DRIVER NAVIGATION & PRIMARY ACTION BUTTONS -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPrimaryAction"
+                android:id="@+id/btnNavigateMap"
                 android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="18dp"
                 android:backgroundTint="@color/primary_blue"
-                android:text="START DELIVERY"
+                android:text="🗺️ Open Live Navigation Map"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 app:cornerRadius="16dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnNavigateMap"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:id="@+id/btnPrimaryAction"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="10dp"
-                android:text="🗺 NAVIGATE ON MAP"
-                android:textAllCaps="false"
-                android:textColor="@color/primary_blue"
-                android:textSize="14sp"
+                android:layout_height="56dp"
+                android:layout_marginTop="18dp"
+                android:backgroundTint="@color/primary_blue"
+                android:text="START DELIVERY"
+                android:textAllCaps="true"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                app:cornerRadius="14dp"
-                app:strokeColor="#2563EB" />
+                app:cornerRadius="16dp" />
 
-            <!-- REPORT PROBLEM BUTTON (REPLACES DECLINE) -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnReportProblem"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            <!-- 6. DRIVER SECONDARY ACTIONS -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="10dp"
-                android:text="⚠️ REPORT PROBLEM TO ADMIN"
-                android:textAllCaps="false"
-                android:textColor="#EF4444"
-                android:textSize="14sp"
-                app:cornerRadius="14dp"
-                app:strokeColor="#EF4444" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnManageDeposit"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:text="Deposit"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="11sp"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="#64748B" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnReportDamage"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginHorizontal="2dp"
+                    android:layout_weight="1"
+                    android:text="Damage"
+                    android:textAllCaps="false"
+                    android:textColor="#D97706"
+                    android:textSize="11sp"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="#D97706" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnReportProblem"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:text="Problem"
+                    android:textAllCaps="false"
+                    android:textColor="#EF4444"
+                    android:textSize="11sp"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="#EF4444" />
+            </LinearLayout>
+
+            <!-- EMPTY / ERROR STATE CONTAINER -->
+            <LinearLayout
+                android:id="@+id/llErrorState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingVertical="40dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:contentDescription="Error Icon"
+                    android:src="@drawable/ic_close"
+                    app:tint="#EF4444" />
+
+                <TextView
+                    android:id="@+id/tvErrorTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Delivery Record Not Found"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvErrorMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="The requested delivery code could not be found in database records."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnErrorBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/primary_blue"
+                    android:text="Back to Dashboard"
+                    android:textAllCaps="false"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

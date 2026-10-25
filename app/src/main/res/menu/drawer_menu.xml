@@ -5,15 +5,18 @@
         <item
             android:id="@+id/drawer_home"
             android:icon="@drawable/ic_home"
-            android:title="Dashboard" />
+            android:title="Dashboard"
+            android:visible="false" />
         <item
             android:id="@+id/drawer_bookings"
             android:icon="@drawable/ic_bookings"
-            android:title="My Bookings" />
+            android:title="My Bookings"
+            android:visible="false" />
         <item
             android:id="@+id/drawer_clients"
             android:icon="@drawable/ic_clients"
-            android:title="Clients" />
+            android:title="Clients"
+            android:visible="false" />
         <item
             android:id="@+id/drawer_notifications"
             android:icon="@drawable/baseline_notifications_none_24"
@@ -21,14 +24,15 @@
         <item
             android:id="@+id/drawer_reports"
             android:icon="@drawable/ic_categories"
-            android:title="Reports" />
+            android:title="Reports / History" />
         <item
             android:id="@+id/drawer_profile"
             android:icon="@drawable/ic_user"
-            android:title="Profile" />
+            android:title="Profile"
+            android:visible="false" />
         <item
             android:id="@+id/drawer_settings"
-            android:icon="@drawable/ic_account"
+            android:icon="@drawable/ic_settings"
             android:title="Settings" />
     </group>
 

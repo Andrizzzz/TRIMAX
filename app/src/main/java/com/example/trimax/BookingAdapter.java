@@ -82,6 +82,10 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingV
                 tvStatusBadge.setText("CANCELLED");
                 tvStatusBadge.setBackgroundResource(R.drawable.bg_status_cancelled);
                 tvStatusBadge.setTextColor(0xFFEF4444);
+            } else if ("IN PROGRESS".equals(status)) {
+                tvStatusBadge.setText("IN PROGRESS");
+                tvStatusBadge.setBackgroundResource(R.drawable.bg_status_confirmed);
+                tvStatusBadge.setTextColor(0xFF2563EB);
             } else if ("COMPLETED".equals(status) || "DELIVERED".equals(status)) {
                 tvStatusBadge.setText("COMPLETED");
                 tvStatusBadge.setBackgroundResource(R.drawable.bg_status_completed);
@@ -90,6 +94,24 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingV
                 tvStatusBadge.setText("PENDING");
                 tvStatusBadge.setBackgroundResource(R.drawable.bg_status_pending);
                 tvStatusBadge.setTextColor(0xFFD97706);
+            }
+
+            // Subtle hover feedback for mouse/trackpad users; normal touch
+            // interaction still uses the card's ripple foreground.
+            if (itemView instanceof androidx.cardview.widget.CardView) {
+                androidx.cardview.widget.CardView card =
+                        (androidx.cardview.widget.CardView) itemView;
+                final float baseElevation = 2f * itemView.getResources().getDisplayMetrics().density;
+                final float hoverElevation = 6f * itemView.getResources().getDisplayMetrics().density;
+                card.setCardElevation(baseElevation);
+                itemView.setOnHoverListener((view, event) -> {
+                    if (event.getAction() == android.view.MotionEvent.ACTION_HOVER_ENTER) {
+                        card.animate().translationZ(hoverElevation - baseElevation).setDuration(120).start();
+                    } else if (event.getAction() == android.view.MotionEvent.ACTION_HOVER_EXIT) {
+                        card.animate().translationZ(0f).setDuration(120).start();
+                    }
+                    return false;
+                });
             }
 
             itemView.setOnClickListener(v -> {

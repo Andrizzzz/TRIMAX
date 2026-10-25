@@ -25,9 +25,10 @@ public class LocationHelper {
     private LocationListener locationListener;
     private OnLocationUpdateListener updateListener;
 
-    private double currentLatitude = 14.8115;
-    private double currentLongitude = 121.0453;
-    private float currentAccuracy = 5.0f;
+    // Zero means no real location fix has been received yet; never expose a fake GPS coordinate.
+    private double currentLatitude = 0.0;
+    private double currentLongitude = 0.0;
+    private float currentAccuracy = 0.0f;
     private float currentSpeed = 0.0f;
     private float currentBearing = 0.0f;
     private long lastTimestamp = System.currentTimeMillis();
@@ -47,6 +48,8 @@ public class LocationHelper {
     }
 
     public void startLocationUpdates(OnLocationUpdateListener listener) {
+        // Reuse a single listener even when multiple lifecycle callbacks request tracking.
+        stopLocationUpdates();
         this.updateListener = listener;
         if (!hasLocationPermission()) {
             return;
@@ -96,10 +99,22 @@ public class LocationHelper {
             isTrackingActive = true;
 
             // Fetch last known location as initial value
-            Location lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Location lastNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            Location best = lastGps != null ? lastGps : lastNet;
-            if (best != null) {
+            Location lastGps = null;
+            Location lastNet = null;
+            try {
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                }
+                if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    lastNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+            } catch (SecurityException ignored) {
+                // Permission may have been revoked while this screen was open.
+            }
+            Location best = lastGps;
+            if (lastNet != null && (best == null || lastNet.getTime() > best.getTime())) best = lastNet;
+            // Avoid using an old cached position as if it were the current location.
+            if (best != null && System.currentTimeMillis() - best.getTime() <= 10 * 60 * 1000L) {
                 currentLatitude = best.getLatitude();
                 currentLongitude = best.getLongitude();
                 currentAccuracy = best.getAccuracy();
@@ -107,6 +122,12 @@ public class LocationHelper {
                 currentBearing = best.getBearing();
                 lastTimestamp = best.getTime();
                 hasValidLocationFix = true;
+            } else if (System.currentTimeMillis() - lastTimestamp > 10 * 60 * 1000L) {
+                // Do not keep reporting a previously valid but now stale fix as current.
+                currentLatitude = 0.0;
+                currentLongitude = 0.0;
+                currentAccuracy = 0.0f;
+                hasValidLocationFix = false;
             }
         } catch (SecurityException ignored) {
             isTrackingActive = false;
@@ -120,6 +141,8 @@ public class LocationHelper {
             } catch (SecurityException ignored) {}
         }
         isTrackingActive = false;
+        locationListener = null;
+        updateListener = null;
     }
 
     public double getLatitude() {
@@ -158,6 +181,78 @@ public class LocationHelper {
 
     public boolean hasValidLocationFix() {
         return hasValidLocationFix;
+    }
+
+    // These values represent the last confirmed successful remote upload, not the last attempt.
+    private long lastRemotePushTimestamp = 0;
+    private double lastRemoteLat = 0.0;
+    private double lastRemoteLng = 0.0;
+    private boolean remotePushInProgress = false;
+    private static final long MIN_REMOTE_PUSH_INTERVAL_MS = 10_000L; // 10 seconds
+    private static final double MIN_REMOTE_PUSH_DISTANCE_METERS = 15.0;
+
+    public synchronized void pushLocationToSupabaseIfOnline(Context context, boolean isOnDuty) {
+        if (!isOnDuty || !hasValidLocationFix || currentLatitude == 0 || currentLongitude == 0) return;
+        if (remotePushInProgress) return;
+
+        TrimaxApi api = TrimaxApi.get(context);
+        if (!api.hasSession()) return;
+
+        final long now = System.currentTimeMillis();
+        final double latitude = currentLatitude;
+        final double longitude = currentLongitude;
+        final float accuracy = currentAccuracy;
+        final float speed = currentSpeed;
+        final float bearing = currentBearing;
+        double distMeters = distanceMeters(lastRemoteLat, lastRemoteLng, latitude, longitude);
+
+        if (lastRemotePushTimestamp > 0
+                && now - lastRemotePushTimestamp < MIN_REMOTE_PUSH_INTERVAL_MS
+                && distMeters < MIN_REMOTE_PUSH_DISTANCE_METERS) {
+            return;
+        }
+
+        // Mark only the request as in-flight here. A failed request must remain eligible for retry.
+        remotePushInProgress = true;
+        api.updateLiveLocation(
+                latitude,
+                longitude,
+                accuracy,
+                speed,
+                bearing,
+                true,
+                new TrimaxApi.Callback<Boolean>() {
+                    @Override public void onSuccess(Boolean result) {
+                        synchronized (LocationHelper.this) {
+                            remotePushInProgress = false;
+                            if (Boolean.TRUE.equals(result)) {
+                                lastRemotePushTimestamp = System.currentTimeMillis();
+                                lastRemoteLat = latitude;
+                                lastRemoteLng = longitude;
+                            }
+                        }
+                    }
+
+                    @Override public void onError(ApiException error) {
+                        synchronized (LocationHelper.this) {
+                            // Keep last successful values unchanged so the next GPS fix can retry.
+                            remotePushInProgress = false;
+                        }
+                    }
+                }
+        );
+    }
+
+    private static double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+        if (lat1 == 0 && lon1 == 0) return 999999.0;
+        double R = 6371000;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 
     public void updateSimulatedLocation(double lat, double lng, float accuracy) {

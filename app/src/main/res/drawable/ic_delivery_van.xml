@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="100dp"
+    android:viewportWidth="160"
+    android:viewportHeight="100">
+    <!-- Van Body Base -->
+    <path
+        android:fillColor="#0866F5"
+        android:pathData="M20,35 L95,35 C100,35 105,38 108,42 L125,58 L140,58 C145,58 148,62 148,67 L148,76 L138,76 C138,70 130,70 130,76 L55,76 C55,70 47,70 47,76 L20,76 C16,76 12,72 12,68 L12,43 C12,38 16,35 20,35 Z" />
+    <!-- Cabin Window -->
+    <path
+        android:fillColor="#EBF2FA"
+        android:pathData="M98,40 L106,40 C108,40 110,42 112,45 L120,55 L98,55 Z" />
+    <!-- Cargo Box Accent Stripe -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,48 L88,48 C90,48 91,49 91,51 L91,55 C91,57 90,58 88,58 L25,58 C23,58 22,57 22,55 L22,51 C22,49 23,48 25,48 Z" />
+    <!-- Wheels -->
+    <path
+        android:fillColor="#14213D"
+        android:pathData="M51,76 A8,8 0 1,0 51,92 A8,8 0 1,0 51,76 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,80 A4,4 0 1,0 51,88 A4,4 0 1,0 51,80 Z" />
+    <path
+        android:fillColor="#14213D"
+        android:pathData="M134,76 A8,8 0 1,0 134,92 A8,8 0 1,0 134,76 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M134,80 A4,4 0 1,0 134,88 A4,4 0 1,0 134,80 Z" />
+</vector>

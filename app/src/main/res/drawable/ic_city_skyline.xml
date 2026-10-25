@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="66dp"
+    android:viewportWidth="360"
+    android:viewportHeight="120">
+    <!-- Soft light blue skyline silhouette -->
+    <path
+        android:fillColor="#1A0866F5"
+        android:pathData="M0,120 L0,80 L20,80 L20,60 L35,60 L35,80 L50,80 L50,45 L70,45 L70,80 L90,80 L90,30 L105,30 L105,20 L115,20 L115,30 L125,30 L125,80 L145,80 L145,55 L165,55 L165,80 L185,80 L185,40 L205,40 L205,80 L225,80 L225,50 L245,50 L245,80 L265,80 L265,25 L280,25 L280,80 L300,80 L300,60 L320,60 L320,80 L340,80 L340,50 L360,50 L360,120 Z" />
+    <path
+        android:fillColor="#280866F5"
+        android:pathData="M0,120 L0,90 L15,90 L15,70 L30,70 L30,90 L60,90 L60,60 L80,60 L80,90 L100,90 L100,50 L120,50 L120,90 L140,90 L140,75 L160,75 L160,90 L190,90 L190,65 L210,65 L210,90 L230,90 L230,55 L250,55 L250,90 L270,90 L270,70 L290,70 L290,90 L310,90 L310,65 L330,65 L330,90 L360,90 L360,120 Z" />
+</vector>

@@ -1,15 +1,26 @@
 package com.example.trimax;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import android.widget.LinearLayout;
 import androidx.cardview.widget.CardView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 
 public class DriverProfileActivity extends AppCompatActivity {
@@ -21,24 +32,67 @@ public class DriverProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_profile);
-        DriverNav.attach(this, R.id.nav_driver_profile);
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            View topBar = findViewById(R.id.topBar);
+            if (topBar != null) {
+                int extraPadding = Math.round(16 * getResources().getDisplayMetrics().density);
+                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + extraPadding,
+                        topBar.getPaddingRight(), topBar.getPaddingBottom());
+            }
+
+            // Keep the floating navigation visible above the system navigation area.
+            View bottomNav = findViewById(R.id.cardBottomNavContainer);
+            if (bottomNav != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
+                if (params.bottomMargin != desiredBottomMargin) {
+                    params.bottomMargin = desiredBottomMargin;
+                    bottomNav.setLayoutParams(params);
+                }
+            }
+            return insets;
+        });
 
         session = new SessionManager(this);
 
-        ImageView btnBack = findViewById(R.id.btnBack);
-        TextView tvDriverName = findViewById(R.id.tvDriverName);
-        TextView tvDriverEmail = findViewById(R.id.tvDriverEmail);
+        ActivityResultLauncher<String[]> photoPicker = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(), uri -> {
+                    if (uri != null) {
+                        try {
+                            getContentResolver().takePersistableUriPermission(
+                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        } catch (SecurityException ignored) {
+                            // Some document providers do not offer persistable URI grants.
+                        }
+                        session.setProfilePhotoUri(uri.toString());
+                        updateProfileHeader();
+                    }
+                });
+
+        ImageView ivDriverProfilePhoto = findViewById(R.id.ivDriverProfilePhoto);
+        if (ivDriverProfilePhoto != null) ivDriverProfilePhoto.setOnClickListener(v -> photoPicker.launch(new String[]{"image/*"}));
 
         CardView cardEditProfile = findViewById(R.id.cardEditProfile);
         CardView cardChangePassword = findViewById(R.id.cardChangePassword);
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
 
-        if (tvDriverName != null) tvDriverName.setText(session.getFullName());
-        if (tvDriverEmail != null) tvDriverEmail.setText(session.getEmail());
+
+        setupBottomNavigation();
+
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(DriverProfileActivity.this, DriverDashboardActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        updateProfileHeader();
 
         if (cardEditProfile != null) {
             cardEditProfile.setOnClickListener(v -> startActivity(new Intent(this, EditProfileActivity.class)));
@@ -51,6 +105,126 @@ public class DriverProfileActivity extends AppCompatActivity {
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutDialog());
         }
+    }
+
+    private void navigateToTab(Class<?> targetClass) {
+        Intent intent = new Intent(this, targetClass);
+        intent.putExtra("PREV_TAB_INDEX", 4);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
+    }
+
+    private void setupBottomNavigation() {
+        highlightBottomNavItem(R.id.nav_profile);
+
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View profile = findViewById(R.id.nav_profile);
+
+        if (home != null) home.setOnClickListener(v -> navigateToTab(DriverDashboardActivity.class));
+        if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(DriverDeliveriesActivity.class));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(DriverHistoryActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_profile));
+    }
+
+    private void highlightBottomNavItem(int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] == activeId) {
+                activeIndex = i;
+                break;
+            }
+        }
+
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                boolean isActive = (id == activeId);
+                v.setSelected(isActive);
+            }
+        }
+
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        getIntent().removeExtra("PREV_TAB_INDEX");
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        LinearLayout navContainer = findViewById(R.id.bottomNavigation);
+        if (indicator != null) {
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
+
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 4};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
+
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
+
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 4;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
+
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(140)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .start();
+                });
+            }
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void updateProfileHeader() {
+        TextView tvDriverName = findViewById(R.id.tvDriverName);
+        TextView tvDriverEmail = findViewById(R.id.tvDriverEmail);
+        ImageView photo = findViewById(R.id.ivDriverProfilePhoto);
+        if (tvDriverName != null) tvDriverName.setText(session.getFullName());
+        if (tvDriverEmail != null) tvDriverEmail.setText(session.getEmail());
+        if (photo != null) {
+            String photoUri = session.getProfilePhotoUri();
+            if (photoUri != null && !photoUri.isEmpty()) {
+                try {
+                    photo.setImageURI(Uri.parse(photoUri));
+                    photo.setColorFilter(null);
+                } catch (Exception ignored) {
+                    photo.setImageResource(R.drawable.ic_user);
+                    photo.setColorFilter(getColor(R.color.primary_blue));
+                }
+            } else {
+                photo.setImageResource(R.drawable.ic_user);
+                photo.setColorFilter(getColor(R.color.primary_blue));
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateProfileHeader();
     }
 
     private void showLogoutDialog() {

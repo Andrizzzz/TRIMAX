@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="90dp"
+    android:viewportWidth="120"
+    android:viewportHeight="90">
+    <!-- Scooter Body -->
+    <path
+        android:fillColor="#0866F5"
+        android:pathData="M35,45 L65,45 C68,45 70,47 70,50 L70,68 C70,70 68,72 65,72 L35,72 C32,72 30,70 30,68 L30,50 C30,47 32,45 35,45 Z" />
+    <!-- Rear Cargo Box -->
+    <path
+        android:fillColor="#082B63"
+        android:pathData="M15,35 L40,35 C42,35 44,37 44,39 L44,55 C44,57 42,59 40,59 L15,59 C13,59 11,57 11,55 L11,39 C11,37 13,35 15,35 Z" />
+    <!-- Handlebars and Front Shell -->
+    <path
+        android:fillColor="#0866F5"
+        android:pathData="M75,30 L85,30 C88,30 92,34 94,38 L102,58 L90,58 L82,40 L75,40 Z" />
+    <!-- Wheels -->
+    <path
+        android:fillColor="#14213D"
+        android:pathData="M32,66 A8,8 0 1,0 32,82 A8,8 0 1,0 32,66 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,70 A4,4 0 1,0 32,78 A4,4 0 1,0 32,70 Z" />
+    <path
+        android:fillColor="#14213D"
+        android:pathData="M92,66 A8,8 0 1,0 92,82 A8,8 0 1,0 92,66 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M92,70 A4,4 0 1,0 92,78 A4,4 0 1,0 92,70 Z" />
+</vector>

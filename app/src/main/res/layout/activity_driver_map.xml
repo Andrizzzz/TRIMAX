@@ -88,9 +88,9 @@
                     android:layout_marginBottom="8dp"
                     android:contentDescription="Zoom In"
                     android:src="@drawable/ic_add"
-                    app:backgroundTint="@android:color/white"
+                    app:backgroundTint="@color/card_bg"
                     app:fabCustomSize="42dp"
-                    app:tint="#0F172A" />
+                    app:tint="@color/text_primary" />
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/btnZoomOut"
@@ -99,9 +99,9 @@
                     android:layout_marginBottom="8dp"
                     android:contentDescription="Zoom Out"
                     android:src="@drawable/ic_minus"
-                    app:backgroundTint="@android:color/white"
+                    app:backgroundTint="@color/card_bg"
                     app:fabCustomSize="42dp"
-                    app:tint="#0F172A" />
+                    app:tint="@color/text_primary" />
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/btnMyLocation"

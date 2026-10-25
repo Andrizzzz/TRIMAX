@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".ReportsActivity">
 
     <!-- Top Left Accent Shape -->
@@ -17,14 +17,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- TOP HEADER -->
+    <!-- TOP HEADER BANNER -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="12dp"
+        android:background="@color/navy_900"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
@@ -32,22 +33,65 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
             android:contentDescription="Back Button"
-            android:focusable="true"
             android:padding="8dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@android:color/white" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="6dp"
+                android:contentDescription="TRIMAX Logo"
+                android:src="@drawable/ic_trimax_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TRI-"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MAX"
+                android:textColor="@color/accent_blue"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnBack"
+            android:layout_marginTop="8dp"
             android:text="Reports &amp; Analytics"
-            android:textColor="#0F172A"
-            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvHeaderTitle"
+            android:layout_marginTop="4dp"
+            android:text="Track performance, monitor operations, and make data-driven decisions."
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
     </RelativeLayout>
 
+    <!-- SCROLLABLE CONTENT AREA -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -60,66 +104,42 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="36dp">
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
 
-            <RelativeLayout
+            <!-- Date Range Selector Pill -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDateFilter"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="46dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="@color/card_bg"
+                android:text="📅 Apr 21, 2025 - May 21, 2025  ▼"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/border_subtle" />
 
-                <TextView
-                    android:id="@+id/tvOverviewTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Monthly Overview 📊"
-                    android:textColor="#0F172A"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-                <!-- Date Range Filter Pill -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDateFilter"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="July 2026 📅"
-                    android:textAllCaps="false"
-                    android:textColor="#2563EB"
-                    android:textSize="12sp"
-                    app:cornerRadius="10dp"
-                    app:strokeColor="#2563EB" />
-            </RelativeLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Summary of agent performance and booking counts."
-                android:textColor="#64748B"
-                android:textSize="14sp" />
-
-            <!-- Stats 2x2 Grid (CLICKABLE CARDS) -->
+            <!-- STATS CARDS GRID (2 Columns) -->
+            <!-- Row 1: Total Bookings & Completed -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginBottom="12dp"
                 android:orientation="horizontal"
                 android:weightSum="2">
 
+                <!-- Total Bookings -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cardTotalBookings"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
 
@@ -129,34 +149,50 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@color/surface_alt"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_bookings"
+                            app:tint="@color/primary_blue" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
                             android:text="Total Bookings"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvReportTotalCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="18"
-                            android:textColor="#2563EB"
-                            android:textSize="26sp"
+                            android:layout_marginTop="2dp"
+                            android:text="248"
+                            android:textColor="@color/text_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="↑ 12% vs. previous period"
+                            android:textColor="@color/status_confirmed"
+                            android:textSize="11sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Completed -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cardConfirmedBookings"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
 
@@ -166,42 +202,59 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@color/status_confirmed_bg"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_check_circle"
+                            app:tint="@color/status_confirmed" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Confirmed"
-                            android:textColor="#64748B"
+                            android:layout_marginTop="10dp"
+                            android:text="Completed"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvReportConfirmedCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="10"
-                            android:textColor="#059669"
-                            android:textSize="26sp"
+                            android:layout_marginTop="2dp"
+                            android:text="214"
+                            android:textColor="@color/text_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="86.3% completion rate"
+                            android:textColor="@color/status_confirmed"
+                            android:textSize="11sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
+            <!-- Row 2: Pending & Cancelled -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
                 android:orientation="horizontal"
                 android:weightSum="2">
 
+                <!-- Pending -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cardPendingBookings"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
 
@@ -211,34 +264,49 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@color/status_pending_bg"
+                            android:padding="6dp"
+                            android:src="@drawable/calendar"
+                            app:tint="#D97706" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
                             android:text="Pending"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvReportPendingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="5"
-                            android:textColor="#D97706"
-                            android:textSize="26sp"
+                            android:layout_marginTop="2dp"
+                            android:text="14"
+                            android:textColor="@color/text_primary"
+                            android:textSize="24sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="5.6% of total bookings"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Cancelled -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cardCancelledBookings"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/card_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
 
@@ -248,73 +316,237 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@color/status_cancelled_bg"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_close"
+                            app:tint="@color/status_cancelled" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
                             android:text="Cancelled"
-                            android:textColor="#64748B"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvReportCancelledCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="3"
-                            android:textColor="#EF4444"
-                            android:textSize="26sp"
+                            android:layout_marginTop="2dp"
+                            android:text="12"
+                            android:textColor="@color/text_primary"
+                            android:textSize="24sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="4.8% of total bookings"
+                            android:textColor="@color/status_cancelled"
+                            android:textSize="11sp" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
-            <!-- Chart Card -->
+            <!-- Row 3: Failed Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="20dp">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:id="@+id/tvChartTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Booking Activity Graph"
-                        android:textColor="#0F172A"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@color/surface_alt"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_close"
+                        app:tint="@color/accent_blue" />
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:gravity="center"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
                         android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="📈"
-                            android:textSize="36sp" />
+                            android:text="Failed Deliveries"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvReportFailedCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Activity Chart Visualized"
-                            android:textColor="#64748B"
-                            android:textSize="13sp" />
+                            android:text="8"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
-                </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3.2% of total bookings"
+                        android:textColor="@color/accent_blue"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- BOOKING TRENDS PREVIEW CARD -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📈 Booking Trends &amp; Activity"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Daily volume and status overview."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <com.example.trimax.ActivityTrendChartView
+                        android:id="@+id/activityTrendChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="190dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@color/surface_alt"
+                        android:padding="8dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- OPERATIONAL INSIGHTS CARD -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡 Operational Insights &amp; Alerts"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvOperationalInsights"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:lineSpacingExtra="4dp"
+                        android:text="Analyzing system performance and operations..."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- EXPORT REPORTS CARD -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📥 Export Professional Report"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Choose your preferred format for analytics reports."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnExportPdf"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="14dp"
+                        android:backgroundTint="@color/primary_blue"
+                        android:text="Generate PDF Report"
+                        android:textAllCaps="false"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="14dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnExportCsv"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="10dp"
+                        android:text="Export CSV Spreadsheet"
+                        android:textAllCaps="false"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="15sp"
+                        app:cornerRadius="14dp"
+                        app:strokeColor="@color/primary_blue" />
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
         </LinearLayout>
     </ScrollView>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

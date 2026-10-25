@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_main"
+    android:fitsSystemWindows="false"
     tools:context=".DriverProfileActivity">
 
     <!-- Top Left Accent Shape -->
@@ -22,21 +23,10 @@
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="20dp"
         android:paddingTop="16dp"
-        android:paddingBottom="12dp"
+        android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:contentDescription="Back Button"
-            android:focusable="true"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_back" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -48,13 +38,12 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="128dp"
-        android:overScrollMode="never"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        app:layout_constraintBottom_toTopOf="@+id/cardBottomNavContainer"
         app:layout_constraintTop_toBottomOf="@+id/topBar">
 
         <LinearLayout
@@ -62,8 +51,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="36dp">
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
 
             <!-- Profile Info Card -->
             <androidx.cardview.widget.CardView
@@ -77,22 +66,32 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="12dp">
 
                     <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:id="@+id/ivDriverProfilePhoto"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:background="@drawable/bg_icon_badge"
-                        android:contentDescription="Driver Avatar"
-                        android:padding="16dp"
-                        android:src="@drawable/ic_user"
-                        app:tint="#2563EB" />
+                        android:clickable="true"
+                        android:contentDescription="Driver profile picture. Tap to change."
+                        android:focusable="true"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_user" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Tap photo to change"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/tvDriverName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="6dp"
                         android:text="Test Driver"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
@@ -123,8 +122,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="4dp"
                 android:text="Assigned Vehicle Details"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
@@ -140,7 +139,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -184,7 +183,7 @@
                 android:id="@+id/cardEditProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="6dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
@@ -194,7 +193,7 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp">
+                    android:padding="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -219,7 +218,7 @@
                 android:id="@+id/cardChangePassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
@@ -255,7 +254,7 @@
                 android:id="@+id/btnLogout"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="44dp"
                 android:text="Logout"
                 android:textAllCaps="false"
                 android:textColor="#EF4444"
@@ -264,18 +263,169 @@
                 app:strokeColor="#EF4444" />
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
-    <!-- BOTTOM NAVIGATION (liquid glass, floats over the content) -->
-    <com.example.trimax.LiquidGlassNavBar
-        android:id="@+id/bottomNavigation"
-        android:layout_width="0dp"
-        android:layout_height="64dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="12dp"
+    <!-- BOTTOM NAVIGATION CONTAINER -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardBottomNavContainer"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="36dp"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:navMenu="@menu/driver_bottom_nav_menu" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_bottom_nav_glass">
+
+            <!-- Shared Sliding Pill Indicator -->
+            <View
+                android:id="@+id/slidingIndicator"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:layout_marginVertical="6dp"
+                android:background="@drawable/bg_bottom_nav_pill" />
+
+            <LinearLayout
+                android:id="@+id/bottomNavigation"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:paddingHorizontal="2dp"
+                android:paddingVertical="5dp"
+                android:weightSum="4">
+
+                <LinearLayout
+                    android:id="@+id/nav_home"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Home">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_home"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Home"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="9sp"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_bookings"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Deliveries">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_bookings"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Deliveries"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="9sp"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_packages"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="History">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_categories"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="History"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="9sp"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/nav_profile"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Profile">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_account"
+                        app:tint="@color/bottom_nav_icon_color"
+                        android:duplicateParentState="true"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Profile"
+                        android:textColor="@color/bottom_nav_text_color"
+                        android:duplicateParentState="true"
+                        android:textSize="9sp"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="@color/bg_main"
     tools:context=".NotificationsActivity">
 
     <!-- Top Left Accent Shape -->
@@ -27,13 +27,33 @@
         android:paddingBottom="12dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="Back"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/btnBack"
+            android:layout_toStartOf="@id/tvMarkAllRead"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Notifications 🔔"
-            android:textColor="#0F172A"
-            android:textSize="22sp"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <TextView
@@ -46,7 +66,7 @@
             android:focusable="true"
             android:padding="4dp"
             android:text="Mark All as Read"
-            android:textColor="#2563EB"
+            android:textColor="@color/primary_blue"
             android:textSize="13sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -55,8 +75,6 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="128dp"
         android:overScrollMode="never"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/topBar">
@@ -74,7 +92,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:text="Today"
-                android:textColor="#64748B"
+                android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -87,6 +105,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -97,28 +116,34 @@
 
                     <TextView
                         android:id="@+id/tvNotif1Title"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_toStartOf="@id/tvNotif1Time"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:layout_marginEnd="8dp"
                         android:layout_height="wrap_content"
                         android:text="🔵 New Booking Submitted"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif1Message"
                         android:layout_below="@+id/tvNotif1Title"
                         android:layout_marginTop="4dp"
                         android:text="Booking #BK-2026-00123 has been submitted successfully."
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif1Time"
                         android:layout_alignParentEnd="true"
                         android:text="2 mins ago"
-                        android:textColor="#94A3B8"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
@@ -132,6 +157,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -142,28 +168,34 @@
 
                     <TextView
                         android:id="@+id/tvNotif2Title"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_toStartOf="@id/tvNotif2Time"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:layout_marginEnd="8dp"
                         android:layout_height="wrap_content"
                         android:text="🟢 Booking Confirmed"
-                        android:textColor="#0F172A"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif2Message"
                         android:layout_below="@+id/tvNotif2Title"
                         android:layout_marginTop="4dp"
                         android:text="Booking #BK-2026-00122 has been confirmed by dispatch."
-                        android:textColor="#64748B"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvNotif2Time"
                         android:layout_alignParentEnd="true"
                         android:text="1 hour ago"
-                        android:textColor="#94A3B8"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
@@ -171,16 +203,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- BOTTOM NAVIGATION (liquid glass, floats over the content) -->
-    <com.example.trimax.LiquidGlassNavBar
-        android:id="@+id/bottomNavigation"
-        android:layout_width="0dp"
-        android:layout_height="64dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:navMenu="@menu/bottom_nav_menu" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

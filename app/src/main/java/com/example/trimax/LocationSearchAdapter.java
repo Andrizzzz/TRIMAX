@@ -20,7 +20,7 @@ public class LocationSearchAdapter extends ArrayAdapter<SearchResultItem> {
     private List<SearchResultItem> items;
 
     public LocationSearchAdapter(@NonNull Context context, @NonNull List<SearchResultItem> items) {
-        super(context, android.R.layout.simple_dropdown_item_1line, items);
+        super(context, R.layout.item_location_suggestion, items);
         this.context = context;
         this.items = new ArrayList<>(items);
     }
@@ -51,25 +51,20 @@ public class LocationSearchAdapter extends ArrayAdapter<SearchResultItem> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_2, parent, false);
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_location_suggestion, parent, false);
         }
 
         SearchResultItem item = getItem(position);
         if (item != null) {
-            TextView text1 = convertView.findViewById(android.R.id.text1);
-            TextView text2 = convertView.findViewById(android.R.id.text2);
+            TextView text1 = convertView.findViewById(R.id.tvSuggestionTitle);
+            TextView text2 = convertView.findViewById(R.id.tvSuggestionSubtitle);
 
             if (text1 != null) {
                 text1.setText(item.getShortName());
-                text1.setTextColor(0xFF0F172A);
-                text1.setTextSize(14);
-                text1.setTypeface(null, android.graphics.Typeface.BOLD);
             }
 
             if (text2 != null) {
                 text2.setText(item.getFullAddress());
-                text2.setTextColor(0xFF64748B);
-                text2.setTextSize(12);
             }
         }
 

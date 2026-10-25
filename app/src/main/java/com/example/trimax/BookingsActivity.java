@@ -5,13 +5,18 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +39,9 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
     private String currentFilter = "ALL";
     private String currentSearchQuery = "";
 
+    private final android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable searchRunnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +57,25 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
             });
         }
 
+        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
+        if (cardBottomNavContainer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
+                params.bottomMargin = baseMargin + systemBars.bottom;
+                v.setLayoutParams(params);
+                return insets;
+            });
+        }
+
         dbHelper = new DatabaseHelper(this);
+
+        // Apply incoming Intent filter extra if passed from Dashboard
+        String initialFilter = getIntent().getStringExtra("FILTER");
+        if (initialFilter != null && !initialFilter.isEmpty()) {
+            currentFilter = initialFilter.toUpperCase();
+        }
 
         MaterialButton btnNewBooking = findViewById(R.id.btnNewBooking);
         etSearchBookings = findViewById(R.id.etSearchBookings);
@@ -62,11 +88,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         chipCancelled = findViewById(R.id.chipCancelled);
         chipCompleted = findViewById(R.id.chipCompleted);
 
-        LiquidGlassNavBar bottomNavigation = findViewById(R.id.bottomNavigation);
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_bookings);
-            setupBottomNavigation(bottomNavigation);
-        }
+        setupBottomNavigation();
 
         // RecyclerView Setup
         bookingAdapter = new BookingAdapter(this);
@@ -76,6 +98,17 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         // New Booking Button Listener
         if (btnNewBooking != null) {
             btnNewBooking.setOnClickListener(v -> {
+                SessionManager session = new SessionManager(this);
+                if (dbHelper == null) dbHelper = new DatabaseHelper(this);
+                boolean isClockedIn = session.isDutyOnline() || dbHelper.getActiveAttendance(session.getUsername()) != null;
+                if (!isClockedIn) {
+                    new AlertDialog.Builder(BookingsActivity.this)
+                            .setTitle("Attendance Required")
+                            .setMessage("You must be clocked in (Start Duty / Agent Attendance) before adding a new booking.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    return;
+                }
                 Intent intent = new Intent(BookingsActivity.this, NewBookingCustomerActivity.class);
                 startActivity(intent);
             });
@@ -88,7 +121,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         if (chipCancelled != null) chipCancelled.setOnClickListener(v -> setFilter("CANCELLED"));
         if (chipCompleted != null) chipCompleted.setOnClickListener(v -> setFilter("COMPLETED"));
 
-        // Search text watcher
+        // Search text watcher with debouncing to prevent UI freeze and ANR
         if (etSearchBookings != null) {
             etSearchBookings.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -97,27 +130,31 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     currentSearchQuery = s != null ? s.toString().trim() : "";
-                    loadBookingsFromDatabase();
+                    if (searchRunnable != null) {
+                        searchHandler.removeCallbacks(searchRunnable);
+                    }
+                    searchRunnable = () -> loadBookingsFromDatabase();
+                    searchHandler.postDelayed(searchRunnable, 250);
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {}
             });
         }
+    }
 
-        // Apply incoming Intent filter extra if passed from Dashboard
-        String initialFilter = getIntent().getStringExtra("FILTER");
-        if (initialFilter != null && !initialFilter.isEmpty()) {
-            currentFilter = initialFilter.toUpperCase();
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (searchHandler != null && searchRunnable != null) {
+            searchHandler.removeCallbacks(searchRunnable);
         }
-
-        setupBottomNavigation(bottomNavigation);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadBookingsFromDatabase();
+        refreshBookings();   // always show the server's current state when the screen is opened again
     }
 
     private void setFilter(String filter) {
@@ -126,19 +163,72 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         loadBookingsFromDatabase();
     }
 
-    private void loadBookingsFromDatabase() {
-        List<Delivery> bookings = dbHelper.getBookingsByFilter(currentFilter, currentSearchQuery);
-        bookingAdapter.setBookingList(bookings);
+    /** The agent's own bookings from the TRIMAX server; the chips and search filter them on the phone. */
+    private List<BookingRecord> serverBookings;
+    private boolean loadingBookings;
 
-        if (bookings.isEmpty()) {
-            tvEmptyBookings.setVisibility(View.VISIBLE);
-            rvBookings.setVisibility(View.GONE);
+    /** Filter or search changed: filter what is loaded; load only if nothing is loaded yet. */
+    private void loadBookingsFromDatabase() {
+        if (isFinishing() || isDestroyed()) return;
+        if (bookingAdapter == null || rvBookings == null || tvEmptyBookings == null) return;
+        updateChipStyles();
+        if (serverBookings != null) {
+            showFilteredBookings();
+            return;
+        }
+        refreshBookings();
+    }
+
+    private void refreshBookings() {
+        if (isFinishing() || isDestroyed()) return;
+        if (bookingAdapter == null || rvBookings == null || tvEmptyBookings == null) return;
+        updateChipStyles();
+        if (loadingBookings) return;
+        loadingBookings = true;
+        if (serverBookings == null) showBookingsMessage("Loading bookings...", false);
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> result) {
+                loadingBookings = false;
+                if (SessionGuard.isGone(BookingsActivity.this)) return;
+                serverBookings = result;
+                showFilteredBookings();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                loadingBookings = false;
+                if (SessionGuard.isGone(BookingsActivity.this)) return;
+                if (SessionGuard.handle(BookingsActivity.this, error)) return;
+                if (serverBookings == null) {
+                    showBookingsMessage(error.getMessage() + "\nTap here to try again.", true);
+                } else {
+                    Toast.makeText(BookingsActivity.this, "Could not refresh: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void showFilteredBookings() {
+        List<BookingRecord> shown = BookingFilter.apply(serverBookings, currentFilter, currentSearchQuery);
+        List<Delivery> rows = new java.util.ArrayList<>();
+        for (BookingRecord b : shown) rows.add(b.toDelivery(false));
+        bookingAdapter.setBookingList(rows);
+        if (rows.isEmpty()) {
+            showBookingsMessage(serverBookings.isEmpty() ? "You have not created any bookings yet."
+                    : "No bookings match this filter.", false);
         } else {
+            tvEmptyBookings.setOnClickListener(null);
             tvEmptyBookings.setVisibility(View.GONE);
             rvBookings.setVisibility(View.VISIBLE);
         }
+    }
 
-        updateChipStyles();
+    private void showBookingsMessage(String message, boolean retry) {
+        tvEmptyBookings.setText(message);
+        tvEmptyBookings.setOnClickListener(retry ? v -> refreshBookings() : null);
+        tvEmptyBookings.setVisibility(View.VISIBLE);
+        rvBookings.setVisibility(View.GONE);
     }
 
     private void updateChipStyles() {
@@ -163,15 +253,20 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
 
     private void resetChipStyle(MaterialButton chip) {
         if (chip == null) return;
-        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0x00000000)); // Transparent
-        chip.setTextColor(0xFF0F172A);
-        chip.setStrokeColor(android.content.res.ColorStateList.valueOf(0xFFCBD5E1));
+        // Keep filter chips visually neutral unless selected. Remove the default
+        // hover overlay that can make All/Pending look selected unexpectedly.
+        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat.getColor(this, R.color.surface_alt)));
+        chip.setRippleColor(android.content.res.ColorStateList.valueOf(0x00000000));
+        chip.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary));
+        chip.setStrokeColor(android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat.getColor(this, R.color.border_subtle)));
         chip.setStrokeWidth(2);
     }
 
     private void setSelectedChipStyle(MaterialButton chip) {
         if (chip == null) return;
-        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF2563EB)); // Blue
+        chip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF2563EB)); // Selected blue
         chip.setTextColor(0xFFFFFFFF);
         chip.setStrokeWidth(0);
     }
@@ -187,29 +282,101 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         startActivity(intent);
     }
 
-    private void setupBottomNavigation(LiquidGlassNavBar bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                startActivity(new Intent(this, DashboardActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_notifications) {
-                startActivity(new Intent(this, NotificationsActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                finish();
-                return true;
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
+    }
+
+    private void navigateToTab(Class<?> targetClass) {
+        Intent intent = new Intent(BookingsActivity.this, targetClass);
+        intent.putExtra("PREV_TAB_INDEX", 1);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
+    }
+
+    private void setupBottomNavigation() {
+        highlightBottomNavItem(R.id.nav_bookings);
+
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        if (home != null) home.setOnClickListener(v -> navigateToTab(DashboardActivity.class));
+        if (bookings != null) bookings.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_bookings));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(PackagesActivity.class));
+        if (clients != null) clients.setOnClickListener(v -> navigateToTab(ClientsActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(ProfileActivity.class));
+    }
+
+    private void highlightBottomNavItem(int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] == activeId) {
+                activeIndex = i;
+                break;
             }
-            return false;
-        });
+        }
+
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                boolean isActive = (id == activeId);
+                v.setSelected(isActive);
+            }
+        }
+
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        getIntent().removeExtra("PREV_TAB_INDEX");
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        LinearLayout navContainer = findViewById(R.id.bottomNavigation);
+        if (indicator != null) {
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
+
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 5};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
+
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
+
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 5;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
+
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(140)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .start();
+                });
+            }
+        }
     }
 }

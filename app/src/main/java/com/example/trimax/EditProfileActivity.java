@@ -1,5 +1,6 @@
 package com.example.trimax;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
@@ -52,7 +53,7 @@ public class EditProfileActivity extends AppCompatActivity {
         if (etEmail != null) etEmail.setText(currentEmail);
         if (etPhone != null) etPhone.setText(currentPhone);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 
         if (btnSaveChanges != null) {
             btnSaveChanges.setOnClickListener(v -> {
@@ -83,10 +84,22 @@ public class EditProfileActivity extends AppCompatActivity {
                     dbHelper.updateUserProfile(userId, newName, newEmail, newPhone);
                     session.updateProfile(newName, newEmail, newPhone);
 
-                    Toast.makeText(this, "Profile changes saved successfully!", Toast.LENGTH_SHORT).show();
+                    // The TRIMAX account (name, email, phone) is managed on the desktop and is re-read from the
+                    // server at the next start, so these edits only change what this phone shows until then.
+                    Toast.makeText(this, "Saved on this phone only. Ask the office to update your TRIMAX account.",
+                            Toast.LENGTH_LONG).show();
                     finish();
                 }
             });
         }
+    }
+
+    private void navigateBack() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        }
+        finish();
     }
 }

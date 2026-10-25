@@ -1,0 +1,6 @@
+- `[ ]` Define string resources in `strings.xml` for Profile, Login, Dashboard, and Bookings
+- `[ ]` Refactor `activity_profile.xml` to use string resources
+- `[ ]` Refactor `activity_login.xml` to use string resources
+- `[ ]` Refactor `activity_dashboard.xml` to use string resources
+- `[ ]` Refactor `activity_bookings.xml` to use string resources
+- `[ ]` Build and verify with `./gradlew assembleDebug` and `./gradlew lintDebug`

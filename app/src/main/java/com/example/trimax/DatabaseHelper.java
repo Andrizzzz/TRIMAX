@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 12; // Version bumped to prevent downgrade crashes
+    private static final int DATABASE_VERSION = 12; // Kept at 12 so phones that installed the older master build (v12) upgrade cleanly
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -30,9 +30,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_PROBLEM_REPORTS = "driver_problem_reports";
     public static final String TABLE_NOTIFICATIONS = "notifications";
     public static final String TABLE_ATTENDANCE = "attendance_records";
+    public static final String TABLE_CUSTOMERS = "customers";
+
+    private final Context context;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context.getApplicationContext();
     }
 
     // -------------------------------------------------------------
@@ -213,6 +217,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "timestamp TEXT)";
         db.execSQL(createNotificationsTable);
 
+        // Saved customer records are independent from individual bookings.
+        createCustomersTable(db);
+
         // 9. Agent Duty Attendance Table
         String createAttendanceTable = "CREATE TABLE " + TABLE_ATTENDANCE + " ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -228,38 +235,93 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Populate Initial Seed Data with Hashed Passwords
         seedInitialData(db);
+        syncCustomersFromBookings(db);
+    }
+
+    private void createCustomersTable(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_CUSTOMERS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "full_name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, address TEXT, "
+                + "latitude REAL DEFAULT 0, longitude REAL DEFAULT 0, created_at TEXT, updated_at TEXT)");
+    }
+
+    private void syncCustomersFromBookings(SQLiteDatabase db) {
+        Cursor cursor = db.rawQuery("SELECT customer_name, customer_phone, MAX(destination), "
+                + "MAX(destination_latitude), MAX(destination_longitude) FROM " + TABLE_DELIVERIES
+                + " WHERE customer_name IS NOT NULL AND TRIM(customer_name)<>'' "
+                + "GROUP BY customer_name, customer_phone", null);
+        if (cursor == null) return;
+        while (cursor.moveToNext()) {
+            String name = cursor.getString(0), phone = cursor.getString(1), address = cursor.getString(2);
+            double latitude = cursor.getDouble(3), longitude = cursor.getDouble(4);
+            if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) continue;
+
+            Cursor existing = db.rawQuery("SELECT id, address, latitude, longitude FROM " + TABLE_CUSTOMERS
+                    + " WHERE phone=? ORDER BY id LIMIT 1", new String[]{phone.trim()});
+            long existingId = -1;
+            String existingAddress = "";
+            double existingLatitude = 0, existingLongitude = 0;
+            if (existing != null) {
+                if (existing.moveToFirst()) {
+                    existingId = existing.getLong(0);
+                    existingAddress = existing.getString(1);
+                    existingLatitude = existing.getDouble(2);
+                    existingLongitude = existing.getDouble(3);
+                }
+                existing.close();
+            }
+
+            if (existingId < 0) {
+                ContentValues values = new ContentValues();
+                values.put("full_name", name.trim());
+                values.put("phone", phone.trim());
+                values.put("email", "");
+                values.put("address", address != null ? address : "");
+                values.put("latitude", latitude);
+                values.put("longitude", longitude);
+                values.put("created_at", String.valueOf(System.currentTimeMillis()));
+                values.put("updated_at", String.valueOf(System.currentTimeMillis()));
+                db.insert(TABLE_CUSTOMERS, null, values);
+            } else if ((existingLatitude == 0 || existingLongitude == 0)
+                    && latitude != 0 && longitude != 0) {
+                ContentValues values = new ContentValues();
+                values.put("latitude", latitude);
+                values.put("longitude", longitude);
+                if (existingAddress == null || existingAddress.trim().isEmpty()) {
+                    values.put("address", address != null ? address : "");
+                }
+                values.put("updated_at", String.valueOf(System.currentTimeMillis()));
+                db.update(TABLE_CUSTOMERS, values, "id=?", new String[]{String.valueOf(existingId)});
+            }
+        }
+        cursor.close();
+    }
+
+    private void insertDebugUser(SQLiteDatabase db, String username, String password,
+                                  String role, String fullName, String email, String phone) {
+        ContentValues values = new ContentValues();
+        values.put("username", username);
+        values.put("password", hashPassword(password));
+        values.put("role", role);
+        values.put("full_name", fullName);
+        values.put("email", email);
+        values.put("phone", phone);
+        db.insertWithOnConflict(TABLE_USERS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     private void seedInitialData(SQLiteDatabase db) {
-        // Driver User Account
-        ContentValues driverUser = new ContentValues();
-        driverUser.put("username", "driver01");
-        driverUser.put("password", hashPassword("driver123"));
-        driverUser.put("role", "DRIVER");
-        driverUser.put("full_name", "Test Driver");
-        driverUser.put("email", "driver@trimax.com");
-        driverUser.put("phone", "09123456789");
-        db.insertWithOnConflict(TABLE_USERS, null, driverUser, SQLiteDatabase.CONFLICT_REPLACE);
-
-        // Official Agent User Account
-        ContentValues agentUser = new ContentValues();
-        agentUser.put("username", "agent01");
-        agentUser.put("password", hashPassword("agent123"));
-        agentUser.put("role", "AGENT");
-        agentUser.put("full_name", "Test Agent");
-        agentUser.put("email", "agent@trimax.com");
-        agentUser.put("phone", "09170001122");
-        db.insertWithOnConflict(TABLE_USERS, null, agentUser, SQLiteDatabase.CONFLICT_REPLACE);
-
-        // Secondary Agent User Account
-        ContentValues riderUser = new ContentValues();
-        riderUser.put("username", "rider01");
-        riderUser.put("password", hashPassword("rider123"));
-        riderUser.put("role", "AGENT");
-        riderUser.put("full_name", "Test Agent");
-        riderUser.put("email", "rider@trimax.com");
-        riderUser.put("phone", "09987654321");
-        db.insertWithOnConflict(TABLE_USERS, null, riderUser, SQLiteDatabase.CONFLICT_REPLACE);
+        // Demo credentials are seeded only into explicitly debuggable builds.
+        // Release builds must use accounts provisioned through the authorized TRIMAX workflow.
+        boolean debugBuild = (context.getApplicationInfo().flags
+                & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        if (debugBuild) {
+            insertDebugUser(db, "driver01", "driver123", "DRIVER", "Test Driver",
+                    "driver@trimax.com", "09123456789");
+            insertDebugUser(db, "agent01", "agent123", "AGENT", "Test Agent",
+                    "agent@trimax.com", "09170001122");
+            insertDebugUser(db, "rider01", "rider123", "AGENT", "Test Agent",
+                    "rider@trimax.com", "09987654321");
+        }
 
         // Sample Admin-Assigned Bookings for driver01
         ContentValues b1 = new ContentValues();
@@ -415,29 +477,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "latitude REAL, "
                 + "longitude REAL, "
                 + "created_at TEXT)");
-        try {
-            db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
-        } catch (Exception ignored) {}
-        if (oldVersion < 12) {
-            try {
-                seedInitialData(db);
-            } catch (Exception ignored) {}
+        db.execSQL("UPDATE " + TABLE_USERS + " SET role='AGENT' WHERE UPPER(role)='RIDER'");
+        createCustomersTable(db);
+        if (oldVersion < 6) {
+            try { seedInitialData(db); } catch (Exception ignored) {}
+        }
+        if (oldVersion < 8) {
+            try { db.execSQL("ALTER TABLE " + TABLE_CUSTOMERS + " ADD COLUMN latitude REAL DEFAULT 0"); } catch (Exception ignored) {}
+            try { db.execSQL("ALTER TABLE " + TABLE_CUSTOMERS + " ADD COLUMN longitude REAL DEFAULT 0"); } catch (Exception ignored) {}
+        }
+        if (oldVersion < 8) syncCustomersFromBookings(db);
+        if (oldVersion < 9) {
+            ContentValues pickupValues = new ContentValues();
+            pickupValues.put("pickup_location", "TRIMAX Hub (14.782700, 121.047587)");
+            pickupValues.put("pickup_latitude", 14.7826996);
+            pickupValues.put("pickup_longitude", 121.0475865);
+            db.update(TABLE_DELIVERIES, pickupValues, null, null);
         }
     }
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Prevent crash on database downgrade by re-initializing tables
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DELIVERIES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_LOCATION_LOGS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DELIVERY_PROOF);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ADJUSTMENTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STATUS_HISTORY);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PROBLEM_REPORTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ATTENDANCE);
-        onCreate(db);
+        onUpgrade(db, oldVersion, newVersion);
     }
 
     // Authenticate User with Secure Password Verification & Legacy Plaintext Upgrade
@@ -514,10 +575,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         argsList.add(driverUsername);
 
         if (filterStatus != null && !"ALL".equalsIgnoreCase(filterStatus)) {
-            query += " AND status=?";
-            argsList.add(filterStatus);
+            if ("DELIVERED".equalsIgnoreCase(filterStatus) || "COMPLETED".equalsIgnoreCase(filterStatus)) {
+                // Historical data may use either DELIVERED or COMPLETED for successful deliveries.
+                query += " AND UPPER(status) IN ('DELIVERED', 'COMPLETED')";
+            } else if ("FAILED".equalsIgnoreCase(filterStatus)) {
+                query += " AND UPPER(status)='FAILED'";
+            } else {
+                query += " AND UPPER(status)=?";
+                argsList.add(filterStatus.toUpperCase(Locale.ROOT));
+            }
         } else {
-            query += " AND (status='DELIVERED' OR status='FAILED' OR status='CANCELLED')";
+            query += " AND UPPER(status) IN ('DELIVERED', 'COMPLETED', 'FAILED', 'CANCELLED')";
         }
 
         query += " ORDER BY sequence_number ASC, id DESC";
@@ -746,35 +814,65 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private Delivery extractDeliveryFromCursor(Cursor cursor) {
-        return new Delivery(
-                cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("booking_id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("driver_id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("customer_id")),
-                cursor.getString(cursor.getColumnIndexOrThrow("customer_name")),
-                cursor.getString(cursor.getColumnIndexOrThrow("customer_phone")),
-                cursor.getString(cursor.getColumnIndexOrThrow("pickup_location")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("pickup_latitude")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("pickup_longitude")),
-                cursor.getString(cursor.getColumnIndexOrThrow("destination")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("destination_latitude")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("destination_longitude")),
-                cursor.getString(cursor.getColumnIndexOrThrow("special_instructions")),
-                cursor.getString(cursor.getColumnIndexOrThrow("package_details")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("original_amount")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("current_total")),
-                cursor.getDouble(cursor.getColumnIndexOrThrow("deposit_amount")),
-                cursor.getString(cursor.getColumnIndexOrThrow("deposit_status")),
-                cursor.getString(cursor.getColumnIndexOrThrow("status")),
-                cursor.getInt(cursor.getColumnIndexOrThrow("sequence_number")),
-                cursor.getString(cursor.getColumnIndexOrThrow("scheduled_time")),
-                cursor.getString(cursor.getColumnIndexOrThrow("priority")),
-                cursor.getString(cursor.getColumnIndexOrThrow("created_at")),
-                cursor.getString(cursor.getColumnIndexOrThrow("updated_at"))
-        );
+        Delivery d = new Delivery();
+        try {
+            d.setId(getSafeInt(cursor, "id"));
+            d.setBookingId(getSafeString(cursor, "booking_id"));
+            d.setDriverId(getSafeString(cursor, "driver_id"));
+            d.setCustomerId(getSafeString(cursor, "customer_id"));
+            d.setCustomerName(getSafeString(cursor, "customer_name"));
+            d.setCustomerPhone(getSafeString(cursor, "customer_phone"));
+            d.setPickupLocation(getSafeString(cursor, "pickup_location"));
+            d.setPickupLatitude(getSafeDouble(cursor, "pickup_latitude"));
+            d.setPickupLongitude(getSafeDouble(cursor, "pickup_longitude"));
+            d.setDestination(getSafeString(cursor, "destination"));
+            d.setDestinationLatitude(getSafeDouble(cursor, "destination_latitude"));
+            d.setDestinationLongitude(getSafeDouble(cursor, "destination_longitude"));
+            d.setSpecialInstructions(getSafeString(cursor, "special_instructions"));
+            d.setPackageDetails(getSafeString(cursor, "package_details"));
+            d.setOriginalAmount(getSafeDouble(cursor, "original_amount"));
+            d.setCurrentTotal(getSafeDouble(cursor, "current_total"));
+            d.setDepositAmount(getSafeDouble(cursor, "deposit_amount"));
+            d.setDepositStatus(getSafeString(cursor, "deposit_status"));
+            d.setStatus(getSafeString(cursor, "status"));
+            d.setSequenceNumber(getSafeInt(cursor, "sequence_number"));
+            d.setScheduledTime(getSafeString(cursor, "scheduled_time"));
+            d.setPriority(getSafeString(cursor, "priority"));
+            d.setCreatedAt(getSafeString(cursor, "created_at"));
+            d.setUpdatedAt(getSafeString(cursor, "updated_at"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return d;
+    }
+
+    private String getSafeString(Cursor c, String colName) {
+        int idx = c.getColumnIndex(colName);
+        return (idx != -1 && !c.isNull(idx)) ? c.getString(idx) : "";
+    }
+
+    private int getSafeInt(Cursor c, String colName) {
+        int idx = c.getColumnIndex(colName);
+        return (idx != -1 && !c.isNull(idx)) ? c.getInt(idx) : 0;
+    }
+
+    private double getSafeDouble(Cursor c, String colName) {
+        int idx = c.getColumnIndex(colName);
+        return (idx != -1 && !c.isNull(idx)) ? c.getDouble(idx) : 0.0;
     }
 
     public boolean addBooking(Delivery delivery) {
+        if (delivery == null || delivery.getDestination() == null || delivery.getDestination().trim().isEmpty()) {
+            return false;
+        }
+        double destinationLatitude = delivery.getDestinationLatitude();
+        double destinationLongitude = delivery.getDestinationLongitude();
+        if (!Double.isFinite(destinationLatitude) || !Double.isFinite(destinationLongitude)
+                || destinationLatitude < -90 || destinationLatitude > 90
+                || destinationLongitude < -180 || destinationLongitude > 180
+                || (destinationLatitude == 0 && destinationLongitude == 0)) {
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("booking_id", delivery.getBookingId());
@@ -782,12 +880,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cv.put("customer_id", delivery.getCustomerId() != null ? delivery.getCustomerId() : "CUST-" + (System.currentTimeMillis() % 1000));
         cv.put("customer_name", delivery.getCustomerName());
         cv.put("customer_phone", delivery.getCustomerPhone());
-        cv.put("pickup_location", delivery.getPickupLocation() != null ? delivery.getPickupLocation() : "TRI-MAX Hub, San Jose del Monte");
-        cv.put("pickup_latitude", delivery.getPickupLatitude() != 0 ? delivery.getPickupLatitude() : 14.8115);
-        cv.put("pickup_longitude", delivery.getPickupLongitude() != 0 ? delivery.getPickupLongitude() : 121.0453);
-        cv.put("destination", delivery.getDestination() != null ? delivery.getDestination() : "San Jose del Monte, Bulacan");
-        cv.put("destination_latitude", delivery.getDestinationLatitude() != 0 ? delivery.getDestinationLatitude() : 14.8150);
-        cv.put("destination_longitude", delivery.getDestinationLongitude() != 0 ? delivery.getDestinationLongitude() : 121.0500);
+        cv.put("pickup_location", "TRIMAX Hub (14.782700, 121.047587)");
+        cv.put("pickup_latitude", 14.7826996);
+        cv.put("pickup_longitude", 121.0475865);
+        cv.put("destination", delivery.getDestination().trim());
+        cv.put("destination_latitude", destinationLatitude);
+        cv.put("destination_longitude", destinationLongitude);
         cv.put("special_instructions", delivery.getSpecialInstructions());
         cv.put("package_details", delivery.getPackageDetails());
         cv.put("original_amount", delivery.getOriginalAmount());
@@ -816,6 +914,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor.close();
         }
         return String.format(Locale.US, "BK-2026-%05d", count);
+    }
+
+    public List<Delivery> getBookingsForCustomer(String customerPhone) {
+        return getBookingsForCustomer(customerPhone, null);
+    }
+
+    public List<Delivery> getBookingsForCustomer(String customerPhone, String customerName) {
+        List<Delivery> list = new ArrayList<>();
+        String phone = customerPhone != null ? customerPhone.trim() : "";
+        String name = customerName != null ? customerName.trim() : "";
+        if (phone.isEmpty() && name.isEmpty()) return list;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_DELIVERIES
+                + " WHERE (customer_phone IS NOT NULL AND customer_phone<>'' AND customer_phone=?) "
+                + " OR (customer_name IS NOT NULL AND customer_name<>'' AND LOWER(customer_name)=LOWER(?)) "
+                + " ORDER BY id DESC",
+                new String[]{phone, name});
+        try {
+            while (cursor != null && cursor.moveToNext()) {
+                list.add(extractDeliveryFromCursor(cursor));
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return list;
     }
 
     public List<Delivery> getAllBookings() {
@@ -879,6 +1003,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 count = cursor.getInt(0);
             }
+            cursor.close();
+        }
+        return count;
+    }
+
+
+    /**
+     * Counts bookings by status within an inclusive date range.
+     * created_at can be stored either as epoch milliseconds or an ISO-like date string.
+     */
+    public int getBookingCountByStatusAndDateRange(String status, long startMillis, long endMillis) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String createdAtEpochSeconds = "CASE "
+                + "WHEN CAST(created_at AS INTEGER) > 100000000000 "
+                + "THEN CAST(CAST(created_at AS INTEGER) / 1000 AS INTEGER) "
+                + "ELSE CAST(strftime('%s', created_at) AS INTEGER) END";
+        StringBuilder query = new StringBuilder("SELECT COUNT(*) FROM " + TABLE_DELIVERIES
+                + " WHERE " + createdAtEpochSeconds + " BETWEEN ? AND ?");
+        List<String> argsList = new ArrayList<>();
+        argsList.add(String.valueOf(startMillis / 1000L));
+        argsList.add(String.valueOf(endMillis / 1000L));
+
+        if ("ALL".equalsIgnoreCase(status) || status == null || status.isEmpty()) {
+            // No additional status condition.
+        } else if ("COMPLETED".equalsIgnoreCase(status)) {
+            query.append(" AND (UPPER(status)='COMPLETED' OR UPPER(status)='DELIVERED')");
+        } else {
+            query.append(" AND UPPER(status)=?");
+            argsList.add(status.toUpperCase());
+        }
+
+        Cursor cursor = db.rawQuery(query.toString(), argsList.toArray(new String[0]));
+        int count = 0;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) count = cursor.getInt(0);
             cursor.close();
         }
         return count;
@@ -1053,6 +1212,100 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         public int getBookingCount() { return bookingCount; }
     }
 
+    public static class SavedCustomer {
+        private final long id;
+        private final String name, phone, email, address;
+        private final double latitude, longitude;
+        private final int bookingCount;
+        public SavedCustomer(long id, String name, String phone, String email, String address,
+                             double latitude, double longitude, int bookingCount) {
+            this.id=id; this.name=name; this.phone=phone; this.email=email; this.address=address;
+            this.latitude=latitude; this.longitude=longitude; this.bookingCount=bookingCount;
+        }
+        public long getId(){return id;}
+        public String getName(){return name;}
+        public String getPhone(){return phone;}
+        public String getEmail(){return email;}
+        public String getAddress(){return address;}
+        public double getLatitude(){return latitude;}
+        public double getLongitude(){return longitude;}
+        public int getBookingCount(){return bookingCount;}
+        @Override public String toString(){return name+" • "+phone;}
+    }
+
+    public List<SavedCustomer> getSavedCustomers(String searchQuery) {
+        List<SavedCustomer> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT c.id, c.full_name, c.phone, c.email, c.address, "
+                + "COALESCE(NULLIF(c.latitude, 0), (SELECT d.destination_latitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.destination_latitude<>0 ORDER BY d.id DESC LIMIT 1), (SELECT d.pickup_latitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.pickup_latitude<>0 ORDER BY d.id DESC LIMIT 1), 0) AS lat, "
+                + "COALESCE(NULLIF(c.longitude, 0), (SELECT d.destination_longitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.destination_longitude<>0 ORDER BY d.id DESC LIMIT 1), (SELECT d.pickup_longitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.pickup_longitude<>0 ORDER BY d.id DESC LIMIT 1), 0) AS lng, "
+                + "(SELECT COUNT(*) FROM " + TABLE_DELIVERIES + " d WHERE d.customer_phone=c.phone OR d.customer_name=c.full_name) "
+                + "FROM " + TABLE_CUSTOMERS + " c";
+        List<String> args = new ArrayList<>();
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            query += " WHERE LOWER(c.full_name) LIKE ? OR LOWER(c.phone) LIKE ? OR LOWER(COALESCE(c.email,'')) LIKE ?";
+            String pattern = "%" + searchQuery.trim().toLowerCase(Locale.ROOT) + "%";
+            args.add(pattern); args.add(pattern); args.add(pattern);
+        }
+        query += " ORDER BY c.full_name COLLATE NOCASE ASC";
+        Cursor cursor = db.rawQuery(query, args.toArray(new String[0]));
+        if (cursor != null) {
+            while (cursor.moveToNext()) list.add(new SavedCustomer(cursor.getLong(0), cursor.getString(1),
+                    cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getDouble(5),
+                    cursor.getDouble(6), cursor.getInt(7)));
+            cursor.close();
+        }
+        return list;
+    }
+
+    public String getCustomerCodeByPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) return null;
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT id FROM " + TABLE_CUSTOMERS + " WHERE phone=? ORDER BY id LIMIT 1",
+                new String[]{phone.trim()});
+        String code = null;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) code = "CUST-" + cursor.getLong(0);
+            cursor.close();
+        }
+        return code;
+    }
+
+    public boolean saveCustomer(String name, String phone, String email, String address) {
+        return saveCustomer(name, phone, email, address, 0, 0);
+    }
+
+    public boolean saveCustomer(String name, String phone, String email, String address, double latitude, double longitude) {
+        if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) return false;
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("full_name", name.trim()); values.put("phone", phone.trim());
+        values.put("email", email != null ? email.trim() : "");
+        values.put("address", address != null ? address.trim() : "");
+        values.put("updated_at", String.valueOf(System.currentTimeMillis()));
+        Cursor cursor = db.rawQuery("SELECT id, address, email, latitude, longitude FROM " + TABLE_CUSTOMERS
+                + " WHERE phone=? ORDER BY id LIMIT 1", new String[]{phone.trim()});
+        long existingId = -1; String existingAddress = "", existingEmail = "";
+        double existingLatitude = 0, existingLongitude = 0;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                existingId=cursor.getLong(0); existingAddress=cursor.getString(1); existingEmail=cursor.getString(2);
+                existingLatitude=cursor.getDouble(3); existingLongitude=cursor.getDouble(4);
+            }
+            cursor.close();
+        }
+        if (existingId >= 0) {
+            if (address == null || address.trim().isEmpty()) values.put("address", existingAddress != null ? existingAddress : "");
+            if (email == null || email.trim().isEmpty()) values.put("email", existingEmail != null ? existingEmail : "");
+            if (latitude != 0 || longitude != 0) { values.put("latitude", latitude); values.put("longitude", longitude); }
+            else { values.put("latitude", existingLatitude); values.put("longitude", existingLongitude); }
+            return db.update(TABLE_CUSTOMERS, values, "id=?", new String[]{String.valueOf(existingId)}) > 0;
+        }
+        values.put("latitude", latitude); values.put("longitude", longitude);
+        values.put("created_at", String.valueOf(System.currentTimeMillis()));
+        return db.insert(TABLE_CUSTOMERS, null, values) != -1;
+    }
+
     public List<ClientItem> getUniqueClients() {
         List<ClientItem> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1125,6 +1378,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("duty_status", "OFF_DUTY");
         cv.put("end_time", String.valueOf(System.currentTimeMillis()));
+
+        int rows = db.update(TABLE_ATTENDANCE, cv, "agent_id=? AND duty_status='ON_DUTY'", new String[]{agentId != null ? agentId : ""});
+        return rows > 0;
+    }
+
+    public boolean endDutyWithPhoto(String agentId, String photoPath, double lat, double lng) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("duty_status", "OFF_DUTY");
+        cv.put("end_time", String.valueOf(System.currentTimeMillis()));
+        cv.put("photo_path", photoPath != null ? photoPath : "");
+        cv.put("latitude", lat);
+        cv.put("longitude", lng);
 
         int rows = db.update(TABLE_ATTENDANCE, cv, "agent_id=? AND duty_status='ON_DUTY'", new String[]{agentId != null ? agentId : ""});
         return rows > 0;

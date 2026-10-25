@@ -1,28 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FFFFFFFF</color>
-    <color name="white">#FF0F172A</color>
-
-    <!-- TRIMAX Premium Corporate Dark Design System -->
-    <color name="primary_blue">#78A9FF</color>
-    <color name="primary_blue_dark">#3B82F6</color>
-    <color name="accent_blue">#8BB8FF</color>
-    <color name="navy_900">#071126</color>
-    <color name="navy_800">#0B1739</color>
-    <color name="gradient_start">#071126</color>
-    <color name="gradient_end">#142B58</color>
-
-    <color name="bg_main">#0B1220</color>
-    <color name="card_bg">#131F32</color>
-    <color name="surface_alt">#1A2940</color>
-    <color name="border_subtle">#2B3B53</color>
-    <color name="text_primary">#F2F6FC</color>
-    <color name="text_secondary">#A3B2C7</color>
-    <color name="text_on_primary">#071126</color>
-    <color name="field_bg">#101B2D</color>
-
-    <color name="status_pending">#F6C56F</color>
-    <color name="status_confirmed">#4ADEA5</color>
-    <color name="status_cancelled">#FDA4AF</color>
-    <color name="status_completed">#8BB8FF</color>
+    <!-- Dark theme semantic palette. Keep resource names aligned with values/colors.xml
+         so existing screens and the shared custom navigation adapt automatically. -->
+    <color name="bg_main">#081426</color>
+    <color name="card_bg">#12243B</color>
+    <!-- Dark frosted glass remains translucent so the screen subtly shows through -->
+    <color name="nav_translucent_bg">#99121F33</color>
+    <color name="nav_glass_top">#CC34445B</color>
+    <color name="nav_glass_bottom">#80121F33</color>
+    <color name="nav_glass_stroke">#66FFFFFF</color>
+    <color name="nav_selected_bg">#332F80ED</color>
+    <color name="nav_selected_fg">#7DB4FF</color>
+    <color name="surface_alt">#1B304A</color>
+    <color name="border_subtle">#263B55</color>
+    <color name="text_primary">#F3F7FC</color>
+    <color name="text_secondary">#A9B8CC</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="field_bg">#102137</color>
 </resources>

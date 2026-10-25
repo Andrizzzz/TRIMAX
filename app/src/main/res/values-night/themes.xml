@@ -1,5 +1,6 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Night mode uses the same semantic theme with dark resource tokens. -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Explicit parent prevents Android from inferring the missing style "Base.Theme". -->
     <style name="Base.Theme.TRIMAX" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary_blue</item>
         <item name="colorOnPrimary">@color/text_on_primary</item>

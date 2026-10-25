@@ -36,10 +36,6 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".RegisterActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
             android:name=".ForgotPasswordActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
@@ -74,6 +70,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".TrackingMapActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".DriverProofActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
@@ -96,6 +96,10 @@
 
         <!-- New Booking Flow -->
         <activity
+            android:name=".AddCustomerActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".NewBookingCustomerActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
@@ -105,6 +109,10 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".NewBookingLocationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".FullMapPickerActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
@@ -157,6 +165,14 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".PackagesActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".PackageDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Facebook SDK Configuration Setup Requirements -->
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
@@ -172,7 +188,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="@string/facebook_app_id" />
+                <data android:scheme="@string/facebook_app_id" tools:ignore="AppLinkUrlError" />
             </intent-filter>
         </activity>
 

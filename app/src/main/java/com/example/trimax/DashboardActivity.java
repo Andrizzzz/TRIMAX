@@ -1,10 +1,15 @@
 package com.example.trimax;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -16,7 +21,10 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -34,12 +42,13 @@ import java.util.Locale;
 public class DashboardActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
-    private MockMapView dashboardMapView;
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
 
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private boolean isEndingDuty = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +74,20 @@ public class DashboardActivity extends AppCompatActivity {
         if (mainContent != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                // Apply the top inset to content only; keep the floating navigation independently inset.
                 v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), 0);
+                return insets;
+            });
+        }
+
+        View cardBottomNavContainer = findViewById(R.id.cardBottomNavContainer);
+        if (cardBottomNavContainer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(cardBottomNavContainer, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                int baseMargin = Math.round(16 * getResources().getDisplayMetrics().density);
+                params.bottomMargin = baseMargin + systemBars.bottom;
+                v.setLayoutParams(params);
                 return insets;
             });
         }
@@ -104,20 +126,33 @@ public class DashboardActivity extends AppCompatActivity {
                             );
 
                             String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            boolean saved;
+                            if (isEndingDuty) {
+                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            } else {
+                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
+                            }
 
                             if (saved) {
-                                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
-                                String startTimeStr = sdf.format(new Date());
+                                if (isEndingDuty) {
+                                    session.setDutyOnline(false);
+                                    session.setDutyStartTime("");
+                                    updateAttendanceUI();
+                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
+                                } else {
+                                    SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
+                                    String startTimeStr = sdf.format(new Date());
 
-                                session.setDutyOnline(true);
-                                session.setDutyStartTime(startTimeStr);
+                                    session.setDutyOnline(true);
+                                    session.setDutyStartTime(startTimeStr);
 
-                                updateAttendanceUI();
-                                Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                                    updateAttendanceUI();
+                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                                }
                             } else {
                                 Toast.makeText(DashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
                             }
+                            isEndingDuty = false;
                         } else {
                             Toast.makeText(DashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
@@ -127,27 +162,49 @@ public class DashboardActivity extends AppCompatActivity {
                 }
         );
 
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (granted) {
+                        launchAttendanceCamera();
+                    } else {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Camera Permission Required")
+                                .setMessage("Camera access is needed to take your attendance verification photo. Enable Camera permission in App Settings to start duty.")
+                                .setPositiveButton("Open Settings", (dialog, which) -> {
+                                    Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            Uri.parse("package:" + getPackageName()));
+                                    startActivity(settingsIntent);
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    }
+                }
+        );
+
         if (btnAgentStartDuty != null) {
             btnAgentStartDuty.setOnClickListener(v -> toggleAgentDutyState());
         }
 
-        // FoodPanda Style Live Map Tracking Views
-        dashboardMapView = findViewById(R.id.dashboardMapView);
-        MaterialButton btnTrackFullMap = findViewById(R.id.btnTrackFullMap);
+        // Dashboard tracking opens a client overview map; avoid initializing a hidden map here.
+        View cardTrackingMap = findViewById(R.id.cardLiveTrackingMap);
+        View trackingLink = findViewById(R.id.tvTrackLink);
+        View trackingFullBtn = findViewById(R.id.btnTrackFullMap);
+        View.OnClickListener openTracking = v ->
+                startActivity(new Intent(DashboardActivity.this, TrackingMapActivity.class));
+        if (cardTrackingMap != null) cardTrackingMap.setOnClickListener(openTracking);
+        if (trackingLink != null) trackingLink.setOnClickListener(openTracking);
+        if (trackingFullBtn != null) trackingFullBtn.setOnClickListener(openTracking);
 
-        if (dashboardMapView != null) {
-            dashboardMapView.startLiveDeliveryAnimation();
-        }
-
-        if (btnTrackFullMap != null) {
-            btnTrackFullMap.setOnClickListener(v -> {
-                Intent intent = new Intent(DashboardActivity.this, DriverMapActivity.class);
-                intent.putExtra("DELIVERY_ID", "BK-2026-00123");
-                startActivity(intent);
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefreshDashboard);
+        if (swipeRefresh != null) {
+            swipeRefresh.setColorSchemeResources(R.color.primary_blue);
+            swipeRefresh.setOnRefreshListener(() -> {
+                refreshDashboardContent();
+                swipeRefresh.setRefreshing(false);
             });
         }
 
-        LiquidGlassNavBar bottomNavigation = findViewById(R.id.bottomNavigation);
 
         String agentName = session.getFullName();
         String agentEmail = session.getEmail();
@@ -162,6 +219,9 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (navigationView != null) {
+            if (navigationView.getMenu().findItem(R.id.drawer_notifications) != null) {
+                navigationView.getMenu().findItem(R.id.drawer_notifications).setVisible(false);
+            }
             View headerView = navigationView.getHeaderView(0);
             if (headerView != null) {
                 TextView tvNavName = headerView.findViewById(R.id.tvNavHeaderName);
@@ -180,15 +240,13 @@ public class DashboardActivity extends AppCompatActivity {
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (itemId == R.id.drawer_home) {
+                    refreshDashboardContent();
                     return true;
                 } else if (itemId == R.id.drawer_bookings) {
                     startActivity(new Intent(DashboardActivity.this, BookingsActivity.class));
                     return true;
                 } else if (itemId == R.id.drawer_clients) {
                     startActivity(new Intent(DashboardActivity.this, ClientsActivity.class));
-                    return true;
-                } else if (itemId == R.id.drawer_notifications) {
-                    startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class));
                     return true;
                 } else if (itemId == R.id.drawer_reports) {
                     startActivity(new Intent(DashboardActivity.this, ReportsActivity.class));
@@ -210,6 +268,7 @@ public class DashboardActivity extends AppCompatActivity {
         // Dark Mode Dashboard Toggle
         ImageView btnThemeToggle = findViewById(R.id.btnThemeToggle);
         if (btnThemeToggle != null) {
+            updateThemeToggleIcon(btnThemeToggle);
             btnThemeToggle.setOnClickListener(v -> toggleDarkMode());
         }
 
@@ -218,19 +277,56 @@ public class DashboardActivity extends AppCompatActivity {
             btnNotifications.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NotificationsActivity.class)));
         }
 
-        // 4. DASHBOARD STATS CARDS
+        // Dashboard quick actions
+        View cardPendingBookings = findViewById(R.id.cardPendingBookings);
         if (statTotalBookings != null) {
             statTotalBookings.setOnClickListener(v -> openBookingsWithFilter("ALL"));
         }
+        if (cardPendingBookings != null) {
+            cardPendingBookings.setOnClickListener(openTracking);
+        }
         if (statPendingBookings != null) {
-            statPendingBookings.setOnClickListener(v -> openBookingsWithFilter("PENDING"));
+            statPendingBookings.setOnClickListener(openTracking);
         }
         if (statConfirmedBookings != null) {
-            statConfirmedBookings.setOnClickListener(v -> openBookingsWithFilter("CONFIRMED"));
+            statConfirmedBookings.setOnClickListener(v -> openBookingsWithFilter("COMPLETED"));
+        }
+        View supportCard = findViewById(R.id.cardAgentAttendance);
+        if (supportCard != null) {
+            supportCard.setOnClickListener(v -> {
+                View supportView = getLayoutInflater().inflate(R.layout.dialog_help_support, null);
+                AlertDialog supportDialog = new AlertDialog.Builder(DashboardActivity.this)
+                        .setView(supportView)
+                        .create();
+                supportDialog.show();
+
+                View closeSupport = supportView.findViewById(R.id.btnCloseSupport);
+                View callSupport = supportView.findViewById(R.id.cardSupportCall);
+                View emailSupport = supportView.findViewById(R.id.cardSupportEmail);
+
+                if (closeSupport != null) {
+                    closeSupport.setOnClickListener(close -> supportDialog.dismiss());
+                }
+                if (callSupport != null) {
+                    callSupport.setOnClickListener(call -> {
+                        supportDialog.dismiss();
+                        startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:0281234567")));
+                    });
+                }
+                if (emailSupport != null) {
+                    emailSupport.setOnClickListener(email -> {
+                        supportDialog.dismiss();
+                        Intent mail = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:support@trimax.ph"));
+                        mail.putExtra(Intent.EXTRA_SUBJECT, "TRIMAX Help & Support");
+                        startActivity(Intent.createChooser(mail, "Contact TRIMAX Support"));
+                    });
+                }
+            });
         }
 
-        // 5. RECENT BOOKING CARDS
-        loadRecentBookings();
+        // 4. DASHBOARD STATS CARDS
+
+        // 5. RECENT BOOKING CARDS: loaded from the server in onResume (refreshDashboardContent).
 
         // 6. "VIEW ALL" & 7. "NEW BOOKING" BUTTONS
         if (tvViewAll != null) {
@@ -238,14 +334,22 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (btnQuickNewBooking != null) {
-            btnQuickNewBooking.setOnClickListener(v -> startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class)));
+            btnQuickNewBooking.setOnClickListener(v -> {
+                boolean isClockedIn = session.isDutyOnline();
+                if (!isClockedIn) {
+                    new AlertDialog.Builder(DashboardActivity.this)
+                            .setTitle("Attendance Required")
+                            .setMessage("You must be clocked in (Start Duty / Agent Attendance) before adding a new booking.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    return;
+                }
+                startActivity(new Intent(DashboardActivity.this, NewBookingCustomerActivity.class));
+            });
         }
 
         // 8. BOTTOM NAVIGATION
-        if (bottomNavigation != null) {
-            bottomNavigation.setSelectedItemId(R.id.nav_home);
-            setupBottomNavigation(bottomNavigation);
-        }
+        setupBottomNavigation();
 
         // Back Press Handler for Navigation Drawer
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -261,6 +365,12 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         updateAttendanceUI();
+    }
+
+    private void updateThemeToggleIcon(ImageView toggle) {
+        boolean darkMode = ThemeHelper.THEME_DARK.equalsIgnoreCase(ThemeHelper.getSelectedTheme(this));
+        toggle.setImageResource(darkMode ? R.drawable.ic_moon : R.drawable.ic_sun);
+        toggle.setContentDescription(darkMode ? "Dark mode is on. Tap to switch to light mode." : "Light mode is on. Tap to switch to dark mode.");
     }
 
     private void toggleDarkMode() {
@@ -280,23 +390,32 @@ public class DashboardActivity extends AppCompatActivity {
         if (session.isDutyOnline()) {
             new AlertDialog.Builder(this)
                     .setTitle("End Duty Shift")
-                    .setMessage("Are you sure you want to end your active duty shift?")
-                    .setPositiveButton("End Duty Shift", (dialog, which) -> {
-                        dbHelper.endDuty(session.getUsername());
-                        session.setDutyOnline(false);
-                        session.setDutyStartTime("");
-                        updateAttendanceUI();
-                        Toast.makeText(this, "Agent Duty shift ended.", Toast.LENGTH_SHORT).show();
+                    .setMessage("Photo verification is required to end your active duty shift.")
+                    .setPositiveButton("Take Photo & End Duty", (dialog, which) -> {
+                        isEndingDuty = true;
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            launchAttendanceCamera();
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+                        }
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            isEndingDuty = false;
+            launchAttendanceCamera();
         } else {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            try {
-                attendanceCameraLauncher.launch(takePictureIntent);
-            } catch (Exception e) {
-                Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
-            }
+            isEndingDuty = false;
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void launchAttendanceCamera() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            attendanceCameraLauncher.launch(takePictureIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -336,19 +455,6 @@ public class DashboardActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (dashboardMapView != null) {
-            dashboardMapView.onResume();
-            dashboardMapView.startLiveDeliveryAnimation();
-        }
-        updateHeaderUI();
-        updateAttendanceUI();
-        updateDashboardStats();
-        loadRecentBookings();
-    }
-
     private void updateHeaderUI() {
         if (session == null) return;
         String agentName = session.getFullName();
@@ -374,19 +480,38 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (dashboardMapView != null) {
-            dashboardMapView.onPause();
-        }
     }
 
-    private void loadRecentBookings() {
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        List<Delivery> bookings = dbHelper.getAllBookings();
+    /** Tiles and the two most recent cards, from the agent's own bookings on the TRIMAX server. */
+    private void loadDashboardBookings() {
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(DashboardActivity.this)) return;
+                updateDashboardStats(records);
+                List<Delivery> bookings = new java.util.ArrayList<>();
+                for (BookingRecord r : records) bookings.add(r.toDelivery(false));
+                loadRecentBookings(bookings);
+            }
 
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(DashboardActivity.this)) return;
+                if (SessionGuard.handle(DashboardActivity.this, error)) return;
+                android.widget.Toast.makeText(DashboardActivity.this,
+                        "Could not load your bookings: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void loadRecentBookings(List<Delivery> bookings) {
         CardView card1 = findViewById(R.id.cardDashboardBooking1);
         CardView card2 = findViewById(R.id.cardDashboardBooking2);
 
-        if (bookings != null && !bookings.isEmpty()) {
+        if (bookings == null || bookings.isEmpty()) {
+            if (card1 != null) card1.setVisibility(View.GONE);
+            if (card2 != null) card2.setVisibility(View.GONE);
+        } else {
             if (card1 != null) {
                 if (bookings.size() > 0) {
                     card1.setVisibility(View.VISIBLE);
@@ -412,7 +537,7 @@ public class DashboardActivity extends AppCompatActivity {
         TextView tvCustomerDate = card.findViewById(index == 1 ? R.id.tvCard1CustomerDate : R.id.tvCard2CustomerDate);
         TextView tvAmount = card.findViewById(index == 1 ? R.id.tvCard1Amount : R.id.tvCard2Amount);
 
-        if (tvId != null) tvId.setText(delivery.getBookingId());
+        if (tvId != null) tvId.setText("#" + delivery.getBookingId());
         if (tvStatus != null) {
             tvStatus.setText(delivery.getStatus());
             if ("CONFIRMED".equalsIgnoreCase(delivery.getStatus())) {
@@ -436,23 +561,35 @@ public class DashboardActivity extends AppCompatActivity {
             tvAmount.setText(String.format("₱ %,.2f", delivery.getCurrentTotal()));
         }
 
-        card.setOnClickListener(v -> openBookingDetail(delivery.getBookingId(), delivery.getCustomerName(), delivery.getStatus(), String.format("₱ %,.2f", delivery.getCurrentTotal())));
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, BookingDetailActivity.class);
+            intent.putExtra("BOOKING_ID", delivery.getBookingId());
+            intent.putExtra("CUSTOMER_NAME", delivery.getCustomerName());
+            intent.putExtra("STATUS", delivery.getStatus());
+            intent.putExtra("TOTAL_AMOUNT", String.format("₱ %,.2f", delivery.getCurrentTotal()));
+            startActivity(intent);
+        });
     }
 
-    private void updateDashboardStats() {
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
+    private void refreshDashboardContent() {
+        updateHeaderUI();
+        updateAttendanceUI();
+        loadDashboardBookings();
+    }
+
+    private void updateDashboardStats(List<BookingRecord> records) {
         TextView tvStatTotalCount = findViewById(R.id.tvStatTotalCount);
         TextView tvStatPendingCount = findViewById(R.id.tvStatPendingCount);
         TextView tvStatConfirmedCount = findViewById(R.id.tvStatConfirmedCount);
 
         if (tvStatTotalCount != null) {
-            tvStatTotalCount.setText(String.valueOf(dbHelper.getBookingCountByStatus("ALL")));
+            tvStatTotalCount.setText(String.valueOf(BookingFilter.count(records, "ALL")));
         }
         if (tvStatPendingCount != null) {
-            tvStatPendingCount.setText(String.valueOf(dbHelper.getBookingCountByStatus("PENDING")));
+            tvStatPendingCount.setText(String.valueOf(BookingFilter.count(records, "PENDING")));
         }
         if (tvStatConfirmedCount != null) {
-            tvStatConfirmedCount.setText(String.valueOf(dbHelper.getBookingCountByStatus("CONFIRMED")));
+            tvStatConfirmedCount.setText(String.valueOf(BookingFilter.count(records, "CONFIRMED")));
         }
     }
 
@@ -487,25 +624,92 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupBottomNavigation(LiquidGlassNavBar bottomNavigation) {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                return true;
-            } else if (itemId == R.id.nav_bookings) {
-                startActivity(new Intent(this, BookingsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_clients) {
-                startActivity(new Intent(this, ClientsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_notifications) {
-                startActivity(new Intent(this, NotificationsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                return true;
+    private void navigateToTab(Class<?> targetClass) {
+        Intent intent = new Intent(DashboardActivity.this, targetClass);
+        intent.putExtra("PREV_TAB_INDEX", 0);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
+    }
+
+    private void setupBottomNavigation() {
+        highlightBottomNavItem(R.id.nav_home);
+
+        View home = findViewById(R.id.nav_home);
+        View bookings = findViewById(R.id.nav_bookings);
+        View packages = findViewById(R.id.nav_packages);
+        View clients = findViewById(R.id.nav_clients);
+        View profile = findViewById(R.id.nav_profile);
+
+        if (home != null) home.setOnClickListener(v -> highlightBottomNavItem(R.id.nav_home));
+        if (bookings != null) bookings.setOnClickListener(v -> navigateToTab(BookingsActivity.class));
+        if (packages != null) packages.setOnClickListener(v -> navigateToTab(PackagesActivity.class));
+        if (clients != null) clients.setOnClickListener(v -> navigateToTab(ClientsActivity.class));
+        if (profile != null) profile.setOnClickListener(v -> navigateToTab(ProfileActivity.class));
+    }
+
+    private void highlightBottomNavItem(int activeId) {
+        int[] ids = {R.id.nav_home, R.id.nav_bookings, R.id.nav_packages, R.id.nav_clients, R.id.nav_profile};
+        int activeIndex = 0;
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] == activeId) {
+                activeIndex = i;
+                break;
             }
-            return false;
-        });
+        }
+
+        for (int id : ids) {
+            View v = findViewById(id);
+            if (v != null) {
+                boolean isActive = (id == activeId);
+                v.setSelected(isActive);
+            }
+        }
+
+        int prevIndex = getIntent().getIntExtra("PREV_TAB_INDEX", -1);
+        getIntent().removeExtra("PREV_TAB_INDEX");
+
+        View indicator = findViewById(R.id.slidingIndicator);
+        LinearLayout navContainer = findViewById(R.id.bottomNavigation);
+        if (indicator != null) {
+            final int targetIndex = activeIndex;
+            final int initialIndex = (prevIndex >= 0 && prevIndex != targetIndex) ? prevIndex : targetIndex;
+
+            int screenWidth = getResources().getDisplayMetrics().widthPixels;
+            int totalWidth = screenWidth - (int) (52 * getResources().getDisplayMetrics().density);
+            final int[] effectiveTabWidth = {totalWidth / 5};
+            int marginHorizontal = (int) (4 * getResources().getDisplayMetrics().density);
+
+            ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+            if (lp != null) {
+                lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                indicator.setLayoutParams(lp);
+            }
+            float startX = (navContainer != null ? navContainer.getPaddingLeft() : (int)(20 * getResources().getDisplayMetrics().density)) + (initialIndex * effectiveTabWidth[0]) + marginHorizontal;
+            indicator.setTranslationX(startX);
+
+            if (navContainer != null && prevIndex >= 0 && prevIndex != targetIndex) {
+                navContainer.post(() -> {
+                    int measuredWidth = navContainer.getWidth() - navContainer.getPaddingLeft() - navContainer.getPaddingRight();
+                    if (measuredWidth > 0) {
+                        effectiveTabWidth[0] = measuredWidth / 5;
+                        if (lp != null) {
+                            lp.width = effectiveTabWidth[0] - (marginHorizontal * 2);
+                            indicator.setLayoutParams(lp);
+                        }
+                    }
+
+                    float targetX = navContainer.getPaddingLeft() + (targetIndex * effectiveTabWidth[0]) + marginHorizontal;
+
+                    indicator.animate()
+                            .translationX(targetX)
+                            .setDuration(140)
+                            .setInterpolator(new FastOutSlowInInterpolator())
+                            .start();
+                });
+            }
+        }
     }
 }
