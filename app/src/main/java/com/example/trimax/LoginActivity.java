@@ -43,15 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
-        TextView tvRegisterLink = findViewById(R.id.tvRegisterLink);
         TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
-
-        if (tvRegisterLink != null) {
-            tvRegisterLink.setOnClickListener(v -> {
-                Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-                startActivity(intent);
-            });
-        }
 
         if (tvForgotPassword != null) {
             tvForgotPassword.setOnClickListener(v -> {
