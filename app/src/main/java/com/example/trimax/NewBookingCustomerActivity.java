@@ -97,6 +97,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etEmail = findViewById(R.id.etEmail);
         etCustomerAddress = findViewById(R.id.etCustomerAddress);
+        TextInputEditText etSearchCustomer = findViewById(R.id.etSearchCustomer);
         if (etCustomerAddress != null) {
             etCustomerAddress.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -110,8 +111,18 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 @Override public void afterTextChanged(Editable s) {}
             });
         }
+        if (etSearchCustomer != null) {
+            etSearchCustomer.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String query = s != null ? s.toString().trim() : "";
+                    configureInlineCustomerSelection(query);
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
         // Populate real saved customers and keep inline selection mutually exclusive.
-        configureInlineCustomerSelection();
+        configureInlineCustomerSelection("");
 
         MaterialButton btnChooseCustomer = findViewById(R.id.btnChooseCustomer);
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
@@ -184,15 +195,21 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     }
 
     private void configureInlineCustomerSelection() {
+        configureInlineCustomerSelection("");
+    }
+
+    private void configureInlineCustomerSelection(String query) {
         LinearLayout container = findViewById(R.id.containerCustomerList);
         if (container == null) return;
 
-        // Replace static sample rows with every saved customer.
+        // Replace static sample rows with saved customers matching search query.
         container.removeAllViews();
-        List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
+        List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers(query != null ? query : "");
         if (customers == null || customers.isEmpty()) {
             TextView empty = new TextView(this);
-            empty.setText("No saved customers yet. Tap + Add New Customer to create one.");
+            empty.setText(TextUtils.isEmpty(query)
+                    ? "No saved customers yet. Tap + Add New Customer to create one."
+                    : "No matching saved customers found.");
             empty.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
             empty.setTextSize(14);
             empty.setPadding(dp(16), dp(18), dp(16), dp(18));
