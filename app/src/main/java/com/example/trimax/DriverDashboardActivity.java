@@ -725,63 +725,66 @@ public class DriverDashboardActivity extends AppCompatActivity {
     }
 
     private void showReportProblemDialog(String bookingId) {
-        String[] problemTypes = {
-                "Vehicle problem",
-                "Accident/emergency",
-                "Cannot reach pickup location",
-                "Incorrect pickup information",
-                "Customer issue",
-                "Package issue",
-                "Other problem"
-        };
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_report_problem, null);
+        bottomSheetDialog.setContentView(dialogView);
 
-        final int[] selectedIndex = {0};
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        android.widget.RadioGroup rg = dialogView.findViewById(R.id.rgProblemTypes);
+        com.google.android.material.textfield.TextInputEditText etDesc = dialogView.findViewById(R.id.etProblemDescription);
+        MaterialButton btnSubmit = dialogView.findViewById(R.id.btnSubmitReport);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Report Problem to Admin (#" + bookingId + ")");
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-        View customView = getLayoutInflater().inflate(android.R.layout.simple_list_item_1, null);
-        final EditText etDescription = new EditText(this);
-        etDescription.setHint("Enter problem details for Admin review...");
-        etDescription.setPadding(32, 24, 32, 24);
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> {
+                int checkedId = rg != null ? rg.getCheckedRadioButtonId() : -1;
+                String selectedType = "Other problem";
+                if (checkedId == R.id.rbVehicle) selectedType = "Vehicle problem";
+                else if (checkedId == R.id.rbCustomer) selectedType = "Customer unreachable";
+                else if (checkedId == R.id.rbAddress) selectedType = "Incorrect address";
+                else if (checkedId == R.id.rbOther) selectedType = "Other problem";
 
-        builder.setSingleChoiceItems(problemTypes, 0, (dialog, which) -> selectedIndex[0] = which);
-        builder.setView(etDescription);
+                String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
+                String desc = "Reported: " + selectedType + (details.isEmpty() ? "" : " - " + details);
 
-        builder.setPositiveButton("Submit Report", (dialog, which) -> {
-            String selectedType = problemTypes[selectedIndex[0]];
-            String desc = etDescription.getText().toString().trim();
+                Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
+                Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
+                double dLat = lat != null ? lat : 14.8115;
+                double dLng = lng != null ? lng : 121.0453;
 
-            if (desc.isEmpty()) {
-                desc = "Reported: " + selectedType;
-            }
-
-            boolean saved = dbHelper.saveProblemReport(bookingId, session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
-            if (saved) {
-                // Problem reports are not on the TRIMAX server yet, so the admin does not receive them.
-                Toast.makeText(this, "Problem report saved on this phone only. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+                boolean saved = dbHelper.saveProblemReport(bookingId, session.getUsername(), selectedType, desc, dLat, dLng);
+                if (saved) {
+                    Toast.makeText(this, "Problem report saved successfully. Admin notified.", Toast.LENGTH_LONG).show();
+                    bottomSheetDialog.dismiss();
+                } else {
+                    Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void showLogoutDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Logout", (dialog, which) -> {
-                    session.logoutUser();
-                    Intent intent = new Intent(this, LoginActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_logout, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        com.google.android.material.button.MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancelLogout);
+        com.google.android.material.button.MaterialButton btnConfirm = dialogView.findViewById(R.id.btnConfirmLogout);
+
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                session.logoutUser();
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void navigateToTab(Class<?> targetClass) {
