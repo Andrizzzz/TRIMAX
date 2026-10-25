@@ -222,9 +222,9 @@ public class DriverProofActivity extends AppCompatActivity {
         if (DeliveryProgress.DELIVERED.equals(code) || DeliveryProgress.COMPLETED.equals(currentRecord.status)) {
             confirmButton.setEnabled(false);
             confirmButton.setText("DELIVERY COMPLETED");
-        } else if (!DeliveryProgress.ARRIVED.equals(code) || DeliveryProgress.CANCELLED.equals(currentRecord.status)) {
+        } else if (DeliveryProgress.CANCELLED.equals(currentRecord.status)) {
             confirmButton.setEnabled(false);
-            confirmButton.setText("MARK ARRIVED FIRST");
+            confirmButton.setText("CANCELLED");
         } else {
             confirmButton.setText(confirmLabel);
             confirmButton.setEnabled(!submitting);
@@ -266,7 +266,8 @@ public class DriverProofActivity extends AppCompatActivity {
         confirmButton.setText("SAVING...");
         Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
         Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-        TrimaxApi.get(this).updateDeliveryStatus(currentRecord.bookingId, DeliveryProgress.ARRIVED, DeliveryProgress.DELIVERED,
+        String expectedStatus = currentRecord.deliveryStatus != null ? currentRecord.deliveryStatus : DeliveryProgress.STARTED;
+        TrimaxApi.get(this).updateDeliveryStatus(currentRecord.bookingId, expectedStatus, DeliveryProgress.DELIVERED,
                 lat, lng, null, recipientName, new TrimaxApi.Callback<BookingRecord>() {
                     @Override
                     public void onSuccess(BookingRecord saved) {

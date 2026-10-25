@@ -37,10 +37,10 @@ public final class DeliveryProgress {
     public static boolean canTransition(String from, String to) {
         if (from == null || to == null) return false;
         switch (from) {
-            case ASSIGNED:   return STARTED.equals(to);
-            case STARTED:    return PICKED_UP.equals(to) || ON_THE_WAY.equals(to) || FAILED.equals(to);
-            case PICKED_UP:  return ON_THE_WAY.equals(to) || FAILED.equals(to);
-            case ON_THE_WAY: return ARRIVED.equals(to) || FAILED.equals(to);
+            case ASSIGNED:   return STARTED.equals(to) || DELIVERED.equals(to) || FAILED.equals(to);
+            case STARTED:
+            case PICKED_UP:
+            case ON_THE_WAY:
             case ARRIVED:    return DELIVERED.equals(to) || FAILED.equals(to);
             default:         return false;
         }
@@ -122,12 +122,12 @@ public final class DeliveryProgress {
                     return new NextStep("WAITING FOR ADMIN CONFIRMATION", null, false, false);
                 }
                 return new NextStep("START DELIVERY", STARTED, false, true);
-            case STARTED:    return new NextStep("PICK UP & ON THE WAY", PICKED_UP, false, true);
-            case PICKED_UP:  return new NextStep("START TRANSPORT / ON THE WAY", ON_THE_WAY, false, true);
-            case ON_THE_WAY: return new NextStep("ARRIVED AT DESTINATION", ARRIVED, false, true);
+            case STARTED:
+            case PICKED_UP:
+            case ON_THE_WAY:
             case ARRIVED:    return new NextStep("DROP-OFF PHOTO & PROOF OF DELIVERY", null, true, true);
             case FAILED:     return new NextStep("DELIVERY FAILED – ADMIN WILL REVIEW", null, false, false);
-            default:         return new NextStep("STATUS: " + code, null, false, false);
+            default:         return new NextStep("DROP-OFF PHOTO & PROOF OF DELIVERY", null, true, true);
         }
     }
 }
