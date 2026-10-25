@@ -17,4 +17,18 @@
     <color name="text_secondary">#A9B8CC</color>
     <color name="text_on_primary">#FFFFFF</color>
     <color name="field_bg">#102137</color>
+
+    <!-- Brand and status colors lifted for dark backgrounds (readable text, calmer pills) -->
+    <color name="primary_blue">#4A86FF</color>
+    <color name="accent_blue">#6FA3FF</color>
+    <color name="status_pending">#FBBF24</color>
+    <color name="status_confirmed">#34D399</color>
+    <color name="status_cancelled">#EF5350</color>
+    <color name="status_completed">#6FA3FF</color>
+    <color name="status_delivered">#34D399</color>
+    <color name="status_confirmed_bg">#14392F</color>
+    <color name="status_cancelled_bg">#3F1D25</color>
+    <color name="status_completed_bg">#14392F</color>
+    <color name="status_pending_bg">#3B2F12</color>
+    <color name="sos_red">#EF5350</color>
 </resources>

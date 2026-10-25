@@ -106,6 +106,21 @@ public class NotificationsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadNotifications();
+        // Pick up what changed on the server (admin confirmations, drivers, deliveries) since last time.
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(NotificationsActivity.this)) return;
+                BookingNotifications.syncAgent(NotificationsActivity.this, session.getUsername(), records);
+                loadNotifications();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(NotificationsActivity.this)) return;
+                SessionGuard.handle(NotificationsActivity.this, error);
+            }
+        });
     }
 
     private void loadNotifications() {
@@ -165,8 +180,7 @@ public class NotificationsActivity extends AppCompatActivity {
         content.addView(message);
         card.addView(content);
         String searchable = (notification.getTitle() == null ? "" : notification.getTitle()) + " " + (notification.getMessage() == null ? "" : notification.getMessage());
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(searchable);
-        card.setTag(matcher.find() ? matcher.group() : null);
+        card.setTag(BookingNotifications.bookingIdFrom(searchable));
         if (notificationClickListener != null) card.setOnClickListener(notificationClickListener);
         return card;
     }
@@ -192,10 +206,7 @@ public class NotificationsActivity extends AppCompatActivity {
 
         String searchableText = (notification.getTitle() == null ? "" : notification.getTitle()) + " "
                 + (notification.getMessage() == null ? "" : notification.getMessage());
-        java.util.regex.Matcher matcher = java.util.regex.Pattern
-                .compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE)
-                .matcher(searchableText);
-        card.setTag(matcher.find() ? matcher.group() : null);
+        card.setTag(BookingNotifications.bookingIdFrom(searchableText));
     }
 
     private void handleBackNavigation() {

@@ -18,5 +18,9 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:fontFamily">sans</item>
+        <!-- Smooth slide + fade between screens (tab switches stay instant) -->
+        <item name="android:windowAnimationStyle">@style/App.ScreenTransitions</item>
+        <!-- Tappable cards dip slightly when pressed -->
+        <item name="cardViewStyle">@style/App.CardView</item>
     </style>
 </resources>

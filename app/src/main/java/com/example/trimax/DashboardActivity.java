@@ -44,6 +44,8 @@ public class DashboardActivity extends AppCompatActivity {
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
+    private boolean askedForLocation;
 
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
@@ -58,6 +60,16 @@ public class DashboardActivity extends AppCompatActivity {
         session = new SessionManager(this);
         dbHelper = new DatabaseHelper(this);
         locationHelper = new LocationHelper(this);
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                granted -> {
+                    if (locationHelper.hasLocationPermission()) {
+                        startDutyTracking();
+                    } else {
+                        Toast.makeText(this, "Location is off: the admin map will not show you while on duty.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
 
         // Role-based Navigation Access Protection Guard
         if (session.isLoggedIn() && "DRIVER".equalsIgnoreCase(session.getRole())) {
@@ -124,34 +136,7 @@ public class DashboardActivity extends AppCompatActivity {
                                     locationHelper.getLongitude()
                             );
 
-                            String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved;
-                            if (isEndingDuty) {
-                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            } else {
-                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            }
-
-                            if (saved) {
-                                if (isEndingDuty) {
-                                    session.setDutyOnline(false);
-                                    session.setDutyStartTime("");
-                                    updateAttendanceUI();
-                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
-                                } else {
-                                    SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
-                                    String startTimeStr = sdf.format(new Date());
-
-                                    session.setDutyOnline(true);
-                                    session.setDutyStartTime(startTimeStr);
-
-                                    updateAttendanceUI();
-                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
-                                }
-                            } else {
-                                Toast.makeText(DashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
-                            }
-                            isEndingDuty = false;
+                            onAttendancePhoto(savedFile, photoBitmap);
                         } else {
                             Toast.makeText(DashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
@@ -477,8 +462,90 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        NavigationView dashboardDrawer = findViewById(R.id.navigationView);
+        if (dashboardDrawer != null) {
+            dashboardDrawer.setCheckedItem(R.id.drawer_home);
+        }
+        refreshDashboardContent();
+        if (session.isDutyOnline() && !locationHelper.isTrackingActive()) startDutyTracking();
+        DutySync.loadServerState(this, onDuty -> {
+            if (onDuty != session.isDutyOnline()) {
+                session.setDutyOnline(onDuty);
+                if (!onDuty) session.setDutyStartTime("");
+                if (onDuty) startDutyTracking(); else locationHelper.stopLocationUpdates();
+                updateAttendanceUI();
+            }
+        });
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        // The GPS listener holds this screen; a new dashboard restarts it in onResume.
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        super.onDestroy();
+    }
+
+    /** The server records the duty change first (photo + event) so the admin sees who is on duty. */
+    private void onAttendancePhoto(File savedFile, Bitmap photoBitmap) {
+        final boolean ending = isEndingDuty;
+        isEndingDuty = false;
+        final String path = savedFile != null ? savedFile.getAbsolutePath() : "";
+        final double lat = locationHelper.getLatitude();
+        final double lng = locationHelper.getLongitude();
+        MaterialButton dutyButton = findViewById(R.id.btnAgentStartDuty);
+        if (dutyButton != null) {
+            dutyButton.setEnabled(false);
+            dutyButton.setText("SAVING…");
+        }
+        DutySync.record(this, !ending, savedFile, photoBitmap, locationHelper, new DutySync.Listener() {
+            @Override
+            public void onDutyChanged(boolean onDuty) {
+                if (onDuty) {
+                    dbHelper.saveAttendance(session.getUsername(), path, lat, lng);
+                    String startTimeStr = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US).format(new Date());
+                    session.setDutyOnline(true);
+                    session.setDutyStartTime(startTimeStr);
+                    startDutyTracking();
+                    Toast.makeText(DashboardActivity.this, "✓ Attendance verified. Duty started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                } else {
+                    dbHelper.endDutyWithPhoto(session.getUsername(), path, lat, lng);
+                    session.setDutyOnline(false);
+                    session.setDutyStartTime("");
+                    locationHelper.stopLocationUpdates();
+                    Toast.makeText(DashboardActivity.this, "✓ Attendance verified. Duty ended.", Toast.LENGTH_LONG).show();
+                }
+                updateAttendanceUI();
+            }
+
+            @Override
+            public void onFinished() {
+                if (dutyButton != null) dutyButton.setEnabled(true);
+                updateAttendanceUI();
+            }
+        });
+    }
+
+    /** While on duty the agent's position is shared with the admin's agent map. */
+    private void startDutyTracking() {
+        if (!session.isDutyOnline()) return;
+        if (!locationHelper.hasLocationPermission()) {
+            if (!askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION});
+            }
+            return;
+        }
+        locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) ->
+                locationHelper.pushLocationToSupabaseIfOnline(DashboardActivity.this, session.isDutyOnline()));
     }
 
     /** Tiles and the two most recent cards, from the agent's own bookings on the TRIMAX server. */
@@ -487,6 +554,7 @@ public class DashboardActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List<BookingRecord> records) {
                 if (SessionGuard.isGone(DashboardActivity.this)) return;
+                BookingNotifications.syncAgent(DashboardActivity.this, session.getUsername(), records);
                 updateDashboardStats(records);
                 List<Delivery> bookings = new java.util.ArrayList<>();
                 for (BookingRecord r : records) bookings.add(r.toDelivery(false));
@@ -582,13 +650,13 @@ public class DashboardActivity extends AppCompatActivity {
         TextView tvStatConfirmedCount = findViewById(R.id.tvStatConfirmedCount);
 
         if (tvStatTotalCount != null) {
-            tvStatTotalCount.setText(String.valueOf(BookingFilter.count(records, "ALL")));
+            UiMotion.countTo(tvStatTotalCount, BookingFilter.count(records, "ALL"));
         }
         if (tvStatPendingCount != null) {
-            tvStatPendingCount.setText(String.valueOf(BookingFilter.count(records, "PENDING")));
+            UiMotion.countTo(tvStatPendingCount, BookingFilter.count(records, "PENDING"));
         }
         if (tvStatConfirmedCount != null) {
-            tvStatConfirmedCount.setText(String.valueOf(BookingFilter.count(records, "CONFIRMED")));
+            UiMotion.countTo(tvStatConfirmedCount, BookingFilter.count(records, "CONFIRMED"));
         }
     }
 

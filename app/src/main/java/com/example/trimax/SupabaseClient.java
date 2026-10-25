@@ -34,6 +34,8 @@ public final class SupabaseClient {
     /** Refresh the access token when it has less than this many seconds left. */
     static final long REFRESH_MARGIN_SECONDS = 60;
     private static final Pattern FUNCTION_NAME = Pattern.compile("[a-z_][a-z0-9_]{0,62}");
+    private static final Pattern BUCKET_NAME = Pattern.compile("[a-z0-9][a-z0-9_-]{0,62}");
+    private static final Pattern OBJECT_PATH = Pattern.compile("[A-Za-z0-9-]{1,64}/[A-Za-z0-9_.-]{1,120}\\.jpg");
 
     private final String baseUrl;
     private final String apiKey;
@@ -191,6 +193,46 @@ public final class SupabaseClient {
     }
 
     // =====================================================================================
+    // Storage
+    // =====================================================================================
+
+    /** The signed-in user's Supabase id, or null when nobody is signed in on this phone. */
+    public String currentUserId() {
+        AuthSession s = store.load();
+        return s == null ? null : s.userId;
+    }
+
+    /**
+     * Uploads a JPEG to Storage as the signed-in user (the bucket's policies decide which folders
+     * that user may write to). Never overwrites an existing object.
+     */
+    public void uploadJpeg(String bucket, String objectPath, byte[] data) throws ApiException {
+        if (bucket == null || !BUCKET_NAME.matcher(bucket).matches()
+                || objectPath == null || !OBJECT_PATH.matcher(objectPath).matches()) {
+            throw new IllegalArgumentException("Bad storage path");
+        }
+        if (data == null || data.length == 0) {
+            throw new ApiException(ApiException.Kind.INVALID, "The photo is empty. Take it again.");
+        }
+        String path = "/storage/v1/object/" + bucket + "/" + objectPath;
+        AuthSession session = validSession(null, false);
+        Response r = send("POST", path, data, "image/jpeg", session.accessToken);
+        if (r.status == 401 || (r.status == 400 && r.body != null && r.body.toLowerCase(java.util.Locale.ROOT).contains("jwt"))) {
+            session = validSession(session, true);
+            r = send("POST", path, data, "image/jpeg", session.accessToken);
+        }
+        if (r.ok()) return;
+        if (r.status == 413) {
+            throw new ApiException(ApiException.Kind.INVALID, "The photo is too large to upload.");
+        }
+        if (r.status >= 400 && r.status < 500) {
+            throw new ApiException(ApiException.Kind.FORBIDDEN,
+                    "The photo could not be uploaded (" + r.status + "). Ask your administrator to check mobile access.");
+        }
+        throw new ApiException(ApiException.Kind.SERVER, "The server had a problem (" + r.status + "). Please try again.");
+    }
+
+    // =====================================================================================
     // HTTP
     // =====================================================================================
 
@@ -213,6 +255,10 @@ public final class SupabaseClient {
     }
 
     private Response send(String method, String path, String jsonBody, String accessToken) throws ApiException {
+        return send(method, path, jsonBody.getBytes(StandardCharsets.UTF_8), "application/json; charset=utf-8", accessToken);
+    }
+
+    private Response send(String method, String path, byte[] bytes, String contentType, String accessToken) throws ApiException {
         HttpURLConnection c = null;
         try {
             c = (HttpURLConnection) new URL(baseUrl + path).openConnection();
@@ -224,9 +270,8 @@ public final class SupabaseClient {
             c.setRequestProperty("apikey", apiKey);
             c.setRequestProperty("Authorization", "Bearer " + (accessToken != null ? accessToken : apiKey));
             c.setRequestProperty("Accept", "application/json");
-            c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            c.setRequestProperty("Content-Type", contentType);
             c.setDoOutput(true);
-            byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
             c.setFixedLengthStreamingMode(bytes.length);
             try (OutputStream out = c.getOutputStream()) {
                 out.write(bytes);

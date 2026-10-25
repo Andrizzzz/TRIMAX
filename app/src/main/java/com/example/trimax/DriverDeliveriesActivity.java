@@ -275,5 +275,6 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
             containerDeliveries.addView(cardView);
         }
+        containerDeliveries.scheduleLayoutAnimation();
     }
 }

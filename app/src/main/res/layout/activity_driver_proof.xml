@@ -103,7 +103,7 @@
                     android:layout_height="28dp"
                     android:contentDescription="Success"
                     android:src="@drawable/ic_check_circle"
-                    app:tint="#10B981" />
+                    app:tint="@color/status_confirmed" />
 
                 <TextView
                     android:layout_width="wrap_content"

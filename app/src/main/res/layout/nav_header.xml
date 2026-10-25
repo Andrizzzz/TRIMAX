@@ -16,7 +16,7 @@
         android:contentDescription="Agent Avatar"
         android:padding="12dp"
         android:src="@drawable/ic_user"
-        app:tint="#2563EB" />
+        app:tint="@color/primary_blue" />
 
     <TextView
         android:id="@+id/tvNavHeaderName"

@@ -108,7 +108,7 @@ public class DriverProfileActivity extends AppCompatActivity {
 
     private void navigateToTab(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
-        intent.putExtra("PREV_TAB_INDEX", 4);
+        intent.putExtra("PREV_TAB_INDEX", 3);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(intent);
         overridePendingTransition(0, 0);

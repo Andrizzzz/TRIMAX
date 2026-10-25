@@ -330,5 +330,6 @@ public class DriverHistoryActivity extends AppCompatActivity {
 
             containerHistory.addView(card);
         }
+        containerHistory.scheduleLayoutAnimation();
     }
 }

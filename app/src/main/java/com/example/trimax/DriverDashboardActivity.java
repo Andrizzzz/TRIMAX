@@ -41,6 +41,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
+    private boolean askedForLocation;
 
     private TextView tvDutyStatusPill;
     private MaterialButton btnToggleDuty;
@@ -79,6 +81,16 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         locationHelper = new LocationHelper(this);
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                granted -> {
+                    if (locationHelper.hasLocationPermission()) {
+                        startDutyTracking();
+                    } else {
+                        Toast.makeText(this, "Location is off: the admin map will not show you while on duty.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
 
         drawerLayout = findViewById(R.id.drawerLayout);
 
@@ -100,36 +112,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
                                     locationHelper.getLongitude()
                             );
 
-                            String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved;
-                            if (isEndingDuty) {
-                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            } else {
-                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            }
-
-                            if (saved) {
-                                if (isEndingDuty) {
-                                    session.setDutyOnline(false);
-                                    locationHelper.stopLocationUpdates();
-                                    updateDutyUI();
-                                    Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
-                                } else {
-                                    session.setDutyOnline(true);
-                                    locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                                        dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
-                                        locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
-                                        updateDutyUI();
-                                    });
-                                    updateDutyUI();
-                                    Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Started.", Toast.LENGTH_LONG).show();
-                                    dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
-                                    locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
-                                }
-                            } else {
-                                Toast.makeText(DriverDashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
-                            }
-                            isEndingDuty = false;
+                            onAttendancePhoto(savedFile, photoBitmap);
                         } else {
                             Toast.makeText(DriverDashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
@@ -440,6 +423,9 @@ public class DriverDashboardActivity extends AppCompatActivity {
             driverDashboardMapView.startLiveDeliveryAnimation();
         }
         refreshDriverDashboard();
+        // After a restart or theme change the activity is new: resume live GPS if still on duty.
+        if (session.isDutyOnline() && !locationHelper.isTrackingActive()) startDutyTracking();
+        syncDutyFromServer();
 
         NavigationView dashboardDrawer = findViewById(R.id.navigationView);
         if (dashboardDrawer != null) {
@@ -459,6 +445,13 @@ public class DriverDashboardActivity extends AppCompatActivity {
         if (driverDashboardMapView != null) {
             driverDashboardMapView.onPause();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        // The GPS listener holds this screen; a new dashboard restarts it in onResume.
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        super.onDestroy();
     }
 
     private String getTimeBasedGreeting() {
@@ -487,6 +480,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
             public void onSuccess(List<BookingRecord> records) {
                 if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
                 activeRecords = records;
+                BookingNotifications.syncDriver(DriverDashboardActivity.this, session.getUsername(), records);
                 currentHeroRecord = records.isEmpty() ? null : records.get(0);
                 currentHeroDelivery = currentHeroRecord == null ? null : currentHeroRecord.toDelivery(true);
                 bindHeroDelivery(records.size());
@@ -570,6 +564,85 @@ public class DriverDashboardActivity extends AppCompatActivity {
             Toast.makeText(this, "🌙 Dark Mode Activated", Toast.LENGTH_SHORT).show();
         }
         ThemeHelper.setTheme(this, newTheme);
+    }
+
+    /** The server records the duty change first (photo + event) so the admin sees who is on duty. */
+    private void onAttendancePhoto(File savedFile, Bitmap photoBitmap) {
+        final boolean ending = isEndingDuty;
+        isEndingDuty = false;
+        final String path = savedFile != null ? savedFile.getAbsolutePath() : "";
+        final double lat = locationHelper.getLatitude();
+        final double lng = locationHelper.getLongitude();
+        setDutyButtonBusy(true);
+        DutySync.record(this, !ending, savedFile, photoBitmap, locationHelper, new DutySync.Listener() {
+            @Override
+            public void onDutyChanged(boolean onDuty) {
+                applyDutyChange(onDuty, path, lat, lng);
+            }
+
+            @Override
+            public void onFinished() {
+                setDutyButtonBusy(false);
+            }
+        });
+    }
+
+    private void applyDutyChange(boolean nowOnDuty, String photoPath, double lat, double lng) {
+        // Keep the phone's attendance log too (the profile screen shows it).
+        if (nowOnDuty) {
+            dbHelper.saveAttendance(session.getUsername(), photoPath, lat, lng);
+        } else {
+            dbHelper.endDutyWithPhoto(session.getUsername(), photoPath, lat, lng);
+        }
+        session.setDutyOnline(nowOnDuty);
+        if (nowOnDuty) {
+            startDutyTracking();
+            locationHelper.pushLocationToSupabaseIfOnline(this, true);
+        } else {
+            locationHelper.stopLocationUpdates();
+        }
+        updateDutyUI();
+        Toast.makeText(this, nowOnDuty ? "✓ Attendance verified. Duty started." : "✓ Attendance verified. Duty ended.",
+                Toast.LENGTH_LONG).show();
+    }
+
+    /** Live GPS while on duty: logs on the phone and shares with the admin map. */
+    private void startDutyTracking() {
+        if (!session.isDutyOnline()) return;
+        if (!locationHelper.hasLocationPermission()) {
+            if (!askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION});
+            }
+            return;
+        }
+        locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+            dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "",
+                    latitude, longitude, accuracy, speed, bearing);
+            locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
+            updateDutyUI();
+        });
+    }
+
+    /** The server is the source of truth for duty (the admin may have a newer state than this phone). */
+    private void syncDutyFromServer() {
+        DutySync.loadServerState(this, server -> {
+            if (server != session.isDutyOnline()) {
+                session.setDutyOnline(server);
+                if (server) startDutyTracking(); else locationHelper.stopLocationUpdates();
+                updateDutyUI();
+            }
+        });
+    }
+
+    private void setDutyButtonBusy(boolean busy) {
+        if (btnToggleDuty == null) return;
+        btnToggleDuty.setEnabled(!busy);
+        btnToggleDuty.animate().alpha(busy ? 0.55f : 1f).setDuration(150).start();
+        if (busy) btnToggleDuty.setText("SAVING…");
+        else updateDutyUI();
     }
 
     private void toggleDriverDuty() {

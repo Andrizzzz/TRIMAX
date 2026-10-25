@@ -184,6 +184,39 @@ public final class TrimaxApi {
         }, cb);
     }
 
+    // ------------------------------------------------------------------ duty (attendance)
+
+    /** Whether the server has the signed-in person on duty (false when they never started one). */
+    public void loadDutyStatus(Callback<Boolean> cb) {
+        run(() -> new JSONObject(client.rpc("trimax_my_duty_status", new JSONObject())).optBoolean("on_duty", false), cb);
+    }
+
+    /**
+     * Starts or ends duty on the server: uploads the attendance photo to the private duty-photos
+     * bucket (into the user's own folder), then records the event so the admin sees it.
+     * The result is whether the server now has this person on duty.
+     */
+    public void recordDutyEvent(boolean start, byte[] jpeg, Double latitude, Double longitude, Callback<Boolean> cb) {
+        run(() -> {
+            String uid = client.currentUserId();
+            if (uid == null) throw ApiException.sessionExpired();
+            String name = (start ? "start_" : "end_") + System.currentTimeMillis() + "_"
+                    + java.util.UUID.randomUUID().toString().substring(0, 8) + ".jpg";
+            String objectPath = uid + "/" + name;
+            client.uploadJpeg("duty-photos", objectPath, jpeg);
+
+            boolean hasFix = latitude != null && longitude != null && Double.isFinite(latitude)
+                    && Double.isFinite(longitude) && !(latitude == 0 && longitude == 0);
+            JSONObject args = new JSONObject();
+            args.put("p_event", start ? "START" : "END");
+            args.put("p_photo_path", objectPath);
+            args.put("p_latitude", hasFix ? latitude : JSONObject.NULL);
+            args.put("p_longitude", hasFix ? longitude : JSONObject.NULL);
+            args.put("p_client_event_id", java.util.UUID.randomUUID().toString());
+            return new JSONObject(client.rpc("trimax_record_duty_event", args)).optBoolean("on_duty", start);
+        }, cb);
+    }
+
     // ------------------------------------------------------------------ plumbing
 
     private <T> void run(Call<T> call, Callback<T> cb) {

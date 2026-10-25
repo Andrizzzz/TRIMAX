@@ -94,6 +94,23 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadNotifications();
+        // New assignments and admin cancellations, as the server has them now.
+        for (String scope : new String[]{"active", "history"}) {
+            TrimaxApi.get(this).listDriverDeliveries(scope, new TrimaxApi.Callback<List<BookingRecord>>() {
+                @Override
+                public void onSuccess(List<BookingRecord> records) {
+                    if (SessionGuard.isGone(DriverNotificationsActivity.this)) return;
+                    BookingNotifications.syncDriver(DriverNotificationsActivity.this, session.getUsername(), records);
+                    loadNotifications();
+                }
+
+                @Override
+                public void onError(ApiException error) {
+                    if (SessionGuard.isGone(DriverNotificationsActivity.this)) return;
+                    SessionGuard.handle(DriverNotificationsActivity.this, error);
+                }
+            });
+        }
     }
 
     private void loadNotifications() {
@@ -190,10 +207,10 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     private void handleNotificationClick(DatabaseHelper.NotificationItem notification) {
         dbHelper.markNotificationAsRead(notification.getId());
         String searchable = (notification.getTitle() == null ? "" : notification.getTitle()) + " " + (notification.getMessage() == null ? "" : notification.getMessage());
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(searchable);
-        if (matcher.find()) {
+        String bookingId = BookingNotifications.bookingIdFrom(searchable);
+        if (bookingId != null) {
             Intent intent = new Intent(this, DriverDeliveryDetailsActivity.class);
-            intent.putExtra("BOOKING_ID", matcher.group());
+            intent.putExtra("BOOKING_ID", bookingId);
             startActivity(intent);
         } else {
             loadNotifications();
@@ -201,7 +218,7 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     }
     private void navigateToTab(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
-        intent.putExtra("PREV_TAB_INDEX", 3);
+        intent.putExtra("PREV_TAB_INDEX", 0);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(intent);
         overridePendingTransition(0, 0);
