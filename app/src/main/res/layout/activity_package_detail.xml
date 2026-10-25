@@ -113,6 +113,7 @@
                 android:textSize="14sp" />
 
             <View
+                android:id="@+id/dividerIncluded"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="16dp"
@@ -120,6 +121,7 @@
 
             <!-- Included Services Section -->
             <TextView
+                android:id="@+id/tvIncludedTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Included Services"
@@ -137,6 +139,7 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/dividerLimits"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="16dp"
@@ -144,6 +147,7 @@
 
             <!-- Package Limits Section -->
             <TextView
+                android:id="@+id/tvLimitsTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Package Limits"
@@ -152,6 +156,7 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/containerLimits"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -236,6 +241,7 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/dividerTime"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="16dp"
@@ -243,6 +249,7 @@
 
             <!-- Estimated Delivery Time Section -->
             <TextView
+                android:id="@+id/tvTimeTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Estimated Delivery Time"
