@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,6 +12,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -234,20 +236,56 @@ public class SettingsActivity extends AppCompatActivity {
         if (ThemeHelper.THEME_LIGHT.equalsIgnoreCase(current)) selectedIndex = 1;
         else if (ThemeHelper.THEME_DARK.equalsIgnoreCase(current)) selectedIndex = 2;
 
-        new AlertDialog.Builder(this)
-                .setTitle("Select App Theme")
-                .setSingleChoiceItems(options, selectedIndex, (dialog, which) -> {
-                    dialog.dismiss();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_theme, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        LinearLayout container = dialogView.findViewById(R.id.containerThemeOptions);
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        if (container != null) {
+            container.removeAllViews();
+            for (int i = 0; i < options.length; i++) {
+                final int index = i;
+                String option = options[i];
+
+                TextView tv = new TextView(this);
+                tv.setText(option);
+                tv.setTextColor(ContextCompat.getColor(this, selectedIndex == index ? R.color.primary_blue : R.color.text_primary));
+                tv.setTextSize(16);
+                tv.setTypeface(null, selectedIndex == index ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+                tv.setPadding(dp(16), dp(14), dp(16), dp(14));
+                tv.setBackgroundResource(android.R.drawable.list_selector_background);
+
+                tv.setOnClickListener(v -> {
                     String newMode = ThemeHelper.THEME_SYSTEM;
-                    if (which == 1) newMode = ThemeHelper.THEME_LIGHT;
-                    else if (which == 2) newMode = ThemeHelper.THEME_DARK;
+                    if (index == 1) newMode = ThemeHelper.THEME_LIGHT;
+                    else if (index == 2) newMode = ThemeHelper.THEME_DARK;
 
                     ThemeHelper.setTheme(SettingsActivity.this, newMode);
                     updateThemeSubtitle();
-                    Toast.makeText(this, "Theme updated to " + options[which], Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                    Toast.makeText(this, "Theme updated to " + option, Toast.LENGTH_SHORT).show();
+                    bottomSheetDialog.dismiss();
+                });
+
+                container.addView(tv);
+
+                if (i < options.length - 1) {
+                    View divider = new View(this);
+                    divider.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT, dp(1)));
+                    divider.setBackgroundColor(0x1A64748B);
+                    container.addView(divider);
+                }
+            }
+        }
+        bottomSheetDialog.show();
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     /**
