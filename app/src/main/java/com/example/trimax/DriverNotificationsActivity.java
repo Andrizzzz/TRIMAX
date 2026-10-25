@@ -39,25 +39,24 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         session = new SessionManager(this);
         dbHelper = new DatabaseHelper(this);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            View topBar = findViewById(R.id.topBar);
-            if (topBar != null) {
-                int baseTopPadding = Math.round(16 * getResources().getDisplayMetrics().density);
-                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
-            }
-            // Match the shared driver-screen layout: keep the floating navigation clear of system bars.
-            View bottomNav = findViewById(R.id.cardBottomNavContainer);
-            if (bottomNav != null) {
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
-                int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
-                if (params.bottomMargin != desiredBottomMargin) {
-                    params.bottomMargin = desiredBottomMargin;
-                    bottomNav.setLayoutParams(params);
+        View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
+        if (root != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+                // Match the shared driver-screen layout: keep the floating navigation clear of system bars.
+                View bottomNav = findViewById(R.id.cardBottomNavContainer);
+                if (bottomNav != null) {
+                    ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                    int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
+                    if (params.bottomMargin != desiredBottomMargin) {
+                        params.bottomMargin = desiredBottomMargin;
+                        bottomNav.setLayoutParams(params);
+                    }
                 }
-            }
-            return insets;
-        });
+                return insets;
+            });
+        }
 
         cardDriverNotif1 = findViewById(R.id.cardDriverNotif1);
         cardDriverNotif2 = findViewById(R.id.cardDriverNotif2);
