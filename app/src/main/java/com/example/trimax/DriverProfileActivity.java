@@ -21,6 +21,7 @@ public class DriverProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_profile);
+        DriverNav.attach(this, R.id.nav_driver_profile);
 
         session = new SessionManager(this);
 

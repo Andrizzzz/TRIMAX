@@ -27,6 +27,7 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_deliveries);
+        DriverNav.attach(this, R.id.nav_driver_deliveries);
 
         dbHelper = new DatabaseHelper(this);
         session = new SessionManager(this);

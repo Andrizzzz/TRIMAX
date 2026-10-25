@@ -27,6 +27,7 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_notifications);
+        DriverNav.attach(this, R.id.nav_driver_notifications);
 
         session = new SessionManager(this);
         dbHelper = new DatabaseHelper(this);

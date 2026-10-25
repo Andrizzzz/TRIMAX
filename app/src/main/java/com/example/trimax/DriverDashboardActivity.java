@@ -51,6 +51,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_dashboard);
+        DriverNav.attach(this, R.id.nav_driver_home);
 
         session = new SessionManager(this);
 

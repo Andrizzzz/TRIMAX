@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="LiquidGlassNavBar">
+        <!-- Menu resource whose items become the tabs -->
+        <attr name="navMenu" format="reference" />
+    </declare-styleable>
+</resources>
