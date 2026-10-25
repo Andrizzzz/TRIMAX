@@ -183,39 +183,64 @@ public class LocationHelper {
         return hasValidLocationFix;
     }
 
+    // These values represent the last confirmed successful remote upload, not the last attempt.
     private long lastRemotePushTimestamp = 0;
     private double lastRemoteLat = 0.0;
     private double lastRemoteLng = 0.0;
+    private boolean remotePushInProgress = false;
     private static final long MIN_REMOTE_PUSH_INTERVAL_MS = 10_000L; // 10 seconds
+    private static final double MIN_REMOTE_PUSH_DISTANCE_METERS = 15.0;
 
-    public void pushLocationToSupabaseIfOnline(Context context, boolean isOnDuty) {
-        if (!hasValidLocationFix || currentLatitude == 0 || currentLongitude == 0) return;
+    public synchronized void pushLocationToSupabaseIfOnline(Context context, boolean isOnDuty) {
+        if (!isOnDuty || !hasValidLocationFix || currentLatitude == 0 || currentLongitude == 0) return;
+        if (remotePushInProgress) return;
 
-        long now = System.currentTimeMillis();
-        double distMeters = distanceMeters(lastRemoteLat, lastRemoteLng, currentLatitude, currentLongitude);
+        TrimaxApi api = TrimaxApi.get(context);
+        if (!api.hasSession()) return;
 
-        if (now - lastRemotePushTimestamp >= MIN_REMOTE_PUSH_INTERVAL_MS || distMeters >= 15.0) {
-            lastRemotePushTimestamp = now;
-            lastRemoteLat = currentLatitude;
-            lastRemoteLng = currentLongitude;
+        final long now = System.currentTimeMillis();
+        final double latitude = currentLatitude;
+        final double longitude = currentLongitude;
+        final float accuracy = currentAccuracy;
+        final float speed = currentSpeed;
+        final float bearing = currentBearing;
+        double distMeters = distanceMeters(lastRemoteLat, lastRemoteLng, latitude, longitude);
 
-            if (TrimaxApi.get(context).hasSession()) {
-                TrimaxApi.get(context).updateLiveLocation(
-                        currentLatitude,
-                        currentLongitude,
-                        currentAccuracy,
-                        currentSpeed,
-                        currentBearing,
-                        isOnDuty,
-                        new TrimaxApi.Callback<Boolean>() {
-                            @Override public void onSuccess(Boolean result) {}
-                            @Override public void onError(ApiException error) {
-                                // Silent retry on next GPS fix
+        if (lastRemotePushTimestamp > 0
+                && now - lastRemotePushTimestamp < MIN_REMOTE_PUSH_INTERVAL_MS
+                && distMeters < MIN_REMOTE_PUSH_DISTANCE_METERS) {
+            return;
+        }
+
+        // Mark only the request as in-flight here. A failed request must remain eligible for retry.
+        remotePushInProgress = true;
+        api.updateLiveLocation(
+                latitude,
+                longitude,
+                accuracy,
+                speed,
+                bearing,
+                true,
+                new TrimaxApi.Callback<Boolean>() {
+                    @Override public void onSuccess(Boolean result) {
+                        synchronized (LocationHelper.this) {
+                            remotePushInProgress = false;
+                            if (Boolean.TRUE.equals(result)) {
+                                lastRemotePushTimestamp = System.currentTimeMillis();
+                                lastRemoteLat = latitude;
+                                lastRemoteLng = longitude;
                             }
                         }
-                );
-            }
-        }
+                    }
+
+                    @Override public void onError(ApiException error) {
+                        synchronized (LocationHelper.this) {
+                            // Keep last successful values unchanged so the next GPS fix can retry.
+                            remotePushInProgress = false;
+                        }
+                    }
+                }
+        );
     }
 
     private static double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
