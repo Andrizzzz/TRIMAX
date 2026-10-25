@@ -109,7 +109,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             double currentLng = locationHelper.getLongitude();
             if (currentLat != 0 && currentLng != 0) {
                 mockMapView.updateDriverLocation(currentLat, currentLng);
-                mockMapView.recenter();
+                // A saved customer's pin stays where it is; only a brand-new customer starts at the phone's GPS.
+                if (!mockMapView.hasExplicitDestinationSelection()) mockMapView.recenter();
             }
         }
         TextView tvCustomerSubtitle = findViewById(R.id.tvCustomerSubtitle);
@@ -348,8 +349,8 @@ public class NewBookingLocationActivity extends AppCompatActivity {
             if (getIntent().hasExtra("SELECTED_PACKAGE")) {
                 detailsIntent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
             }
-            detailsIntent.putExtra("PICKUP_LAT", 14.7826996);
-            detailsIntent.putExtra("PICKUP_LNG", 121.0475865);
+            detailsIntent.putExtra("PICKUP_LAT", BookingRecord.HUB_LATITUDE);
+            detailsIntent.putExtra("PICKUP_LNG", BookingRecord.HUB_LONGITUDE);
             detailsIntent.putExtra("DEST_LAT", destPoint.getLatitude());
             detailsIntent.putExtra("DEST_LNG", destPoint.getLongitude());
 

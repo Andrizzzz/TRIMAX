@@ -39,7 +39,7 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <!-- STEP PROGRESS INDICATOR (1 Customer -> 2 Pickup -> 3 Delivery Active -> 4 Review) -->
+    <!-- STEP PROGRESS INDICATOR (1 Customer -> 2 Location -> 3 Items (active) -> 4 Review) -->
     <LinearLayout
         android:id="@+id/stepProgressLayout"
         android:layout_width="match_parent"
@@ -105,7 +105,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Pickup"
+                android:text="Location"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>
@@ -138,7 +138,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Delivery"
+                android:text="Items"
                 android:textColor="@color/primary_blue"
                 android:textSize="11sp"
                 android:textStyle="bold" />

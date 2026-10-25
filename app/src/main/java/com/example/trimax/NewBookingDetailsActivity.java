@@ -63,8 +63,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         customerLatitude = intent.getDoubleExtra("CUSTOMER_LAT", 0);
         customerLongitude = intent.getDoubleExtra("CUSTOMER_LNG", 0);
 
-        pickupLat = 14.7826996;
-        pickupLng = 121.0475865;
+        pickupLat = BookingRecord.HUB_LATITUDE;
+        pickupLng = BookingRecord.HUB_LONGITUDE;
         destLat = intent.getDoubleExtra("DEST_LAT", 0);
         destLng = intent.getDoubleExtra("DEST_LNG", 0);
 

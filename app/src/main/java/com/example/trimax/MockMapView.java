@@ -6,6 +6,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
+import android.view.MotionEvent;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -80,11 +82,18 @@ public class MockMapView extends FrameLayout {
     private int sampleLocationIndex = 0;
     private boolean hasExplicitDestinationSelection = false;
     private boolean isProgrammaticMove = false;
+    /**
+     * When the user last touched the map. Only moves that follow a real touch (drag, fling, pinch,
+     * tap) may move the destination pin; code-driven moves (recentering on GPS, showing a saved or
+     * searched place) never do.
+     */
+    private long lastUserTouchMs = 0;
+    private static final long USER_GESTURE_WINDOW_MS = 2000;
     private boolean liveDriverRouteOrigin = false;
     private boolean destinationPinEnabled = true;
     private GeoPoint lastRoutedDriverPoint;
 
-    private static final GeoPoint RIDER_POINT = new GeoPoint(14.7843353, 121.0604306); // Fixed TRIMAX Hub
+    private static final GeoPoint RIDER_POINT = new GeoPoint(BookingRecord.HUB_LATITUDE, BookingRecord.HUB_LONGITUDE); // Fixed TRIMAX Hub (same as the server)
 
     private final GeoPoint[] sampleGeoPoints = {
             new GeoPoint(14.8150, 121.0500), // Tungkong Mangga
@@ -210,6 +219,15 @@ public class MockMapView extends FrameLayout {
             }
         });
         mapView.getOverlays().add(0, eventsOverlay);
+
+        // Remember real touches so map moves caused by the user can be told apart from code-driven ones.
+        mapView.getOverlays().add(new org.osmdroid.views.overlay.Overlay() {
+            @Override
+            public boolean onTouchEvent(MotionEvent event, MapView map) {
+                lastUserTouchMs = SystemClock.uptimeMillis();
+                return false;   // never consume: dragging and taps work as before
+            }
+        });
 
         // Listen for user map scroll/drag/pan to automatically update pin location at map center
         mapView.addMapListener(new org.osmdroid.events.MapListener() {
@@ -427,6 +445,8 @@ public class MockMapView extends FrameLayout {
 
     private void onMapMoved() {
         if (!destinationPinEnabled || isProgrammaticMove || mapView == null) return;
+        // Recentering on GPS or showing a saved/searched place must not re-pin the customer.
+        if (SystemClock.uptimeMillis() - lastUserTouchMs > USER_GESTURE_WINDOW_MS) return;
         org.osmdroid.api.IGeoPoint center = mapView.getMapCenter();
         if (center != null) {
             GeoPoint centerPoint = new GeoPoint(center.getLatitude(), center.getLongitude());
@@ -579,7 +599,7 @@ public class MockMapView extends FrameLayout {
 
     public GeoPoint getPickupGeoPoint() {
         // Never use the movable driver marker as a booking pickup coordinate.
-        return new GeoPoint(14.7843353, 121.0604306);
+        return new GeoPoint(BookingRecord.HUB_LATITUDE, BookingRecord.HUB_LONGITUDE);
     }
 
     public GeoPoint getDestinationGeoPoint() {
