@@ -18,8 +18,10 @@ public class SessionManager {
     private final SharedPreferences pref;
     private final SharedPreferences.Editor editor;
     private final SharedPreferences profilePrefs;
+    private final Context appContext;
 
     public SessionManager(Context context) {
+        appContext = context.getApplicationContext();
         pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = pref.edit();
         profilePrefs = context.getSharedPreferences("TrimaxProfilePhotos", Context.MODE_PRIVATE);
@@ -42,8 +44,12 @@ public class SessionManager {
         editor.apply();
     }
 
+    /**
+     * Signed in on this phone AND holding a server sign-in. A profile left over from the old local-only
+     * login (no server tokens) does not count, so those users are sent to the sign-in screen once.
+     */
     public boolean isLoggedIn() {
-        return pref.getBoolean(KEY_IS_LOGGED_IN, false);
+        return pref.getBoolean(KEY_IS_LOGGED_IN, false) && TrimaxApi.get(appContext).hasSession();
     }
 
     public int getUserId() {
@@ -115,8 +121,10 @@ public class SessionManager {
         editor.apply();
     }
 
+    /** Clears the local profile and the server sign-in (revoked on the server in the background). */
     public void logoutUser() {
         editor.clear();
         editor.apply();
+        TrimaxApi.get(appContext).signOut();
     }
 }

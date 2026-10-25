@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
@@ -153,7 +154,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
     @Override
     protected void onResume() {
         super.onResume();
-        loadBookingsFromDatabase();
+        refreshBookings();   // always show the server's current state when the screen is opened again
     }
 
     private void setFilter(String filter) {
@@ -162,26 +163,72 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
         loadBookingsFromDatabase();
     }
 
+    /** The agent's own bookings from the TRIMAX server; the chips and search filter them on the phone. */
+    private List<BookingRecord> serverBookings;
+    private boolean loadingBookings;
+
+    /** Filter or search changed: filter what is loaded; load only if nothing is loaded yet. */
     private void loadBookingsFromDatabase() {
         if (isFinishing() || isDestroyed()) return;
-        if (dbHelper == null || bookingAdapter == null || rvBookings == null || tvEmptyBookings == null) return;
-        try {
-            List<Delivery> bookings = dbHelper.getBookingsByFilter(currentFilter, currentSearchQuery);
-            if (bookings == null) bookings = new java.util.ArrayList<>();
-            bookingAdapter.setBookingList(bookings);
-
-            if (bookings.isEmpty()) {
-                tvEmptyBookings.setVisibility(View.VISIBLE);
-                rvBookings.setVisibility(View.GONE);
-            } else {
-                tvEmptyBookings.setVisibility(View.GONE);
-                rvBookings.setVisibility(View.VISIBLE);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        if (bookingAdapter == null || rvBookings == null || tvEmptyBookings == null) return;
         updateChipStyles();
+        if (serverBookings != null) {
+            showFilteredBookings();
+            return;
+        }
+        refreshBookings();
+    }
+
+    private void refreshBookings() {
+        if (isFinishing() || isDestroyed()) return;
+        if (bookingAdapter == null || rvBookings == null || tvEmptyBookings == null) return;
+        updateChipStyles();
+        if (loadingBookings) return;
+        loadingBookings = true;
+        if (serverBookings == null) showBookingsMessage("Loading bookings...", false);
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> result) {
+                loadingBookings = false;
+                if (SessionGuard.isGone(BookingsActivity.this)) return;
+                serverBookings = result;
+                showFilteredBookings();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                loadingBookings = false;
+                if (SessionGuard.isGone(BookingsActivity.this)) return;
+                if (SessionGuard.handle(BookingsActivity.this, error)) return;
+                if (serverBookings == null) {
+                    showBookingsMessage(error.getMessage() + "\nTap here to try again.", true);
+                } else {
+                    Toast.makeText(BookingsActivity.this, "Could not refresh: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void showFilteredBookings() {
+        List<BookingRecord> shown = BookingFilter.apply(serverBookings, currentFilter, currentSearchQuery);
+        List<Delivery> rows = new java.util.ArrayList<>();
+        for (BookingRecord b : shown) rows.add(b.toDelivery(false));
+        bookingAdapter.setBookingList(rows);
+        if (rows.isEmpty()) {
+            showBookingsMessage(serverBookings.isEmpty() ? "You have not created any bookings yet."
+                    : "No bookings match this filter.", false);
+        } else {
+            tvEmptyBookings.setOnClickListener(null);
+            tvEmptyBookings.setVisibility(View.GONE);
+            rvBookings.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void showBookingsMessage(String message, boolean retry) {
+        tvEmptyBookings.setText(message);
+        tvEmptyBookings.setOnClickListener(retry ? v -> refreshBookings() : null);
+        tvEmptyBookings.setVisibility(View.VISIBLE);
+        rvBookings.setVisibility(View.GONE);
     }
 
     private void updateChipStyles() {

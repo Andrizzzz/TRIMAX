@@ -205,19 +205,65 @@ public class DriverHistoryActivity extends AppCompatActivity {
         chip.setAlpha(1f);
     }
 
+    /** This driver's finished deliveries from the TRIMAX server; the chips filter them on the phone. */
+    private List<BookingRecord> historyRecords;
+    private boolean loadingHistory;
+
     private void loadHistory() {
         if (containerHistory == null) return;
-        containerHistory.removeAllViews();
+        if (historyRecords != null) {
+            renderHistory();      // filter chip changed; the list is fetched fresh each time the screen opens
+            return;
+        }
+        if (loadingHistory) return;
+        loadingHistory = true;
+        if (historyRecords == null) showHistoryMessage("Loading delivery history...", false);
+        TrimaxApi.get(this).listDriverDeliveries("history", new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                loadingHistory = false;
+                if (SessionGuard.isGone(DriverHistoryActivity.this)) return;
+                historyRecords = records;
+                renderHistory();
+            }
 
-        List<Delivery> list = dbHelper.getDeliveryHistory(session.getUsername(), activeFilter);
+            @Override
+            public void onError(ApiException error) {
+                loadingHistory = false;
+                if (SessionGuard.isGone(DriverHistoryActivity.this)) return;
+                if (SessionGuard.handle(DriverHistoryActivity.this, error)) return;
+                if (historyRecords == null) showHistoryMessage(error.getMessage() + "\nTap here to try again.", true);
+                else android.widget.Toast.makeText(DriverHistoryActivity.this, "Could not refresh: " + error.getMessage(),
+                        android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void showHistoryMessage(String text, boolean retry) {
+        containerHistory.removeAllViews();
+        TextView tvEmpty = new TextView(this);
+        tvEmpty.setText(text);
+        tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
+        tvEmpty.setTextSize(16);
+        tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
+        if (retry) tvEmpty.setOnClickListener(v -> loadHistory());
+        containerHistory.addView(tvEmpty);
+    }
+
+    private void renderHistory() {
+        containerHistory.removeAllViews();
+        List<Delivery> list = new java.util.ArrayList<>();
+        for (BookingRecord r : historyRecords) {
+            Delivery d = r.toDelivery(true);
+            String s = d.getStatus();
+            boolean delivered = "DELIVERED".equals(s) || "COMPLETED".equals(s);
+            if ("DELIVERED".equals(activeFilter) && !delivered) continue;
+            if ("FAILED".equals(activeFilter) && !"FAILED".equals(s)) continue;
+            list.add(d);
+        }
 
         if (list.isEmpty()) {
-            TextView tvEmpty = new TextView(this);
-            tvEmpty.setText("No delivery history records found.");
-            tvEmpty.setTextColor(getResources().getColor(R.color.text_secondary));
-            tvEmpty.setTextSize(16);
-            tvEmpty.setPadding(dp(20), dp(40), dp(20), dp(20));
-            containerHistory.addView(tvEmpty);
+            showHistoryMessage("No delivery history records found.", false);
             return;
         }
 

@@ -90,11 +90,40 @@ public class ClientDetailActivity extends AppCompatActivity {
         loadBookingHistory(phone, name);
     }
 
+    /** This customer's bookings, from the agent's own bookings on the TRIMAX server. */
     private void loadBookingHistory(String phone, String name) {
         if (clientBookingHistoryContainer == null) return;
-        clientBookingHistoryContainer.removeAllViews();
+        showHistoryNote("Loading booking history...");
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(ClientDetailActivity.this)) return;
+                List<Delivery> bookings = new java.util.ArrayList<>();
+                for (BookingRecord r : BookingFilter.forCustomer(records, phone, name)) bookings.add(r.toDelivery(false));
+                showBookingHistory(bookings);
+            }
 
-        List<Delivery> bookings = dbHelper.getBookingsForCustomer(phone, name);
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(ClientDetailActivity.this)) return;
+                if (SessionGuard.handle(ClientDetailActivity.this, error)) return;
+                showHistoryNote("Could not load booking history: " + error.getMessage());
+            }
+        });
+    }
+
+    private void showHistoryNote(String text) {
+        clientBookingHistoryContainer.removeAllViews();
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+        tv.setTextSize(14);
+        tv.setPadding(dp(4), dp(12), dp(4), dp(12));
+        clientBookingHistoryContainer.addView(tv);
+    }
+
+    private void showBookingHistory(List<Delivery> bookings) {
+        clientBookingHistoryContainer.removeAllViews();
         if (bookings == null || bookings.isEmpty()) {
             TextView tvEmpty = new TextView(this);
             tvEmpty.setText("No booking history found for this client.");

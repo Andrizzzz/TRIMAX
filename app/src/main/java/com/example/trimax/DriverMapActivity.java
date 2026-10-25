@@ -78,15 +78,20 @@ public class DriverMapActivity extends AppCompatActivity {
         }
         if (deliveryCode != null) deliveryCode = deliveryCode.trim();
 
-        if (deliveryCode != null && !deliveryCode.isEmpty()) {
-            currentDelivery = dbHelper.getDeliveryByCode(deliveryCode);
-        }
-
-        if (currentDelivery == null) {
-            currentDelivery = dbHelper.getNextAssignedDelivery(session.getUsername());
-            if (currentDelivery != null) {
-                deliveryCode = currentDelivery.getBookingId();
-            }
+        // The screen that opens the map passes the destination it got from the server. If it is missing,
+        // the delivery is fetched from the server below (only deliveries assigned to this driver load).
+        String destAddress = getIntent().getStringExtra("DEST_ADDRESS");
+        double destLat = getIntent().getDoubleExtra("DEST_LAT", 0);
+        double destLng = getIntent().getDoubleExtra("DEST_LNG", 0);
+        if (deliveryCode != null && !deliveryCode.isEmpty() && destAddress != null) {
+            currentDelivery = new Delivery();
+            currentDelivery.setBookingId(deliveryCode);
+            currentDelivery.setDestination(destAddress);
+            currentDelivery.setDestinationLatitude(destLat);
+            currentDelivery.setDestinationLongitude(destLng);
+            currentDelivery.setCustomerName(getIntent().getStringExtra("CUSTOMER_NAME"));
+        } else if (deliveryCode != null && deliveryCode.matches("\\d{1,9}")) {
+            fetchDestination(Integer.parseInt(deliveryCode));
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
@@ -150,6 +155,32 @@ public class DriverMapActivity extends AppCompatActivity {
         if (btnStartNavigation != null) btnStartNavigation.setOnClickListener(v -> startTurnByTurnNavigation());
     }
 
+
+    private void fetchDestination(int bookingId) {
+        TrimaxApi.get(this).getDriverDelivery(bookingId, new TrimaxApi.Callback<BookingRecord>() {
+            @Override
+            public void onSuccess(BookingRecord record) {
+                if (SessionGuard.isGone(DriverMapActivity.this)) return;
+                currentDelivery = record.toDelivery(true);
+                TextView tvDestAddress = findViewById(R.id.tvDestAddress);
+                if (tvDestAddress != null) {
+                    tvDestAddress.setText(currentDelivery.getDestination() != null ? currentDelivery.getDestination() : "No destination specified");
+                }
+                if (mockMapView != null && isValidCoordinate(currentDelivery.getDestinationLatitude(), currentDelivery.getDestinationLongitude())) {
+                    mockMapView.setDestinationLocation(currentDelivery.getDestinationLatitude(),
+                            currentDelivery.getDestinationLongitude(), currentDelivery.getCustomerName(),
+                            currentDelivery.getDestination());
+                }
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(DriverMapActivity.this)) return;
+                if (SessionGuard.handle(DriverMapActivity.this, error)) return;
+                Toast.makeText(DriverMapActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 
     private boolean hasLocationPermission() {
         boolean fineGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)

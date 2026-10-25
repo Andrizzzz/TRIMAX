@@ -19,9 +19,26 @@ import java.util.Locale;
 
 public class NewBookingSummaryActivity extends AppCompatActivity {
 
+    private static final String STATE_REQUEST_ID = "trimax_request_id";
+
+    /**
+     * One id per booking attempt, reused on every retry (and kept across screen rotation), so a retry after
+     * a time-out returns the booking the server already saved instead of creating a second one.
+     */
+    private String requestId;
+    private boolean submitting;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_REQUEST_ID, requestId);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestId = savedInstanceState != null ? savedInstanceState.getString(STATE_REQUEST_ID) : null;
+        if (requestId == null) requestId = java.util.UUID.randomUUID().toString();
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_new_booking_summary);
 
@@ -85,9 +102,11 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             if (tvDeliveryAddress != null) tvDeliveryAddress.setText(address);
         }
 
-        // Package price calculation
-        double total = selectedPrice * quantity;
+        // Estimated from the prices shown on the previous step; the server prices the booking when it is saved.
+        double total = intent.getDoubleExtra("ESTIMATED_TOTAL", selectedPrice * quantity);
         tvTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", total));
+        final int[] productIds = intent.getIntArrayExtra("PRODUCT_IDS");
+        final int[] productQuantities = intent.getIntArrayExtra("PRODUCT_QUANTITIES");
 
         btnConfirmBooking.setOnClickListener(v -> {
             if (address == null || address.trim().isEmpty()
@@ -97,49 +116,83 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please select a valid delivery destination before confirming.", Toast.LENGTH_LONG).show();
                 return;
             }
-            // Disable immediately after validation to prevent duplicate bookings from rapid taps.
-            btnConfirmBooking.setEnabled(false);
-            SessionManager session = new SessionManager(this);
-            DatabaseHelper dbHelper = new DatabaseHelper(this);
-            String generatedBookingId = dbHelper.generateNextBookingId();
+            if (productIds == null || productQuantities == null || productIds.length == 0
+                    || productIds.length != productQuantities.length) {
+                Toast.makeText(this, "Please go back and select at least 1 product.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (submitting) return;   // ignore rapid repeat taps while the first submission is running
+
             String notes = intent.getStringExtra("NOTES");
             String scheduledTimeStr = resolvedTime.isEmpty()
                     ? resolvedDate
                     : resolvedDate + " • " + resolvedTime;
-            String packageDetailsStr = (service != null ? service : "Basic Delivery") + " (x" + quantity + ")";
 
-            Delivery newBooking = new Delivery();
-            newBooking.setBookingId(generatedBookingId);
-            newBooking.setDriverId(session.getUsername() != null && !session.getUsername().isEmpty() ? session.getUsername() : "agent01");
-            newBooking.setCustomerName(customerName != null ? customerName : "Guest Customer");
-            newBooking.setCustomerPhone(customerPhone != null ? customerPhone : "N/A");
-            newBooking.setPickupLocation("TRIMAX Hub (14.782700, 121.047587)");
-            newBooking.setPickupLatitude(pickupLat);
-            newBooking.setPickupLongitude(pickupLng);
-            newBooking.setDestination(address != null ? address : "San Jose del Monte, Bulacan");
-            newBooking.setDestinationLatitude(destLat);
-            newBooking.setDestinationLongitude(destLng);
-            newBooking.setPackageDetails(packageDetailsStr);
-            newBooking.setScheduledTime(scheduledTimeStr);
-            newBooking.setSpecialInstructions(notes != null ? notes : "");
-            newBooking.setOriginalAmount(total);
-            newBooking.setCurrentTotal(total);
-            newBooking.setStatus("PENDING");
-            newBooking.setPriority("NORMAL");
-
-            dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
-            newBooking.setCustomerId(dbHelper.getCustomerCodeByPhone(customerPhone));
-            if (!dbHelper.addBooking(newBooking)) {
-                btnConfirmBooking.setEnabled(true);
-                Toast.makeText(this, "Booking could not be saved. Please try again.", Toast.LENGTH_LONG).show();
+            // The booking is created on the TRIMAX server: Pending, with no driver. Only an administrator
+            // assigns a driver, from the desktop app.
+            CreateBookingRequest request = new CreateBookingRequest(requestId);
+            request.customerName = customerName;
+            request.customerContact = customerPhone;
+            request.deliveryAddress = address;
+            request.latitude = destLat;
+            request.longitude = destLng;
+            request.schedule = scheduledTimeStr;
+            request.instructions = notes;
+            for (int i = 0; i < productIds.length; i++) {
+                request.lines.add(new CreateBookingRequest.Line(productIds[i], productQuantities[i]));
+            }
+            String problem = request.validate();
+            if (problem != null) {
+                Toast.makeText(this, problem, Toast.LENGTH_LONG).show();
                 return;
             }
-            dbHelper.addNotification(session.getUsername(), "Booking Request Submitted", "Booking #" + generatedBookingId + " is pending admin confirmation.");
 
-            Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
-            confirmedIntent.putExtra("BOOKING_ID", generatedBookingId);
-            startActivity(confirmedIntent);
-            finishAffinity(); // Close creation flow stack
+            submitting = true;
+            final CharSequence confirmLabel = btnConfirmBooking.getText();
+            btnConfirmBooking.setEnabled(false);
+            btnConfirmBooking.setText("Submitting...");
+            btnEdit.setEnabled(false);
+            TrimaxApi.get(this).createBooking(request, new TrimaxApi.Callback<BookingRecord>() {
+                @Override
+                public void onSuccess(BookingRecord saved) {
+                    if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
+                    SessionManager session = new SessionManager(NewBookingSummaryActivity.this);
+                    DatabaseHelper dbHelper = new DatabaseHelper(NewBookingSummaryActivity.this);
+                    // Local conveniences only: the saved-customers list and a notification on this phone.
+                    dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
+                    dbHelper.addNotification(session.getUsername(), "Booking Request Submitted",
+                            "Booking #" + saved.idText() + " is pending admin confirmation.");
+
+                    Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
+                    confirmedIntent.putExtra("BOOKING_ID", saved.idText());
+                    startActivity(confirmedIntent);
+                    finishAffinity(); // Close creation flow stack
+                }
+
+                @Override
+                public void onError(ApiException error) {
+                    if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
+                    submitting = false;
+                    btnConfirmBooking.setEnabled(true);
+                    btnConfirmBooking.setText(confirmLabel);
+                    btnEdit.setEnabled(true);
+                    if (SessionGuard.handle(NewBookingSummaryActivity.this, error)) return;
+                    String message = error.getMessage();
+                    // A time-out or dropped connection can happen after the server saved the booking.
+                    // Confirming again from this screen reuses the same request id, so it cannot duplicate it.
+                    boolean unsure = error.getKind() == ApiException.Kind.TIMEOUT
+                            || error.getKind() == ApiException.Kind.NETWORK;
+                    if (unsure) {
+                        message += "\n\nThe booking may already have been saved. Tap Confirm again from this "
+                                + "screen (before editing anything): it will not create a second booking.";
+                    }
+                    new androidx.appcompat.app.AlertDialog.Builder(NewBookingSummaryActivity.this)
+                            .setTitle(unsure ? "Not sure it was saved" : "Booking not saved")
+                            .setMessage(message)
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
+            });
         });
     }
 

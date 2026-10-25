@@ -79,8 +79,7 @@ public class ReportsActivity extends AppCompatActivity {
         MaterialButton btnExportPdf = findViewById(R.id.btnExportPdf);
         if (btnExportCsv != null) btnExportCsv.setOnClickListener(v -> exportCsv());
         if (btnExportPdf != null) btnExportPdf.setOnClickListener(v -> exportPdf());
-
-        updateMetrics();
+        // Metrics load in onResume, which always follows onCreate.
     }
 
 
@@ -88,28 +87,56 @@ public class ReportsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        updateMetrics();
+        loadReportData();
+    }
+
+    /** The agent's own bookings from the TRIMAX server (null until loaded). Reports are computed from these. */
+    private List<BookingRecord> reportRecords;
+
+    private void loadReportData() {
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(ReportsActivity.this)) return;
+                reportRecords = records;
+                updateMetrics();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(ReportsActivity.this)) return;
+                if (SessionGuard.handle(ReportsActivity.this, error)) return;
+                Toast.makeText(ReportsActivity.this, "Could not load reports: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private List<BookingRecord> filteredRecords() {
+        List<BookingRecord> out = new java.util.ArrayList<>();
+        if (reportRecords == null) return out;
+        long[] bounds = selectedDateRange == -1 ? null : getSelectedDateBounds(selectedDateRange);
+        for (BookingRecord r : reportRecords) {
+            if (bounds != null) {
+                long created = IsoTime.parseMillis(r.createdAt);
+                if (created < bounds[0] || created > bounds[1]) continue;
+            }
+            out.add(r);
+        }
+        return out;
     }
 
     private void updateMetrics() {
-        if (dbHelper == null) return;
+        if (reportRecords == null) return;
 
-        int total;
-        int confirmed;
-        int pending;
-        int cancelled;
-
-        if (selectedDateRange == -1) {
-            total = dbHelper.getBookingCountByStatus("ALL");
-            confirmed = dbHelper.getBookingCountByStatus("CONFIRMED");
-            pending = dbHelper.getBookingCountByStatus("PENDING");
-            cancelled = dbHelper.getBookingCountByStatus("CANCELLED");
-        } else {
-            long[] range = getSelectedDateBounds(selectedDateRange);
-            total = dbHelper.getBookingCountByStatusAndDateRange("ALL", range[0], range[1]);
-            confirmed = dbHelper.getBookingCountByStatusAndDateRange("CONFIRMED", range[0], range[1]);
-            pending = dbHelper.getBookingCountByStatusAndDateRange("PENDING", range[0], range[1]);
-            cancelled = dbHelper.getBookingCountByStatusAndDateRange("CANCELLED", range[0], range[1]);
+        List<BookingRecord> period = filteredRecords();
+        int total = period.size();
+        int confirmed = BookingFilter.count(period, "CONFIRMED");   // includes In Progress
+        int pending = BookingFilter.count(period, "PENDING");
+        int cancelled = BookingFilter.count(period, "CANCELLED");
+        int completedCount = BookingFilter.count(period, "COMPLETED");
+        int failedCount = 0;
+        for (BookingRecord r : period) {
+            if (DeliveryProgress.FAILED.equals(r.deliveryStatus) && !DeliveryProgress.CANCELLED.equals(r.status)) failedCount++;
         }
 
         if (tvReportTotalCount != null) tvReportTotalCount.setText(String.valueOf(total));
@@ -118,23 +145,13 @@ public class ReportsActivity extends AppCompatActivity {
         if (tvReportCancelledCount != null) tvReportCancelledCount.setText(String.valueOf(cancelled));
         TextView tvReportFailedCount = findViewById(R.id.tvReportFailedCount);
         if (tvReportFailedCount != null) {
-            int failedCount = selectedDateRange == -1 ? dbHelper.getBookingCountByStatus("FAILED")
-                    : dbHelper.getBookingCountByStatusAndDateRange("FAILED", getSelectedDateBounds(selectedDateRange)[0], getSelectedDateBounds(selectedDateRange)[1]);
             tvReportFailedCount.setText(String.valueOf(failedCount));
         }
 
         TextView tvInsights = findViewById(R.id.tvOperationalInsights);
         if (tvInsights != null) {
-            int failed;
-            int completed;
-            if (selectedDateRange == -1) {
-                failed = dbHelper.getBookingCountByStatus("FAILED");
-                completed = dbHelper.getBookingCountByStatus("COMPLETED");
-            } else {
-                long[] insightBounds = getSelectedDateBounds(selectedDateRange);
-                failed = dbHelper.getBookingCountByStatusAndDateRange("FAILED", insightBounds[0], insightBounds[1]);
-                completed = dbHelper.getBookingCountByStatusAndDateRange("COMPLETED", insightBounds[0], insightBounds[1]);
-            }
+            int failed = failedCount;
+            int completed = completedCount;
             int completionRate = total == 0 ? 0 : Math.round(completed * 100f / total);
             List<Delivery> reportBookings = getFilteredBookings();
             Map<String, Integer> destinations = new HashMap<>();
@@ -230,19 +247,15 @@ public class ReportsActivity extends AppCompatActivity {
     }
 
     private List<Delivery> getFilteredBookings() {
-        List<Delivery> all = dbHelper.getAllBookings();
-        if (selectedDateRange == -1) return all;
-        long[] bounds = getSelectedDateBounds(selectedDateRange);
         List<Delivery> filtered = new java.util.ArrayList<>();
-        for (Delivery d : all) {
-            long created = parseCreatedAt(d.getCreatedAt());
-            if (created >= bounds[0] && created <= bounds[1]) filtered.add(d);
-        }
+        for (BookingRecord r : filteredRecords()) filtered.add(r.toDelivery(false));
         return filtered;
     }
 
     private long parseCreatedAt(String value) {
         if (value == null || value.trim().isEmpty()) return -1;
+        long iso = IsoTime.parseMillis(value);   // server timestamps, e.g. 2026-10-23T15:34:14.460485+08:00
+        if (iso > 0) return iso;
         try {
             long raw = Long.parseLong(value.trim());
             return raw < 100000000000L ? raw * 1000L : raw;
