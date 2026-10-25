@@ -230,7 +230,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showThemePickerDialog() {
-        String[] options = {"System Default 📱", "Light Mode ☀️", "Dark Mode 🌙"};
+        String[] titles = {"System Default", "Light Mode", "Dark Mode"};
+        int[] icons = {R.drawable.ic_settings, R.drawable.ic_sun, R.drawable.ic_moon};
         String current = ThemeHelper.getSelectedTheme(this);
         int selectedIndex = 0;
         if (ThemeHelper.THEME_LIGHT.equalsIgnoreCase(current)) selectedIndex = 1;
@@ -247,45 +248,40 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (container != null) {
             container.removeAllViews();
-            for (int i = 0; i < options.length; i++) {
+            for (int i = 0; i < titles.length; i++) {
                 final int index = i;
-                String option = options[i];
+                View row = getLayoutInflater().inflate(R.layout.item_theme_option, container, false);
 
-                TextView tv = new TextView(this);
-                tv.setText(option);
-                tv.setTextColor(ContextCompat.getColor(this, selectedIndex == index ? R.color.primary_blue : R.color.text_primary));
-                tv.setTextSize(16);
-                tv.setTypeface(null, selectedIndex == index ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
-                tv.setPadding(dp(16), dp(14), dp(16), dp(14));
-                tv.setBackgroundResource(android.R.drawable.list_selector_background);
+                ImageView ivIcon = row.findViewById(R.id.ivThemeIcon);
+                TextView tvTitle = row.findViewById(R.id.tvThemeTitle);
+                ImageView ivCheck = row.findViewById(R.id.ivCheck);
 
-                tv.setOnClickListener(v -> {
+                if (ivIcon != null) ivIcon.setImageResource(icons[i]);
+                if (tvTitle != null) tvTitle.setText(titles[i]);
+                if (ivCheck != null) {
+                    ivCheck.setVisibility(selectedIndex == index ? View.VISIBLE : View.GONE);
+                }
+
+                if (selectedIndex == index && tvTitle != null) {
+                    tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvTitle.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+                }
+
+                row.setOnClickListener(v -> {
                     String newMode = ThemeHelper.THEME_SYSTEM;
                     if (index == 1) newMode = ThemeHelper.THEME_LIGHT;
                     else if (index == 2) newMode = ThemeHelper.THEME_DARK;
 
                     ThemeHelper.setTheme(SettingsActivity.this, newMode);
                     updateThemeSubtitle();
-                    Toast.makeText(this, "Theme updated to " + option, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Theme updated to " + titles[index], Toast.LENGTH_SHORT).show();
                     bottomSheetDialog.dismiss();
                 });
 
-                container.addView(tv);
-
-                if (i < options.length - 1) {
-                    View divider = new View(this);
-                    divider.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT, dp(1)));
-                    divider.setBackgroundColor(0x1A64748B);
-                    container.addView(divider);
-                }
+                container.addView(row);
             }
         }
         bottomSheetDialog.show();
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     /**
