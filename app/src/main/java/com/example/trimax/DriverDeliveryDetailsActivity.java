@@ -383,10 +383,11 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                         if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
                         if (SessionGuard.handle(DriverDeliveryDetailsActivity.this, error)) return;
                         btnPrimaryAction.setText(label);
-                        btnPrimaryAction.setEnabled(true);
+                        updateStatusAndButtons();   // the buttons the current status allows, not simply "enabled"
                         Toast.makeText(DriverDeliveryDetailsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND) {
-                            loadDeliveryData();   // show what the server has now
+                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND
+                                || error.getKind() == ApiException.Kind.INVALID || error.getKind() == ApiException.Kind.TIMEOUT) {
+                            loadDeliveryData();   // show what the server has now (a timed-out step may have been saved)
                         }
                     }
                 });

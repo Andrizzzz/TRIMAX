@@ -36,6 +36,48 @@ public class BookingRecordTest {
             + "\"last_changed_at\": \"2026-10-23T15:16:01.1+08:00\", \"delivery_status_at\": null, \"already_existed\": false, "
             + "\"customer_matched_existing\": false}";
 
+    // Replies of trimax_driver_update_delivery_status with the live server's delivery rules (captured from a
+    // test database on 2026-10-25 by an earlier session, commit ed5b7d5): Start Delivery, the same request
+    // repeated, then Drop Off.
+    static final String STARTED_REPLY = "{\"items\": [], \"driver\": {\"name\": \"Dan Driver\", \"username\": \"driver.dan\", \"vehicle_id\": \"T"
+            + "RK-001\", \"vehicle_type\": \"Truck\"}, \"events\": [{\"at\": \"2026-10-25T09:59:37.153621+08:00\", \"to"
+            + "\": \"STARTED\", \"from\": \"ASSIGNED\", \"note\": null, \"type\": \"delivery_status\", \"booking_status"
+            + "\": \"In Progress\"}, {\"at\": \"2026-10-25T09:59:37.115384+08:00\", \"to\": \"ASSIGNED\", \"from\": nul"
+            + "l, \"note\": \"Assigned to driver.dan (vehicle TRK-001)\", \"type\": \"assigned\", \"booking_status\": \"Confirmed\"}], \"status\": \"In Progress\", \"customer\": {\"name\": \"Store Dos\", \"address\": \"Tung"
+            + "ko, SJDM\", \"contact\": \"+63 917 333 4444\", \"client_id\": 2}, \"delivery\": {\"address\": \"Tungko, "
+            + "SJDM\", \"latitude\": 14.78, \"schedule\": null, \"longitude\": 121.06, \"instructions\": null}, \"booki"
+            + "ng_id\": 2, \"created_at\": \"2026-10-25T09:59:37.115384+08:00\", \"assigned_at\": \"2026-10-25T09:59:37"
+            + ".115384+08:00\", \"created_via\": \"desktop\", \"total_amount\": 0.00, \"delivery_status\": \"STARTED\","
+            + " \"last_changed_at\": \"2026-10-25T09:59:37.153621+08:00\", \"delivery_status_at\": \"2026-10-25T09:59:3"
+            + "7.153621+08:00\"}";
+
+    static final String STARTED_RETRY_REPLY = "{\"items\": [], \"driver\": {\"name\": \"Dan Driver\", \"username\": \"driver.dan\", \"vehicle_id\": \"T"
+            + "RK-001\", \"vehicle_type\": \"Truck\"}, \"events\": [{\"at\": \"2026-10-25T09:59:37.153621+08:00\", \"to"
+            + "\": \"STARTED\", \"from\": \"ASSIGNED\", \"note\": null, \"type\": \"delivery_status\", \"booking_status"
+            + "\": \"In Progress\"}, {\"at\": \"2026-10-25T09:59:37.115384+08:00\", \"to\": \"ASSIGNED\", \"from\": nul"
+            + "l, \"note\": \"Assigned to driver.dan (vehicle TRK-001)\", \"type\": \"assigned\", \"booking_status\": \"Confirmed\"}], \"status\": \"In Progress\", \"customer\": {\"name\": \"Store Dos\", \"address\": \"Tung"
+            + "ko, SJDM\", \"contact\": \"+63 917 333 4444\", \"client_id\": 2}, \"delivery\": {\"address\": \"Tungko, "
+            + "SJDM\", \"latitude\": 14.78, \"schedule\": null, \"longitude\": 121.06, \"instructions\": null}, \"booki"
+            + "ng_id\": 2, \"created_at\": \"2026-10-25T09:59:37.115384+08:00\", \"assigned_at\": \"2026-10-25T09:59:37"
+            + ".115384+08:00\", \"created_via\": \"desktop\", \"total_amount\": 0.00, \"delivery_status\": \"STARTED\","
+            + " \"last_changed_at\": \"2026-10-25T09:59:37.153621+08:00\", \"already_recorded\": true, \"delivery_statu"
+            + "s_at\": \"2026-10-25T09:59:37.153621+08:00\"}";
+
+    static final String DELIVERED_REPLY = "{\"items\": [], \"driver\": {\"name\": \"Dan Driver\", \"username\": \"driver.dan\", \"vehicle_id\": \"T"
+            + "RK-001\", \"vehicle_type\": \"Truck\"}, \"events\": [{\"at\": \"2026-10-25T09:59:37.232346+08:00\", \"to"
+            + "\": \"DELIVERED\", \"from\": \"STARTED\", \"note\": \"Received by Maria Santos\", \"type\": \"delivery_s"
+            + "tatus\", \"booking_status\": \"Completed\"}, {\"at\": \"2026-10-25T09:59:37.153621+08:00\", \"to\": \"ST"
+            + "ARTED\", \"from\": \"ASSIGNED\", \"note\": null, \"type\": \"delivery_status\", \"booking_status\": \"In"
+            + " Progress\"}, {\"at\": \"2026-10-25T09:59:37.115384+08:00\", \"to\": \"ASSIGNED\", \"from\": null, \"not"
+            + "e\": \"Assigned to driver.dan (vehicle TRK-001)\", \"type\": \"assigned\", \"booking_status\": \"Confirm"
+            + "ed\"}], \"status\": \"Completed\", \"customer\": {\"name\": \"Store Dos\", \"address\": \"Tungko, SJDM\""
+            + ", \"contact\": \"+63 917 333 4444\", \"client_id\": 2}, \"delivery\": {\"address\": \"Tungko, SJDM\", \""
+            + "latitude\": 14.78, \"schedule\": null, \"longitude\": 121.06, \"instructions\": null}, \"booking_id\": 2"
+            + ", \"created_at\": \"2026-10-25T09:59:37.115384+08:00\", \"assigned_at\": \"2026-10-25T09:59:37.115384+08"
+            + ":00\", \"created_via\": \"desktop\", \"total_amount\": 0.00, \"delivery_status\": \"DELIVERED\", \"last_"
+            + "changed_at\": \"2026-10-25T09:59:37.232346+08:00\", \"delivery_status_at\": \"2026-10-25T09:59:37.232346"
+            + "+08:00\"}";
+
     @Test
     public void parsesADriverDeliveryWithHistory() throws Exception {
         BookingRecord b = BookingRecord.parse(DRIVER_DETAIL);
@@ -118,5 +160,46 @@ public class BookingRecordTest {
     @Test(expected = org.json.JSONException.class)
     public void rejectsAnUnknownRole() throws Exception {
         MobileAccount.parse("{\"role\": \"ADMIN\", \"username\": \"marc\"}");
+    }
+
+    @Test
+    public void startDeliveryReplyShowsStartedAndOffersDropOff() throws Exception {
+        BookingRecord b = BookingRecord.parse(STARTED_REPLY);
+        assertEquals("STARTED", b.deliveryStatus);
+        assertEquals("In Progress", b.status);
+        assertEquals("STARTED", b.toDelivery(true).getStatus());
+        assertEquals("IN PROGRESS", b.toDelivery(false).getStatus());
+        DeliveryProgress.NextStep next = DeliveryProgress.nextStep(b.status, b.deliveryStatus);
+        assertTrue("Drop off opens the proof screen", next.opensProof);
+        assertNull("DELIVERED is sent from the proof screen", next.target);
+        assertTrue(next.enabled);
+        assertEquals("ASSIGNED", b.events.get(0).from);
+        assertEquals("STARTED", b.events.get(0).to);
+    }
+
+    @Test
+    public void aRepeatedStartGetsTheSameScreen() throws Exception {
+        BookingRecord first = BookingRecord.parse(STARTED_REPLY);
+        BookingRecord again = BookingRecord.parse(STARTED_RETRY_REPLY);
+        assertEquals(first.bookingId, again.bookingId);
+        assertEquals(first.status, again.status);
+        assertEquals(first.deliveryStatus, again.deliveryStatus);
+        assertEquals("the retry wrote nothing new", first.events.size(), again.events.size());
+        assertEquals(DeliveryProgress.nextStep(first.status, first.deliveryStatus).label,
+                DeliveryProgress.nextStep(again.status, again.deliveryStatus).label);
+    }
+
+    @Test
+    public void dropOffReplyShowsDeliveredAndNoMoreActions() throws Exception {
+        BookingRecord b = BookingRecord.parse(DELIVERED_REPLY);
+        assertEquals("DELIVERED", b.deliveryStatus);
+        assertEquals("Completed", b.status);
+        assertEquals("DELIVERED", b.toDelivery(true).getStatus());
+        DeliveryProgress.NextStep next = DeliveryProgress.nextStep(b.status, b.deliveryStatus);
+        assertFalse(next.enabled);
+        assertNull(next.target);
+        assertFalse(DeliveryProgress.isUnderWay(b.deliveryStatus));
+        assertEquals("STARTED", b.events.get(0).from);
+        assertEquals("DELIVERED", b.events.get(0).to);
     }
 }

@@ -23,9 +23,21 @@ Supabase project; without it every server call fails with a clear message.**
 | Bookings, booking details, dashboard, reports, client history, tracking | `trimax_agent_list_bookings`, `trimax_agent_get_booking` |
 | Driver dashboard, deliveries, details, map, history, proof | `trimax_driver_list_deliveries`, `trimax_driver_get_delivery`, `trimax_driver_update_delivery_status` |
 | Change password | Supabase Auth `PUT /auth/v1/user` |
+| Duty start/end with photo, live GPS | `trimax_record_duty_event`, `trimax_my_duty_status`, `trimax_update_location` |
+| SOS and problem reports | `trimax_report_issue` |
+| Drop-off photo | Storage bucket `delivery-proofs`, then `trimax_driver_attach_proof` |
+| Price list pictures | public bucket `product-images` (after the Stage F database update) |
 
-Still only on the phone (the app says so where relevant): saved-customer list, notifications, attendance,
-driver location log, proof photos, deposits, damage charges, problem/SOS reports, profile edits.
+Driver delivery flow (same rules as the live server): **START DELIVERY** sends ASSIGNED -> STARTED (the
+booking must be Confirmed by the administrator; it becomes In Progress). The drop-off button then opens the
+proof screen, which sends STARTED -> DELIVERED with the recipient's name (the booking becomes Completed);
+"Mark delivery failed" sends STARTED -> FAILED with a note. There are no intermediate statuses any more
+(PICKED_UP / ON_THE_WAY / ARRIVED only exist on old rows, which can still be finished or failed), and
+Start/End Duty never changes a delivery. A repeated request (double tap, retry after a timeout) is answered
+with the saved booking, so it changes the status only once.
+
+Still only on the phone (the app says so where relevant): saved-customer list, notifications, the local
+driver location log, deposits, damage charges, profile edits.
 OTP proof of delivery is not implemented; the recipient's name is required.
 
 PR #8 (`feature/supabase-auth-migration`) is superseded: do **not** apply its `delivery_bookings` /

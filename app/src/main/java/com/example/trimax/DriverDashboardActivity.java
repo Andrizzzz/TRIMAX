@@ -378,51 +378,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
 
         if (btnHeroStartDelivery != null) {
-            btnHeroStartDelivery.setOnClickListener(v -> {
-                if (currentHeroDelivery == null || currentHeroRecord == null) return;
-                final String id = currentHeroDelivery.getBookingId();
-                String status = currentHeroDelivery.getStatus();
-
-                if ("ASSIGNED".equalsIgnoreCase(status)) {
-                    btnHeroStartDelivery.setEnabled(false);
-                    Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
-                    Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-                    TrimaxApi.get(this).updateDeliveryStatus(currentHeroRecord.bookingId, DeliveryProgress.ASSIGNED,
-                            DeliveryProgress.STARTED, lat, lng, null, null, new TrimaxApi.Callback<BookingRecord>() {
-                                @Override
-                                public void onSuccess(BookingRecord saved) {
-                                    if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
-                                    dbHelper.logLocation(session.getUsername(), id, locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
-                                    Toast.makeText(DriverDashboardActivity.this, "Delivery #" + id + " STARTED! Opening Navigation...", Toast.LENGTH_SHORT).show();
-
-                                    Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
-                                    intent.putExtra("DELIVERY_ID", id);
-                                    intent.putExtra("DEST_ADDRESS", currentHeroDelivery.getDestination());
-                                    intent.putExtra("DEST_LAT", currentHeroDelivery.getDestinationLatitude());
-                                    intent.putExtra("DEST_LNG", currentHeroDelivery.getDestinationLongitude());
-                                    intent.putExtra("CUSTOMER_NAME", currentHeroDelivery.getCustomerName());
-                                    startActivity(intent);
-                                }
-
-                                @Override
-                                public void onError(ApiException error) {
-                                    if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
-                                    if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
-                                    btnHeroStartDelivery.setEnabled(true);
-                                    Toast.makeText(DriverDashboardActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                                    loadAssignedHeroDelivery();
-                                }
-                            });
-                } else {
-                    Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
-                    intent.putExtra("DELIVERY_ID", id);
-                    intent.putExtra("DEST_ADDRESS", currentHeroDelivery.getDestination());
-                    intent.putExtra("DEST_LAT", currentHeroDelivery.getDestinationLatitude());
-                    intent.putExtra("DEST_LNG", currentHeroDelivery.getDestinationLongitude());
-                    intent.putExtra("CUSTOMER_NAME", currentHeroDelivery.getCustomerName());
-                    startActivity(intent);
-                }
-            });
+            btnHeroStartDelivery.setOnClickListener(v -> onHeroPrimaryAction());
         }
 
         if (btnHeroReportProblem != null) {
@@ -539,7 +495,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
             return;
         }
 
-        btnHeroStartDelivery.setEnabled(true);
+        btnHeroStartDelivery.setEnabled(!heroUpdating);   // not while Start is being sent
         btnHeroViewDetails.setEnabled(true);
         btnHeroReportProblem.setEnabled(true);
 
@@ -564,8 +520,82 @@ public class DriverDashboardActivity extends AppCompatActivity {
         } else {
             tvHeroStatusPill.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvHeroStatusPill.setTextColor(0xFF059669);
-            btnHeroStartDelivery.setText("START NAVIGATION");
+            btnHeroStartDelivery.setText(heroUpdating ? "STARTING..." : "START NAVIGATION");
         }
+    }
+
+    /** True while Start Delivery is being sent, so a second tap or a refresh cannot send it again. */
+    private boolean heroUpdating;
+
+    /**
+     * The hero card's main button, by the server's status:
+     *  - assigned and confirmed: Start Delivery (ASSIGNED -> STARTED), then the in-app navigation opens;
+     *  - already started: the navigation opens;
+     *  - waiting for the administrator (label VIEW DETAILS), failed, completed or cancelled: the details open.
+     * Before, a booking still waiting for the administrator also tried to start (the server refused it).
+     */
+    private void onHeroPrimaryAction() {
+        if (currentHeroDelivery == null || currentHeroRecord == null || heroUpdating) return;
+        final BookingRecord record = currentHeroRecord;
+        final String id = record.idText();
+        DeliveryProgress.NextStep step = DeliveryProgress.nextStep(record.status, record.deliveryStatus);
+
+        if (!DeliveryProgress.STARTED.equals(step.target)) {
+            if (DeliveryProgress.isUnderWay(record.deliveryStatus)) {
+                openNavigation(id, record.toDelivery(true));
+            } else {
+                Intent details = new Intent(this, DriverDeliveryDetailsActivity.class);
+                details.putExtra("DELIVERY_ID", id);
+                startActivity(details);
+            }
+            return;
+        }
+
+        heroUpdating = true;
+        btnHeroStartDelivery.setEnabled(false);
+        btnHeroStartDelivery.setText("STARTING...");
+        String expected = record.deliveryStatus != null ? record.deliveryStatus : DeliveryProgress.ASSIGNED;
+        Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
+        Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
+        TrimaxApi.get(this).updateDeliveryStatus(record.bookingId, expected, DeliveryProgress.STARTED, lat, lng, null, null,
+                new TrimaxApi.Callback<BookingRecord>() {
+                    @Override
+                    public void onSuccess(BookingRecord saved) {
+                        heroUpdating = false;
+                        if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                        dbHelper.logLocation(session.getUsername(), id, locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                        // Show what the server saved (the card may have moved on to another booking meanwhile).
+                        if (currentHeroRecord != null && currentHeroRecord.bookingId == saved.bookingId) {
+                            currentHeroRecord = saved;
+                            currentHeroDelivery = saved.toDelivery(true);
+                        }
+                        bindHeroDelivery(activeRecords != null ? activeRecords.size() : 1);
+                        Toast.makeText(DriverDashboardActivity.this, "Delivery #" + id + " "
+                                + DeliveryProgress.driverDisplayStatus(saved.status, saved.deliveryStatus)
+                                + "! Opening Navigation...", Toast.LENGTH_SHORT).show();
+                        openNavigation(id, saved.toDelivery(true));
+                    }
+
+                    @Override
+                    public void onError(ApiException error) {
+                        heroUpdating = false;
+                        if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                        if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
+                        bindHeroDelivery(activeRecords != null ? activeRecords.size() : 1);
+                        Toast.makeText(DriverDashboardActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        loadAssignedHeroDelivery();   // show what the server has now (a timed-out start may have been saved)
+                    }
+                });
+    }
+
+    private void openNavigation(String id, Delivery d) {
+        Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
+        intent.putExtra("DELIVERY_ID", id);
+        intent.putExtra("DEST_ADDRESS", d.getDestination());
+        intent.putExtra("DEST_LAT", d.getDestinationLatitude());
+        intent.putExtra("DEST_LNG", d.getDestinationLongitude());
+        intent.putExtra("CUSTOMER_NAME", d.getCustomerName());
+        startActivity(intent);
     }
 
     private void updateThemeToggleIcon(ImageView toggle) {
