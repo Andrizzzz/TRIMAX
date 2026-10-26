@@ -260,17 +260,37 @@ public class DriverMapActivity extends AppCompatActivity {
         Toast.makeText(this, "Navigating to pinned customer destination: " + destination,
                 Toast.LENGTH_SHORT).show();
 
-        // Prefer the installed Google Maps app for full turn-by-turn navigation.
-        Uri navigationUri = Uri.parse("google.navigation:q=" + Uri.encode(destinationQuery) + "&mode=d");
-        Intent navigationIntent = new Intent(Intent.ACTION_VIEW, navigationUri);
+        // Coordinates go in as plain "lat,lng" (an encoded comma is not understood by every app);
+        // a typed address is URL-encoded.
+        String navTarget = hasValidCoords ? destinationQuery : Uri.encode(destinationQuery);
+
+        // 1. Google Maps turn-by-turn navigation, when installed.
+        Intent navigationIntent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("google.navigation:q=" + navTarget + "&mode=d"));
         navigationIntent.setPackage("com.google.android.apps.maps");
         try {
             startActivity(navigationIntent);
             return;
         } catch (ActivityNotFoundException ignored) {
-            // Fall back to Google Maps Directions on the web. Coordinates are used
-            // whenever available so the route targets the saved booking pin.
+            // not installed: try any other navigation app
         }
+
+        // 2. Any navigation app that handles geo: links (Waze, HERE, OsmAnd, ...), still on the pin.
+        Uri geoUri = hasValidCoords
+                ? Uri.parse("geo:" + destinationQuery + "?q=" + destinationQuery
+                        + "(" + Uri.encode(destination.isEmpty() ? "Delivery" : destination) + ")")
+                : Uri.parse("geo:0,0?q=" + navTarget);
+        Intent geoIntent = new Intent(Intent.ACTION_VIEW, geoUri);
+        if (geoIntent.resolveActivity(getPackageManager()) != null) {
+            try {
+                startActivity(Intent.createChooser(geoIntent, "Navigate with"));
+                return;
+            } catch (ActivityNotFoundException ignored) {
+                // fall through to the browser
+            }
+        }
+
+        // 3. Google Maps directions in the browser.
 
         String encodedDestination = Uri.encode(destinationQuery);
         Uri directionsUri = Uri.parse(

@@ -162,6 +162,8 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadDeliveries();
+        IssueReporter.flush(this);          // SOS / problem reports made while offline
+        ProofUploader.flush(this);          // drop-off photos not yet on the server
     }
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
@@ -275,5 +277,6 @@ public class DriverDeliveriesActivity extends AppCompatActivity {
 
             containerDeliveries.addView(cardView);
         }
+        containerDeliveries.scheduleLayoutAnimation();
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tag key for UiMotion.countTo's running animator -->
+    <item name="tag_count_animator" type="id" />
+    <!-- ProductImageLoader: which picture address an ImageView is waiting for -->
+    <item name="tag_product_image_url" type="id" />
+</resources>

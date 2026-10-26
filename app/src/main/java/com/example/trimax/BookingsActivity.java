@@ -220,6 +220,7 @@ public class BookingsActivity extends AppCompatActivity implements BookingAdapte
             tvEmptyBookings.setOnClickListener(null);
             tvEmptyBookings.setVisibility(View.GONE);
             rvBookings.setVisibility(View.VISIBLE);
+            rvBookings.scheduleLayoutAnimation();
         }
     }
 

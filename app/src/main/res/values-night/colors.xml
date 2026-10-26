@@ -5,11 +5,11 @@
     <color name="bg_main">#081426</color>
     <color name="card_bg">#12243B</color>
     <!-- Dark frosted glass remains translucent so the screen subtly shows through -->
-    <color name="nav_translucent_bg">#33121F33</color>
-    <color name="nav_glass_top">#6634445B</color>
-    <color name="nav_glass_bottom">#26121F33</color>
-    <color name="nav_glass_stroke">#4DFFFFFF</color>
-    <color name="nav_selected_bg">#262F80ED</color>
+    <color name="nav_translucent_bg">#08121F33</color>
+    <color name="nav_glass_top">#2034445B</color>
+    <color name="nav_glass_bottom">#05121F33</color>
+    <color name="nav_glass_stroke">#1AFFFFFF</color>
+    <color name="nav_selected_bg">#0D2F80ED</color>
     <color name="nav_selected_fg">#7DB4FF</color>
     <color name="surface_alt">#1B304A</color>
     <color name="border_subtle">#263B55</color>
@@ -17,4 +17,18 @@
     <color name="text_secondary">#A9B8CC</color>
     <color name="text_on_primary">#FFFFFF</color>
     <color name="field_bg">#102137</color>
+
+    <!-- Brand and status colors lifted for dark backgrounds (readable text, calmer pills) -->
+    <color name="primary_blue">#4A86FF</color>
+    <color name="accent_blue">#6FA3FF</color>
+    <color name="status_pending">#FBBF24</color>
+    <color name="status_confirmed">#34D399</color>
+    <color name="status_cancelled">#EF5350</color>
+    <color name="status_completed">#6FA3FF</color>
+    <color name="status_delivered">#34D399</color>
+    <color name="status_confirmed_bg">#14392F</color>
+    <color name="status_cancelled_bg">#3F1D25</color>
+    <color name="status_completed_bg">#14392F</color>
+    <color name="status_pending_bg">#3B2F12</color>
+    <color name="sos_red">#EF5350</color>
 </resources>

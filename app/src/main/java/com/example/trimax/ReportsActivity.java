@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
@@ -27,6 +28,7 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -152,7 +154,6 @@ public class ReportsActivity extends AppCompatActivity {
         if (tvInsights != null) {
             int failed = failedCount;
             int completed = completedCount;
-            int completionRate = total == 0 ? 0 : Math.round(completed * 100f / total);
             List<Delivery> reportBookings = getFilteredBookings();
             Map<String, Integer> destinations = new HashMap<>();
             Map<String, Integer> drivers = new HashMap<>();
@@ -165,7 +166,7 @@ public class ReportsActivity extends AppCompatActivity {
             String topDestination = mostFrequent(destinations);
             String busiestDriver = mostFrequent(drivers);
             StringBuilder insights = new StringBuilder();
-            insights.append("Completion rate: ").append(completionRate).append("%\n");
+            insights.append(ReportText.completionRate(completed, total)).append("\n");
             if (pending > 0) insights.append("Action needed: ").append(pending).append(" booking(s) are still pending.\n");
             if (failed > 0) insights.append("Review needed: ").append(failed).append(" booking(s) have failed.\n");
             if (cancelled > 0) insights.append("Cancelled bookings: ").append(cancelled).append(". Review cancellation reasons if recorded.\n");
@@ -276,8 +277,7 @@ public class ReportsActivity extends AppCompatActivity {
     }
 
     private String csvCell(String value) {
-        String safe = value == null ? "" : value;
-        return "\"" + safe.replace("\"", "\"\"") + "\"";
+        return ReportText.csvCell(value);
     }
 
     private void requestSaveReport(byte[] bytes, String mimeType, String suggestedName, int requestCode) {
@@ -408,18 +408,56 @@ public class ReportsActivity extends AppCompatActivity {
 
     private void showDateRangePicker() {
         String[] options = {"All Time", "This Month", "Last Month", "Last 30 Days", "This Quarter", "Year to Date"};
-        new AlertDialog.Builder(this)
-                .setTitle("Select Report Date Range")
-                .setItems(options, (dialog, which) -> {
-                    selectedDateRange = which == 0 ? -1 : which;
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_date_range, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        LinearLayout container = dialogView.findViewById(R.id.containerDateOptions);
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        if (container != null) {
+            container.removeAllViews();
+            for (int i = 0; i < options.length; i++) {
+                final int index = i;
+                String option = options[i];
+
+                TextView tv = new TextView(this);
+                tv.setText(option);
+                tv.setTextColor(ContextCompat.getColor(this, selectedDateRange == (index == 0 ? -1 : index) ? R.color.primary_blue : R.color.text_primary));
+                tv.setTextSize(16);
+                tv.setTypeface(null, selectedDateRange == (index == 0 ? -1 : index) ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+                tv.setPadding(dp(16), dp(14), dp(16), dp(14));
+                tv.setBackgroundResource(android.R.drawable.list_selector_background);
+
+                tv.setOnClickListener(v -> {
+                    selectedDateRange = index == 0 ? -1 : index;
                     MaterialButton btnDateFilter = findViewById(R.id.btnDateFilter);
                     if (btnDateFilter != null) {
-                        btnDateFilter.setText(options[which] + " 📅");
+                        btnDateFilter.setText(option + " 📅");
                     }
                     updateMetrics();
-                    Toast.makeText(this, "Report data filtered: " + options[which], Toast.LENGTH_SHORT).show();
-                })
-                .show();
+                    Toast.makeText(this, "Report data filtered: " + option, Toast.LENGTH_SHORT).show();
+                    bottomSheetDialog.dismiss();
+                });
+
+                container.addView(tv);
+
+                if (i < options.length - 1) {
+                    View divider = new View(this);
+                    divider.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT, dp(1)));
+                    divider.setBackgroundColor(0x1A64748B);
+                    container.addView(divider);
+                }
+            }
+        }
+        bottomSheetDialog.show();
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private long[] getSelectedDateBounds(int rangeOption) {

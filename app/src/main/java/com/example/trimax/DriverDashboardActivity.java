@@ -41,6 +41,8 @@ public class DriverDashboardActivity extends AppCompatActivity {
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
+    private boolean askedForLocation;
 
     private TextView tvDutyStatusPill;
     private MaterialButton btnToggleDuty;
@@ -60,6 +62,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
     private boolean isEndingDuty = false;
+    /** File the camera app writes the full-size attendance photo into. */
+    private File pendingDutyCapture;
+    /** Start duty was tapped before location permission was answered: continue to the camera after. */
+    private boolean dutyStartWaitingForLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,17 +85,41 @@ public class DriverDashboardActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         locationHelper = new LocationHelper(this);
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                granted -> {
+                    if (locationHelper.hasLocationPermission()) {
+                        startDutyTracking();
+                    } else {
+                        Toast.makeText(this, "Location is off: the admin map will not show you while on duty.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                    if (dutyStartWaitingForLocation) {     // continue the Start duty that asked for it
+                        dutyStartWaitingForLocation = false;
+                        openAttendanceCameraWithPermission();
+                    }
+                });
+        if (savedInstanceState != null) {
+            isEndingDuty = savedInstanceState.getBoolean("duty_ending", false);
+            String pending = savedInstanceState.getString("duty_capture", null);
+            pendingDutyCapture = pending != null ? new File(pending) : null;
+        }
 
         drawerLayout = findViewById(R.id.drawerLayout);
 
         attendanceCameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    File rawCapture = pendingDutyCapture;
+                    pendingDutyCapture = null;
                     if (result.getResultCode() == RESULT_OK) {
-                        Bitmap photoBitmap = null;
-                        if (result.getData() != null && result.getData().getExtras() != null) {
-                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
+                        // Full-size photo from the file the camera wrote; the camera's small preview otherwise.
+                        Bitmap photoBitmap = CameraCapture.readUpright(rawCapture);
+                        if (photoBitmap == null && result.getData() != null && result.getData().getExtras() != null) {
+                            Object preview = result.getData().getExtras().get("data");
+                            if (preview instanceof Bitmap) photoBitmap = (Bitmap) preview;
                         }
+                        if (rawCapture != null) rawCapture.delete();   // the stamped copy below is kept
 
                         if (photoBitmap != null) {
                             File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
@@ -100,40 +130,14 @@ public class DriverDashboardActivity extends AppCompatActivity {
                                     locationHelper.getLongitude()
                             );
 
-                            String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved;
-                            if (isEndingDuty) {
-                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            } else {
-                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            }
-
-                            if (saved) {
-                                if (isEndingDuty) {
-                                    session.setDutyOnline(false);
-                                    locationHelper.stopLocationUpdates();
-                                    updateDutyUI();
-                                    Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
-                                } else {
-                                    session.setDutyOnline(true);
-                                    locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
-                                        dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", latitude, longitude, accuracy, speed, bearing);
-                                        locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
-                                        updateDutyUI();
-                                    });
-                                    updateDutyUI();
-                                    Toast.makeText(DriverDashboardActivity.this, "✓ Attendance Verified! Duty Started.", Toast.LENGTH_LONG).show();
-                                    dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "", locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
-                                    locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
-                                }
-                            } else {
-                                Toast.makeText(DriverDashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
-                            }
-                            isEndingDuty = false;
+                            onAttendancePhoto(savedFile, photoBitmap);
                         } else {
+                            stopGpsWarmUp();
                             Toast.makeText(DriverDashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        if (rawCapture != null) rawCapture.delete();
+                        stopGpsWarmUp();
                         Toast.makeText(DriverDashboardActivity.this, "Attendance photo capture cancelled.", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -374,51 +378,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
         }
 
         if (btnHeroStartDelivery != null) {
-            btnHeroStartDelivery.setOnClickListener(v -> {
-                if (currentHeroDelivery == null || currentHeroRecord == null) return;
-                final String id = currentHeroDelivery.getBookingId();
-                String status = currentHeroDelivery.getStatus();
-
-                if ("ASSIGNED".equalsIgnoreCase(status)) {
-                    btnHeroStartDelivery.setEnabled(false);
-                    Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
-                    Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
-                    TrimaxApi.get(this).updateDeliveryStatus(currentHeroRecord.bookingId, DeliveryProgress.ASSIGNED,
-                            DeliveryProgress.STARTED, lat, lng, null, null, new TrimaxApi.Callback<BookingRecord>() {
-                                @Override
-                                public void onSuccess(BookingRecord saved) {
-                                    if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
-                                    dbHelper.logLocation(session.getUsername(), id, locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
-                                    Toast.makeText(DriverDashboardActivity.this, "Delivery #" + id + " STARTED! Opening Navigation...", Toast.LENGTH_SHORT).show();
-
-                                    Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
-                                    intent.putExtra("DELIVERY_ID", id);
-                                    intent.putExtra("DEST_ADDRESS", currentHeroDelivery.getDestination());
-                                    intent.putExtra("DEST_LAT", currentHeroDelivery.getDestinationLatitude());
-                                    intent.putExtra("DEST_LNG", currentHeroDelivery.getDestinationLongitude());
-                                    intent.putExtra("CUSTOMER_NAME", currentHeroDelivery.getCustomerName());
-                                    startActivity(intent);
-                                }
-
-                                @Override
-                                public void onError(ApiException error) {
-                                    if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
-                                    if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
-                                    btnHeroStartDelivery.setEnabled(true);
-                                    Toast.makeText(DriverDashboardActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                                    loadAssignedHeroDelivery();
-                                }
-                            });
-                } else {
-                    Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
-                    intent.putExtra("DELIVERY_ID", id);
-                    intent.putExtra("DEST_ADDRESS", currentHeroDelivery.getDestination());
-                    intent.putExtra("DEST_LAT", currentHeroDelivery.getDestinationLatitude());
-                    intent.putExtra("DEST_LNG", currentHeroDelivery.getDestinationLongitude());
-                    intent.putExtra("CUSTOMER_NAME", currentHeroDelivery.getCustomerName());
-                    startActivity(intent);
-                }
-            });
+            btnHeroStartDelivery.setOnClickListener(v -> onHeroPrimaryAction());
         }
 
         if (btnHeroReportProblem != null) {
@@ -440,6 +400,11 @@ public class DriverDashboardActivity extends AppCompatActivity {
             driverDashboardMapView.startLiveDeliveryAnimation();
         }
         refreshDriverDashboard();
+        // After a restart or theme change the activity is new: resume live GPS if still on duty.
+        if (session.isDutyOnline() && !locationHelper.isTrackingActive()) startDutyTracking();
+        syncDutyFromServer();
+        IssueReporter.flush(this);          // SOS / problem reports made while offline
+        ProofUploader.flush(this);          // drop-off photos not yet on the server
 
         NavigationView dashboardDrawer = findViewById(R.id.navigationView);
         if (dashboardDrawer != null) {
@@ -459,6 +424,13 @@ public class DriverDashboardActivity extends AppCompatActivity {
         if (driverDashboardMapView != null) {
             driverDashboardMapView.onPause();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        // The GPS listener holds this screen; a new dashboard restarts it in onResume.
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        super.onDestroy();
     }
 
     private String getTimeBasedGreeting() {
@@ -487,6 +459,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
             public void onSuccess(List<BookingRecord> records) {
                 if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
                 activeRecords = records;
+                BookingNotifications.syncDriver(DriverDashboardActivity.this, session.getUsername(), records);
                 currentHeroRecord = records.isEmpty() ? null : records.get(0);
                 currentHeroDelivery = currentHeroRecord == null ? null : currentHeroRecord.toDelivery(true);
                 bindHeroDelivery(records.size());
@@ -522,7 +495,7 @@ public class DriverDashboardActivity extends AppCompatActivity {
             return;
         }
 
-        btnHeroStartDelivery.setEnabled(true);
+        btnHeroStartDelivery.setEnabled(!heroUpdating);   // not while Start is being sent
         btnHeroViewDetails.setEnabled(true);
         btnHeroReportProblem.setEnabled(true);
 
@@ -547,8 +520,82 @@ public class DriverDashboardActivity extends AppCompatActivity {
         } else {
             tvHeroStatusPill.setBackgroundResource(R.drawable.bg_status_confirmed);
             tvHeroStatusPill.setTextColor(0xFF059669);
-            btnHeroStartDelivery.setText("START NAVIGATION");
+            btnHeroStartDelivery.setText(heroUpdating ? "STARTING..." : "START NAVIGATION");
         }
+    }
+
+    /** True while Start Delivery is being sent, so a second tap or a refresh cannot send it again. */
+    private boolean heroUpdating;
+
+    /**
+     * The hero card's main button, by the server's status:
+     *  - assigned and confirmed: Start Delivery (ASSIGNED -> STARTED), then the in-app navigation opens;
+     *  - already started: the navigation opens;
+     *  - waiting for the administrator (label VIEW DETAILS), failed, completed or cancelled: the details open.
+     * Before, a booking still waiting for the administrator also tried to start (the server refused it).
+     */
+    private void onHeroPrimaryAction() {
+        if (currentHeroDelivery == null || currentHeroRecord == null || heroUpdating) return;
+        final BookingRecord record = currentHeroRecord;
+        final String id = record.idText();
+        DeliveryProgress.NextStep step = DeliveryProgress.nextStep(record.status, record.deliveryStatus);
+
+        if (!DeliveryProgress.STARTED.equals(step.target)) {
+            if (DeliveryProgress.isUnderWay(record.deliveryStatus)) {
+                openNavigation(id, record.toDelivery(true));
+            } else {
+                Intent details = new Intent(this, DriverDeliveryDetailsActivity.class);
+                details.putExtra("DELIVERY_ID", id);
+                startActivity(details);
+            }
+            return;
+        }
+
+        heroUpdating = true;
+        btnHeroStartDelivery.setEnabled(false);
+        btnHeroStartDelivery.setText("STARTING...");
+        String expected = record.deliveryStatus != null ? record.deliveryStatus : DeliveryProgress.ASSIGNED;
+        Double lat = locationHelper.hasValidLocationFix() ? locationHelper.getLatitude() : null;
+        Double lng = locationHelper.hasValidLocationFix() ? locationHelper.getLongitude() : null;
+        TrimaxApi.get(this).updateDeliveryStatus(record.bookingId, expected, DeliveryProgress.STARTED, lat, lng, null, null,
+                new TrimaxApi.Callback<BookingRecord>() {
+                    @Override
+                    public void onSuccess(BookingRecord saved) {
+                        heroUpdating = false;
+                        if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                        dbHelper.logLocation(session.getUsername(), id, locationHelper.getLatitude(), locationHelper.getLongitude(), locationHelper.getAccuracy(), 0f, 0f);
+                        // Show what the server saved (the card may have moved on to another booking meanwhile).
+                        if (currentHeroRecord != null && currentHeroRecord.bookingId == saved.bookingId) {
+                            currentHeroRecord = saved;
+                            currentHeroDelivery = saved.toDelivery(true);
+                        }
+                        bindHeroDelivery(activeRecords != null ? activeRecords.size() : 1);
+                        Toast.makeText(DriverDashboardActivity.this, "Delivery #" + id + " "
+                                + DeliveryProgress.driverDisplayStatus(saved.status, saved.deliveryStatus)
+                                + "! Opening Navigation...", Toast.LENGTH_SHORT).show();
+                        openNavigation(id, saved.toDelivery(true));
+                    }
+
+                    @Override
+                    public void onError(ApiException error) {
+                        heroUpdating = false;
+                        if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                        if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
+                        bindHeroDelivery(activeRecords != null ? activeRecords.size() : 1);
+                        Toast.makeText(DriverDashboardActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        loadAssignedHeroDelivery();   // show what the server has now (a timed-out start may have been saved)
+                    }
+                });
+    }
+
+    private void openNavigation(String id, Delivery d) {
+        Intent intent = new Intent(DriverDashboardActivity.this, DriverMapActivity.class);
+        intent.putExtra("DELIVERY_ID", id);
+        intent.putExtra("DEST_ADDRESS", d.getDestination());
+        intent.putExtra("DEST_LAT", d.getDestinationLatitude());
+        intent.putExtra("DEST_LNG", d.getDestinationLongitude());
+        intent.putExtra("CUSTOMER_NAME", d.getCustomerName());
+        startActivity(intent);
     }
 
     private void updateThemeToggleIcon(ImageView toggle) {
@@ -570,6 +617,108 @@ public class DriverDashboardActivity extends AppCompatActivity {
             Toast.makeText(this, "🌙 Dark Mode Activated", Toast.LENGTH_SHORT).show();
         }
         ThemeHelper.setTheme(this, newTheme);
+    }
+
+    /** The server records the duty change first (photo + event) so the admin sees who is on duty. */
+    private void onAttendancePhoto(File savedFile, Bitmap photoBitmap) {
+        final boolean ending = isEndingDuty;
+        isEndingDuty = false;
+        final String path = savedFile != null ? savedFile.getAbsolutePath() : "";
+        final double lat = locationHelper.getLatitude();
+        final double lng = locationHelper.getLongitude();
+        setDutyButtonBusy(true);
+        DutySync.record(this, !ending, savedFile, photoBitmap, locationHelper, new DutySync.Listener() {
+            @Override
+            public void onDutyChanged(boolean onDuty) {
+                applyDutyChange(onDuty, path, lat, lng);
+            }
+
+            @Override
+            public void onFinished() {
+                setDutyButtonBusy(false);
+                stopGpsWarmUp();
+            }
+        });
+    }
+
+    /**
+     * GPS for the attendance record itself: started when Start/End duty is tapped, so a position is
+     * ready by the time the photo is taken (off duty, the dashboard does not track otherwise).
+     */
+    private void warmUpGps() {
+        if (!locationHelper.isTrackingActive() && locationHelper.hasLocationPermission()) {
+            locationHelper.startLocationUpdates(null);
+        }
+    }
+
+    /** Off duty again (or the start did not happen): stop the GPS the attendance step started. */
+    private void stopGpsWarmUp() {
+        if (!session.isDutyOnline()) locationHelper.stopLocationUpdates();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("duty_ending", isEndingDuty);
+        if (pendingDutyCapture != null) outState.putString("duty_capture", pendingDutyCapture.getAbsolutePath());
+    }
+
+    private void applyDutyChange(boolean nowOnDuty, String photoPath, double lat, double lng) {
+        // Keep the phone's attendance log too (the profile screen shows it).
+        if (nowOnDuty) {
+            dbHelper.saveAttendance(session.getUsername(), photoPath, lat, lng);
+        } else {
+            dbHelper.endDutyWithPhoto(session.getUsername(), photoPath, lat, lng);
+        }
+        session.setDutyOnline(nowOnDuty);
+        if (nowOnDuty) {
+            startDutyTracking();
+            locationHelper.pushLocationToSupabaseIfOnline(this, true);
+        } else {
+            locationHelper.stopLocationUpdates();
+        }
+        updateDutyUI();
+        Toast.makeText(this, nowOnDuty ? "✓ Attendance verified. Duty started." : "✓ Attendance verified. Duty ended.",
+                Toast.LENGTH_LONG).show();
+    }
+
+    /** Live GPS while on duty: logs on the phone and shares with the admin map. */
+    private void startDutyTracking() {
+        if (!session.isDutyOnline()) return;
+        if (!locationHelper.hasLocationPermission()) {
+            if (!askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION});
+            }
+            return;
+        }
+        locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) -> {
+            dbHelper.logLocation(session.getUsername(), currentHeroDelivery != null ? currentHeroDelivery.getBookingId() : "",
+                    latitude, longitude, accuracy, speed, bearing);
+            locationHelper.pushLocationToSupabaseIfOnline(DriverDashboardActivity.this, session.isDutyOnline());
+            updateDutyUI();
+        });
+    }
+
+    /** The server is the source of truth for duty (the admin may have a newer state than this phone). */
+    private void syncDutyFromServer() {
+        DutySync.loadServerState(this, server -> {
+            if (server != session.isDutyOnline()) {
+                session.setDutyOnline(server);
+                if (server) startDutyTracking(); else locationHelper.stopLocationUpdates();
+                updateDutyUI();
+            }
+        });
+    }
+
+    private void setDutyButtonBusy(boolean busy) {
+        if (btnToggleDuty == null) return;
+        btnToggleDuty.setEnabled(!busy);
+        btnToggleDuty.animate().alpha(busy ? 0.55f : 1f).setDuration(150).start();
+        if (busy) btnToggleDuty.setText("SAVING…");
+        else updateDutyUI();
     }
 
     private void toggleDriverDuty() {
@@ -598,19 +747,37 @@ public class DriverDashboardActivity extends AppCompatActivity {
                     .show();
         } else {
             isEndingDuty = false;
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                launchAttendanceCamera();
-            } else {
-                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+            // The start record should carry where the driver is: ask for location once, before the camera.
+            if (!locationHelper.hasLocationPermission() && !askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                dutyStartWaitingForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION});
+                return;
             }
+            openAttendanceCameraWithPermission();
+        }
+    }
+
+    private void openAttendanceCameraWithPermission() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            launchAttendanceCamera();
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
         }
     }
 
     private void launchAttendanceCamera() {
-        Intent takePictureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        warmUpGps();
+        pendingDutyCapture = CameraCapture.newTargetFile(this, "DUTY");
+        Intent takePictureIntent = CameraCapture.intent(this, pendingDutyCapture);
         try {
             attendanceCameraLauncher.launch(takePictureIntent);
         } catch (Exception e) {
+            if (pendingDutyCapture != null) pendingDutyCapture.delete();
+            pendingDutyCapture = null;
+            stopGpsWarmUp();
             Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
         }
     }
@@ -652,63 +819,58 @@ public class DriverDashboardActivity extends AppCompatActivity {
     }
 
     private void showReportProblemDialog(String bookingId) {
-        String[] problemTypes = {
-                "Vehicle problem",
-                "Accident/emergency",
-                "Cannot reach pickup location",
-                "Incorrect pickup information",
-                "Customer issue",
-                "Package issue",
-                "Other problem"
-        };
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_report_problem, null);
+        bottomSheetDialog.setContentView(dialogView);
 
-        final int[] selectedIndex = {0};
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        android.widget.RadioGroup rg = dialogView.findViewById(R.id.rgProblemTypes);
+        com.google.android.material.textfield.TextInputEditText etDesc = dialogView.findViewById(R.id.etProblemDescription);
+        MaterialButton btnSubmit = dialogView.findViewById(R.id.btnSubmitReport);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Report Problem to Admin (#" + bookingId + ")");
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-        View customView = getLayoutInflater().inflate(android.R.layout.simple_list_item_1, null);
-        final EditText etDescription = new EditText(this);
-        etDescription.setHint("Enter problem details for Admin review...");
-        etDescription.setPadding(32, 24, 32, 24);
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> {
+                int checkedId = rg != null ? rg.getCheckedRadioButtonId() : -1;
+                String selectedType = "Other problem";
+                if (checkedId == R.id.rbVehicle) selectedType = "Vehicle problem";
+                else if (checkedId == R.id.rbCustomer) selectedType = "Customer unreachable";
+                else if (checkedId == R.id.rbAddress) selectedType = "Incorrect address";
+                else if (checkedId == R.id.rbOther) selectedType = "Other problem";
 
-        builder.setSingleChoiceItems(problemTypes, 0, (dialog, which) -> selectedIndex[0] = which);
-        builder.setView(etDescription);
+                String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
+                String desc = "Reported: " + selectedType + (details.isEmpty() ? "" : " - " + details);
 
-        builder.setPositiveButton("Submit Report", (dialog, which) -> {
-            String selectedType = problemTypes[selectedIndex[0]];
-            String desc = etDescription.getText().toString().trim();
-
-            if (desc.isEmpty()) {
-                desc = "Reported: " + selectedType;
-            }
-
-            boolean saved = dbHelper.saveProblemReport(bookingId, session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
-            if (saved) {
-                // Problem reports are not on the TRIMAX server yet, so the admin does not receive them.
-                Toast.makeText(this, "Problem report saved on this phone only. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+                // Kept on this phone and sent to the admin's Notifications (queued and retried when offline).
+                // The real GPS fix is sent only when there is one; no stand-in location goes to the admin.
+                IssueReporter.send(this, false, bookingId, selectedType, desc, locationHelper);
+                bottomSheetDialog.dismiss();
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void showLogoutDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Logout", (dialog, which) -> {
-                    session.logoutUser();
-                    Intent intent = new Intent(this, LoginActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_logout, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        com.google.android.material.button.MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancelLogout);
+        com.google.android.material.button.MaterialButton btnConfirm = dialogView.findViewById(R.id.btnConfirmLogout);
+
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                session.logoutUser();
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void navigateToTab(Class<?> targetClass) {

@@ -77,4 +77,6 @@
     <string name="filter_completed">Completed</string>
     <string name="filter_cancelled">Cancelled</string>
     <string name="msg_no_bookings">No bookings found</string>
+    <!-- TRI-MAX office / dispatch line used by every "Call office" button. PLACEHOLDER: replace with the real number. -->
+    <string name="office_phone" translatable="false">0281234567</string>
 </resources>

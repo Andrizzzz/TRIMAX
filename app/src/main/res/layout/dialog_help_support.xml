@@ -136,7 +136,7 @@
                     android:contentDescription="Email Icon"
                     android:padding="8dp"
                     android:src="@drawable/ic_email"
-                    app:tint="#059669" />
+                    app:tint="@color/status_confirmed" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -149,7 +149,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Email Support Team"
-                        android:textColor="#059669"
+                        android:textColor="@color/status_confirmed"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 

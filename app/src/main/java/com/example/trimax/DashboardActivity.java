@@ -44,10 +44,16 @@ public class DashboardActivity extends AppCompatActivity {
     private SessionManager session;
     private DatabaseHelper dbHelper;
     private LocationHelper locationHelper;
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
+    private boolean askedForLocation;
 
     private ActivityResultLauncher<Intent> attendanceCameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
     private boolean isEndingDuty = false;
+    /** File the camera app writes the full-size attendance photo into. */
+    private File pendingDutyCapture;
+    /** Start duty was tapped before location permission was answered: continue to the camera after. */
+    private boolean dutyStartWaitingForLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +64,25 @@ public class DashboardActivity extends AppCompatActivity {
         session = new SessionManager(this);
         dbHelper = new DatabaseHelper(this);
         locationHelper = new LocationHelper(this);
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                granted -> {
+                    if (locationHelper.hasLocationPermission()) {
+                        startDutyTracking();
+                    } else {
+                        Toast.makeText(this, "Location is off: the admin map will not show you while on duty.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                    if (dutyStartWaitingForLocation) {     // continue the Start duty that asked for it
+                        dutyStartWaitingForLocation = false;
+                        openAttendanceCameraWithPermission();
+                    }
+                });
+        if (savedInstanceState != null) {
+            isEndingDuty = savedInstanceState.getBoolean("duty_ending", false);
+            String pending = savedInstanceState.getString("duty_capture", null);
+            pendingDutyCapture = pending != null ? new File(pending) : null;
+        }
 
         // Role-based Navigation Access Protection Guard
         if (session.isLoggedIn() && "DRIVER".equalsIgnoreCase(session.getRole())) {
@@ -109,11 +134,16 @@ public class DashboardActivity extends AppCompatActivity {
         attendanceCameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    File rawCapture = pendingDutyCapture;
+                    pendingDutyCapture = null;
                     if (result.getResultCode() == RESULT_OK) {
-                        Bitmap photoBitmap = null;
-                        if (result.getData() != null && result.getData().getExtras() != null) {
-                            photoBitmap = (Bitmap) result.getData().getExtras().get("data");
+                        // Full-size photo from the file the camera wrote; the camera's small preview otherwise.
+                        Bitmap photoBitmap = CameraCapture.readUpright(rawCapture);
+                        if (photoBitmap == null && result.getData() != null && result.getData().getExtras() != null) {
+                            Object preview = result.getData().getExtras().get("data");
+                            if (preview instanceof Bitmap) photoBitmap = (Bitmap) preview;
                         }
+                        if (rawCapture != null) rawCapture.delete();   // the stamped copy below is kept
 
                         if (photoBitmap != null) {
                             File savedFile = ImageTimestampHelper.saveBitmapWithTimestamp(
@@ -124,38 +154,14 @@ public class DashboardActivity extends AppCompatActivity {
                                     locationHelper.getLongitude()
                             );
 
-                            String path = savedFile != null ? savedFile.getAbsolutePath() : "";
-                            boolean saved;
-                            if (isEndingDuty) {
-                                saved = dbHelper.endDutyWithPhoto(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            } else {
-                                saved = dbHelper.saveAttendance(session.getUsername(), path, locationHelper.getLatitude(), locationHelper.getLongitude());
-                            }
-
-                            if (saved) {
-                                if (isEndingDuty) {
-                                    session.setDutyOnline(false);
-                                    session.setDutyStartTime("");
-                                    updateAttendanceUI();
-                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Ended.", Toast.LENGTH_LONG).show();
-                                } else {
-                                    SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US);
-                                    String startTimeStr = sdf.format(new Date());
-
-                                    session.setDutyOnline(true);
-                                    session.setDutyStartTime(startTimeStr);
-
-                                    updateAttendanceUI();
-                                    Toast.makeText(DashboardActivity.this, "✓ Attendance Verified! Duty Started: " + startTimeStr, Toast.LENGTH_LONG).show();
-                                }
-                            } else {
-                                Toast.makeText(DashboardActivity.this, "Failed to save attendance record in database.", Toast.LENGTH_SHORT).show();
-                            }
-                            isEndingDuty = false;
+                            onAttendancePhoto(savedFile, photoBitmap);
                         } else {
+                            stopGpsWarmUp();
                             Toast.makeText(DashboardActivity.this, "Failed to retrieve attendance photo.", Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        if (rawCapture != null) rawCapture.delete();
+                        stopGpsWarmUp();
                         Toast.makeText(DashboardActivity.this, "Attendance photo capture cancelled.", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -309,7 +315,7 @@ public class DashboardActivity extends AppCompatActivity {
                 if (callSupport != null) {
                     callSupport.setOnClickListener(call -> {
                         supportDialog.dismiss();
-                        startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:0281234567")));
+                        startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getString(R.string.office_phone))));
                     });
                 }
                 if (emailSupport != null) {
@@ -400,22 +406,62 @@ public class DashboardActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            isEndingDuty = false;
-            launchAttendanceCamera();
         } else {
             isEndingDuty = false;
+            // The start record should carry where the agent is: ask for location once, before the camera.
+            if (!locationHelper.hasLocationPermission() && !askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                dutyStartWaitingForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
+                return;
+            }
+            openAttendanceCameraWithPermission();
+        }
+    }
+
+    private void openAttendanceCameraWithPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchAttendanceCamera();
+        } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
     }
 
     private void launchAttendanceCamera() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        warmUpGps();
+        pendingDutyCapture = CameraCapture.newTargetFile(this, "DUTY");
+        Intent takePictureIntent = CameraCapture.intent(this, pendingDutyCapture);
         try {
             attendanceCameraLauncher.launch(takePictureIntent);
         } catch (Exception e) {
+            if (pendingDutyCapture != null) pendingDutyCapture.delete();
+            pendingDutyCapture = null;
+            stopGpsWarmUp();
             Toast.makeText(this, "Camera app unavailable on this device.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * GPS for the attendance record itself: started when Start/End duty is tapped, so a position is
+     * ready by the time the photo is taken (off duty, the dashboard does not track otherwise).
+     */
+    private void warmUpGps() {
+        if (!locationHelper.isTrackingActive() && locationHelper.hasLocationPermission()) {
+            locationHelper.startLocationUpdates(null);
+        }
+    }
+
+    /** Off duty again (or the start did not happen): stop the GPS the attendance step started. */
+    private void stopGpsWarmUp() {
+        if (!session.isDutyOnline()) locationHelper.stopLocationUpdates();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("duty_ending", isEndingDuty);
+        if (pendingDutyCapture != null) outState.putString("duty_capture", pendingDutyCapture.getAbsolutePath());
     }
 
     private void updateAttendanceUI() {
@@ -477,8 +523,91 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        NavigationView dashboardDrawer = findViewById(R.id.navigationView);
+        if (dashboardDrawer != null) {
+            dashboardDrawer.setCheckedItem(R.id.drawer_home);
+        }
+        refreshDashboardContent();
+        if (session.isDutyOnline() && !locationHelper.isTrackingActive()) startDutyTracking();
+        DutySync.loadServerState(this, onDuty -> {
+            if (onDuty != session.isDutyOnline()) {
+                session.setDutyOnline(onDuty);
+                if (!onDuty) session.setDutyStartTime("");
+                if (onDuty) startDutyTracking(); else locationHelper.stopLocationUpdates();
+                updateAttendanceUI();
+            }
+        });
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        // The GPS listener holds this screen; a new dashboard restarts it in onResume.
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+        super.onDestroy();
+    }
+
+    /** The server records the duty change first (photo + event) so the admin sees who is on duty. */
+    private void onAttendancePhoto(File savedFile, Bitmap photoBitmap) {
+        final boolean ending = isEndingDuty;
+        isEndingDuty = false;
+        final String path = savedFile != null ? savedFile.getAbsolutePath() : "";
+        final double lat = locationHelper.getLatitude();
+        final double lng = locationHelper.getLongitude();
+        MaterialButton dutyButton = findViewById(R.id.btnAgentStartDuty);
+        if (dutyButton != null) {
+            dutyButton.setEnabled(false);
+            dutyButton.setText("SAVING…");
+        }
+        DutySync.record(this, !ending, savedFile, photoBitmap, locationHelper, new DutySync.Listener() {
+            @Override
+            public void onDutyChanged(boolean onDuty) {
+                if (onDuty) {
+                    dbHelper.saveAttendance(session.getUsername(), path, lat, lng);
+                    String startTimeStr = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.US).format(new Date());
+                    session.setDutyOnline(true);
+                    session.setDutyStartTime(startTimeStr);
+                    startDutyTracking();
+                    Toast.makeText(DashboardActivity.this, "✓ Attendance verified. Duty started: " + startTimeStr, Toast.LENGTH_LONG).show();
+                } else {
+                    dbHelper.endDutyWithPhoto(session.getUsername(), path, lat, lng);
+                    session.setDutyOnline(false);
+                    session.setDutyStartTime("");
+                    locationHelper.stopLocationUpdates();
+                    Toast.makeText(DashboardActivity.this, "✓ Attendance verified. Duty ended.", Toast.LENGTH_LONG).show();
+                }
+                updateAttendanceUI();
+            }
+
+            @Override
+            public void onFinished() {
+                if (dutyButton != null) dutyButton.setEnabled(true);
+                stopGpsWarmUp();
+                updateAttendanceUI();
+            }
+        });
+    }
+
+    /** While on duty the agent's position is shared with the admin's agent map. */
+    private void startDutyTracking() {
+        if (!session.isDutyOnline()) return;
+        if (!locationHelper.hasLocationPermission()) {
+            if (!askedForLocation && locationPermissionLauncher != null) {
+                askedForLocation = true;
+                locationPermissionLauncher.launch(new String[]{
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION});
+            }
+            return;
+        }
+        locationHelper.startLocationUpdates((latitude, longitude, accuracy, speed, bearing) ->
+                locationHelper.pushLocationToSupabaseIfOnline(DashboardActivity.this, session.isDutyOnline()));
     }
 
     /** Tiles and the two most recent cards, from the agent's own bookings on the TRIMAX server. */
@@ -487,6 +616,7 @@ public class DashboardActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List<BookingRecord> records) {
                 if (SessionGuard.isGone(DashboardActivity.this)) return;
+                BookingNotifications.syncAgent(DashboardActivity.this, session.getUsername(), records);
                 updateDashboardStats(records);
                 List<Delivery> bookings = new java.util.ArrayList<>();
                 for (BookingRecord r : records) bookings.add(r.toDelivery(false));
@@ -582,13 +712,13 @@ public class DashboardActivity extends AppCompatActivity {
         TextView tvStatConfirmedCount = findViewById(R.id.tvStatConfirmedCount);
 
         if (tvStatTotalCount != null) {
-            tvStatTotalCount.setText(String.valueOf(BookingFilter.count(records, "ALL")));
+            UiMotion.countTo(tvStatTotalCount, BookingFilter.count(records, "ALL"));
         }
         if (tvStatPendingCount != null) {
-            tvStatPendingCount.setText(String.valueOf(BookingFilter.count(records, "PENDING")));
+            UiMotion.countTo(tvStatPendingCount, BookingFilter.count(records, "PENDING"));
         }
         if (tvStatConfirmedCount != null) {
-            tvStatConfirmedCount.setText(String.valueOf(BookingFilter.count(records, "CONFIRMED")));
+            UiMotion.countTo(tvStatConfirmedCount, BookingFilter.count(records, "CONFIRMED"));
         }
     }
 
@@ -608,19 +738,25 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void showLogoutDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Logout", (dialog, which) -> {
-                    session.logoutUser();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_logout, null);
+        bottomSheetDialog.setContentView(dialogView);
 
-                    Intent intent = new Intent(DashboardActivity.this, LoginActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        com.google.android.material.button.MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancelLogout);
+        com.google.android.material.button.MaterialButton btnConfirm = dialogView.findViewById(R.id.btnConfirmLogout);
+
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                session.logoutUser();
+                Intent intent = new Intent(DashboardActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void navigateToTab(Class<?> targetClass) {

@@ -84,11 +84,24 @@
             android:text="Wholesale item catalog &amp; delivery price list."
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
+
+        <!-- Loading / empty / error (tap to retry); hidden when the list shows -->
+        <TextView
+            android:id="@+id/tvPackagesState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="8dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- RECYCLER VIEW GRID -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPackages"
+        android:layoutAnimation="@anim/layout_list_enter"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"

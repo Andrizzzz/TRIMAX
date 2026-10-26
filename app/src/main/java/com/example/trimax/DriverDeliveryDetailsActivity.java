@@ -190,6 +190,14 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadDeliveryData();
+        // GPS for this screen: status changes and problem reports carry where the driver was.
+        if (!locationHelper.isTrackingActive()) locationHelper.startLocationUpdates(null);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationHelper.stopLocationUpdates();
     }
 
     /** The delivery as the TRIMAX server has it; only deliveries assigned to the signed-in driver load. */
@@ -375,10 +383,11 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
                         if (SessionGuard.isGone(DriverDeliveryDetailsActivity.this)) return;
                         if (SessionGuard.handle(DriverDeliveryDetailsActivity.this, error)) return;
                         btnPrimaryAction.setText(label);
-                        btnPrimaryAction.setEnabled(true);
+                        updateStatusAndButtons();   // the buttons the current status allows, not simply "enabled"
                         Toast.makeText(DriverDeliveryDetailsActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND) {
-                            loadDeliveryData();   // show what the server has now
+                        if (error.getKind() == ApiException.Kind.CONFLICT || error.getKind() == ApiException.Kind.NOT_FOUND
+                                || error.getKind() == ApiException.Kind.INVALID || error.getKind() == ApiException.Kind.TIMEOUT) {
+                            loadDeliveryData();   // show what the server has now (a timed-out step may have been saved)
                         }
                     }
                 });
@@ -386,180 +395,158 @@ public class DriverDeliveryDetailsActivity extends AppCompatActivity {
 
     private void showDepositDialog() {
         if (currentDelivery == null) return;
-        String[] statuses = {"COLLECTED", "RETURNED", "FORFEITED", "PENDING"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Manage Deposit (Current: ₱" + currentDelivery.getDepositAmount() + ")");
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_manage_deposit, null);
+        bottomSheetDialog.setContentView(dialogView);
 
-        LinearLayout container = new LinearLayout(this);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setPadding(32, 24, 32, 24);
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        android.widget.RadioGroup rgStatus = dialogView.findViewById(R.id.rgDepositStatus);
+        com.google.android.material.textfield.TextInputEditText etAmount = dialogView.findViewById(R.id.etDepositAmount);
+        MaterialButton btnUpdate = dialogView.findViewById(R.id.btnUpdateDeposit);
 
-        final EditText etAmount = new EditText(this);
-        etAmount.setHint("Deposit Amount (₱)");
-        etAmount.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        etAmount.setText(String.valueOf(currentDelivery.getDepositAmount()));
-        container.addView(etAmount);
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        if (etAmount != null) etAmount.setText(String.valueOf(currentDelivery.getDepositAmount()));
 
-        final EditText etReason = new EditText(this);
-        etReason.setHint("Reason / Notes...");
-        etReason.setSingleLine(false);
-        etReason.setMinLines(2);
-        etReason.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
-        etReason.setPadding(12, 12, 12, 12);
-        LinearLayout.LayoutParams reasonParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        reasonParams.topMargin = 12;
-        etReason.setLayoutParams(reasonParams);
-        container.addView(etReason);
+        String currentStatus = currentDelivery.getDepositStatus();
+        if (rgStatus != null && currentStatus != null) {
+            if ("COLLECTED".equalsIgnoreCase(currentStatus)) rgStatus.check(R.id.rbCollected);
+            else if ("RETURNED".equalsIgnoreCase(currentStatus)) rgStatus.check(R.id.rbReturned);
+            else if ("FORFEITED".equalsIgnoreCase(currentStatus)) rgStatus.check(R.id.rbForfeited);
+            else rgStatus.check(R.id.rbPending);
+        }
 
-        builder.setView(container);
-        builder.setSingleChoiceItems(statuses, 0, null);
+        if (btnUpdate != null) {
+            btnUpdate.setOnClickListener(v -> {
+                int checkedId = rgStatus != null ? rgStatus.getCheckedRadioButtonId() : -1;
+                String chosenStatus = "PENDING";
+                if (checkedId == R.id.rbCollected) chosenStatus = "COLLECTED";
+                else if (checkedId == R.id.rbReturned) chosenStatus = "RETURNED";
+                else if (checkedId == R.id.rbForfeited) chosenStatus = "FORFEITED";
 
-        builder.setPositiveButton("Update Deposit", (dialog, which) -> {
-            int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-            String chosenStatus = statuses[selectedPosition >= 0 ? selectedPosition : 0];
-            String amtStr = etAmount.getText().toString().trim();
-            double amt = currentDelivery.getDepositAmount();
-            try {
-                if (!amtStr.isEmpty()) amt = Double.parseDouble(amtStr);
-            } catch (Exception ignored) {}
+                String amtStr = etAmount != null && etAmount.getText() != null ? etAmount.getText().toString().trim() : "";
+                double amt = currentDelivery.getDepositAmount();
+                try {
+                    if (!amtStr.isEmpty()) amt = Double.parseDouble(amtStr);
+                } catch (Exception ignored) {}
 
-            String reason = etReason.getText().toString().trim();
-            if (reason.isEmpty()) reason = "Deposit status updated to " + chosenStatus;
+                String reason = "Deposit status updated to " + chosenStatus;
 
-            boolean updated = dbHelper.updateDepositStatus(currentDelivery.getBookingId(), session.getUsername(), amt, chosenStatus, reason);
-            if (updated) {
-                // Deposits are not on the TRIMAX server yet: say so instead of implying the office was told.
-                Toast.makeText(this, "Deposit noted as " + chosenStatus + " on this phone only. Tell the office.",
-                        Toast.LENGTH_LONG).show();
-                loadDeliveryData();
-            } else {
-                Toast.makeText(this, "Failed to update deposit", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+                boolean updated = dbHelper.updateDepositStatus(currentDelivery.getBookingId(), session.getUsername(), amt, chosenStatus, reason);
+                if (updated) {
+                    Toast.makeText(this, "Deposit noted as " + chosenStatus + " on this phone only. Tell the office.",
+                            Toast.LENGTH_LONG).show();
+                    loadDeliveryData();
+                    bottomSheetDialog.dismiss();
+                } else {
+                    Toast.makeText(this, "Failed to update deposit", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void showReportDamageDialog() {
         if (currentDelivery == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Report Damage / Broken Item");
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_report_damage, null);
+        bottomSheetDialog.setContentView(dialogView);
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 24, 32, 24);
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        com.google.android.material.textfield.TextInputEditText etAmount = dialogView.findViewById(R.id.etDamageAmount);
+        com.google.android.material.textfield.TextInputEditText etDesc = dialogView.findViewById(R.id.etDamageDescription);
+        MaterialButton btnSubmit = dialogView.findViewById(R.id.btnSubmitDamage);
 
-        final EditText etItem = new EditText(this);
-        etItem.setHint("Item Name (e.g. Glass Container)");
-        layout.addView(etItem);
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-        String[] damageTypes = {"Broken", "Damaged", "Missing", "Other"};
-        final Spinner spinnerType = new Spinner(this);
-        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, damageTypes);
-        spinnerType.setAdapter(adapter);
-        layout.addView(spinnerType);
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> {
+                String chargeStr = etAmount != null && etAmount.getText() != null ? etAmount.getText().toString().trim() : "";
+                String desc = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
+                double chargeAmt = 0;
+                try {
+                    if (!chargeStr.isEmpty()) chargeAmt = Double.parseDouble(chargeStr);
+                } catch (Exception ignored) {}
 
-        final EditText etDesc = new EditText(this);
-        etDesc.setHint("Damage Description...");
-        layout.addView(etDesc);
+                if (desc.isEmpty()) desc = "Damage reported by driver";
 
-        final EditText etCharge = new EditText(this);
-        etCharge.setHint("Additional Damage Charge Amount (₱)");
-        etCharge.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        layout.addView(etCharge);
-
-        builder.setView(layout);
-
-        builder.setPositiveButton("Submit Damage Report", (dialog, which) -> {
-            String item = etItem.getText().toString().trim();
-            String damageType = damageTypes[spinnerType.getSelectedItemPosition()];
-            String desc = etDesc.getText().toString().trim();
-            String chargeStr = etCharge.getText().toString().trim();
-            double chargeAmt = 0;
-            try {
-                if (!chargeStr.isEmpty()) chargeAmt = Double.parseDouble(chargeStr);
-            } catch (Exception ignored) {}
-
-            if (item.isEmpty()) item = "Package Item";
-            if (desc.isEmpty()) desc = "Damage reported by driver";
-
-            boolean saved = dbHelper.addOrderAdjustment(currentDelivery.getBookingId(), session.getUsername(), "DAMAGE_CHARGE", chargeAmt, damageType + ": " + item, desc);
-            if (saved) {
-                // Damage charges are not on the TRIMAX server yet: the booking total there is unchanged.
-                Toast.makeText(this, "Damage report saved on this phone only (₱" + chargeAmt
-                        + " not charged). Call the office.", Toast.LENGTH_LONG).show();
-                loadDeliveryData();
-            } else {
-                Toast.makeText(this, "Failed to submit damage report", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+                boolean saved = dbHelper.addOrderAdjustment(currentDelivery.getBookingId(), session.getUsername(), "DAMAGE_CHARGE", chargeAmt, "Damaged Item", desc);
+                if (saved) {
+                    Toast.makeText(this, "Damage report saved on this phone only (₱" + chargeAmt
+                            + " not charged). Call the office.", Toast.LENGTH_LONG).show();
+                    loadDeliveryData();
+                    bottomSheetDialog.dismiss();
+                } else {
+                    Toast.makeText(this, "Failed to submit damage report", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        bottomSheetDialog.show();
     }
 
     private void showReportProblemDialog() {
         if (currentDelivery == null) return;
-        String[] problemTypes = {
-                "Vehicle problem",
-                "Accident/emergency",
-                "Cannot reach pickup location",
-                "Incorrect pickup information",
-                "Customer issue",
-                "Package issue",
-                "Other problem"
-        };
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_report_problem, null);
+        bottomSheetDialog.setContentView(dialogView);
 
-        final int[] selectedIndex = {0};
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        android.widget.RadioGroup rg = dialogView.findViewById(R.id.rgProblemTypes);
+        com.google.android.material.textfield.TextInputEditText etDesc = dialogView.findViewById(R.id.etProblemDescription);
+        MaterialButton btnSubmit = dialogView.findViewById(R.id.btnSubmitReport);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Report Problem to Admin");
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-        final EditText etDescription = new EditText(this);
-        etDescription.setHint("Enter details for Admin review...");
-        etDescription.setPadding(32, 24, 32, 24);
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> {
+                int checkedId = rg != null ? rg.getCheckedRadioButtonId() : -1;
+                String selectedType = "Other problem";
+                if (checkedId == R.id.rbVehicle) selectedType = "Vehicle problem";
+                else if (checkedId == R.id.rbCustomer) selectedType = "Customer unreachable";
+                else if (checkedId == R.id.rbAddress) selectedType = "Incorrect address";
+                else if (checkedId == R.id.rbOther) selectedType = "Other problem";
 
-        builder.setSingleChoiceItems(problemTypes, 0, (dialog, which) -> selectedIndex[0] = which);
-        builder.setView(etDescription);
+                String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
+                String desc = "Reported: " + selectedType + (details.isEmpty() ? "" : " - " + details);
 
-        builder.setPositiveButton("Submit Report", (dialog, which) -> {
-            String selectedType = problemTypes[selectedIndex[0]];
-            String desc = etDescription.getText().toString().trim();
+                // Kept on this phone and sent to the admin's Notifications (queued and retried when offline).
+                // The real GPS fix is sent only when there is one; no stand-in location goes to the admin.
+                IssueReporter.send(this, false, currentDelivery.getBookingId(), selectedType, desc, locationHelper);
+                bottomSheetDialog.dismiss();
+            });
+        }
 
-            if (desc.isEmpty()) {
-                desc = "Problem reported: " + selectedType;
-            }
-
-            boolean saved = dbHelper.saveProblemReport(currentDelivery.getBookingId(), session.getUsername(), selectedType, desc, locationHelper.getLatitude(), locationHelper.getLongitude());
-            if (saved) {
-                Toast.makeText(this, "Problem report saved on this phone. Call the office if it needs action now.", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Failed to submit problem report", Toast.LENGTH_SHORT).show();
-            }
-        });
-        // A delivery that cannot be finished is reported to the server; the administrator then decides
-        // whether to cancel the booking (which returns the stock) from the desktop.
-        if (currentRecord != null && DeliveryProgress.isUnderWay(currentRecord.deliveryStatus)) {
-            builder.setNeutralButton("Mark delivery failed", (dialog, which) -> {
-                String desc = etDescription.getText().toString().trim();
-                String reason = problemTypes[selectedIndex[0]] + (desc.isEmpty() ? "" : ": " + desc);
+        // A started delivery that cannot be finished: end it as FAILED (the server needs a reason); the
+        // admin is alerted and decides from the desktop whether to cancel the booking (returns the stock).
+        MaterialButton btnMarkFailed = dialogView.findViewById(R.id.btnMarkFailed);
+        boolean canFail = currentRecord != null && DeliveryProgress.isUnderWay(currentRecord.deliveryStatus)
+                && !DeliveryProgress.CANCELLED.equals(currentRecord.status)
+                && !DeliveryProgress.COMPLETED.equals(currentRecord.status);
+        if (btnMarkFailed != null) {
+            btnMarkFailed.setVisibility(canFail ? View.VISIBLE : View.GONE);
+            btnMarkFailed.setOnClickListener(v -> {
+                int checkedId = rg != null ? rg.getCheckedRadioButtonId() : -1;
+                String selectedType = "Other problem";
+                if (checkedId == R.id.rbVehicle) selectedType = "Vehicle problem";
+                else if (checkedId == R.id.rbCustomer) selectedType = "Customer unreachable";
+                else if (checkedId == R.id.rbAddress) selectedType = "Incorrect address";
+                String details = etDesc != null && etDesc.getText() != null ? etDesc.getText().toString().trim() : "";
+                String full = selectedType + (details.isEmpty() ? "" : ": " + details);
+                String reason = full.length() > 480 ? full.substring(0, 480) : full;
+                String bookingText = currentDelivery.getBookingId();
                 new AlertDialog.Builder(this)
                         .setTitle("Mark delivery failed?")
                         .setMessage("Booking #" + currentRecord.bookingId + " will be reported as FAILED (" + reason
                                 + "). You cannot continue it afterwards; the administrator will review it.")
-                        .setPositiveButton("Mark failed", (d2, w2) -> advanceStatus(DeliveryProgress.FAILED,
-                                reason.length() > 480 ? reason.substring(0, 480) : reason, null))
+                        .setPositiveButton("Mark failed", (d2, w2) -> {
+                            bottomSheetDialog.dismiss();
+                            advanceStatus(DeliveryProgress.FAILED, reason, () ->
+                                    IssueReporter.send(this, false, bookingText, "Delivery failed", reason, locationHelper));
+                        })
                         .setNegativeButton("Back", null)
                         .show();
             });
         }
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        bottomSheetDialog.show();
     }
 
     private void showErrorState(String title, String message) {

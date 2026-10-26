@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -38,25 +39,24 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         session = new SessionManager(this);
         dbHelper = new DatabaseHelper(this);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            View topBar = findViewById(R.id.topBar);
-            if (topBar != null) {
-                int baseTopPadding = Math.round(16 * getResources().getDisplayMetrics().density);
-                topBar.setPadding(topBar.getPaddingLeft(), systemBars.top + baseTopPadding, topBar.getPaddingRight(), topBar.getPaddingBottom());
-            }
-            // Match the shared driver-screen layout: keep the floating navigation clear of system bars.
-            View bottomNav = findViewById(R.id.cardBottomNavContainer);
-            if (bottomNav != null) {
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
-                int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
-                if (params.bottomMargin != desiredBottomMargin) {
-                    params.bottomMargin = desiredBottomMargin;
-                    bottomNav.setLayoutParams(params);
+        View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
+        if (root != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+                // Match the shared driver-screen layout: keep the floating navigation clear of system bars.
+                View bottomNav = findViewById(R.id.cardBottomNavContainer);
+                if (bottomNav != null) {
+                    ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomNav.getLayoutParams();
+                    int desiredBottomMargin = systemBars.bottom + Math.round(16 * getResources().getDisplayMetrics().density);
+                    if (params.bottomMargin != desiredBottomMargin) {
+                        params.bottomMargin = desiredBottomMargin;
+                        bottomNav.setLayoutParams(params);
+                    }
                 }
-            }
-            return insets;
-        });
+                return insets;
+            });
+        }
 
         cardDriverNotif1 = findViewById(R.id.cardDriverNotif1);
         cardDriverNotif2 = findViewById(R.id.cardDriverNotif2);
@@ -71,6 +71,16 @@ public class DriverNotificationsActivity extends AppCompatActivity {
         }
 
 
+
+        ImageView btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                Intent intent = new Intent(DriverNotificationsActivity.this, DriverDashboardActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            });
+        }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
             @Override
@@ -94,6 +104,23 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadNotifications();
+        // New assignments and admin cancellations, as the server has them now.
+        for (String scope : new String[]{"active", "history"}) {
+            TrimaxApi.get(this).listDriverDeliveries(scope, new TrimaxApi.Callback<List<BookingRecord>>() {
+                @Override
+                public void onSuccess(List<BookingRecord> records) {
+                    if (SessionGuard.isGone(DriverNotificationsActivity.this)) return;
+                    BookingNotifications.syncDriver(DriverNotificationsActivity.this, session.getUsername(), records);
+                    loadNotifications();
+                }
+
+                @Override
+                public void onError(ApiException error) {
+                    if (SessionGuard.isGone(DriverNotificationsActivity.this)) return;
+                    SessionGuard.handle(DriverNotificationsActivity.this, error);
+                }
+            });
+        }
     }
 
     private void loadNotifications() {
@@ -190,10 +217,10 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     private void handleNotificationClick(DatabaseHelper.NotificationItem notification) {
         dbHelper.markNotificationAsRead(notification.getId());
         String searchable = (notification.getTitle() == null ? "" : notification.getTitle()) + " " + (notification.getMessage() == null ? "" : notification.getMessage());
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("BK-[A-Za-z0-9-]+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(searchable);
-        if (matcher.find()) {
+        String bookingId = BookingNotifications.bookingIdFrom(searchable);
+        if (bookingId != null) {
             Intent intent = new Intent(this, DriverDeliveryDetailsActivity.class);
-            intent.putExtra("BOOKING_ID", matcher.group());
+            intent.putExtra("BOOKING_ID", bookingId);
             startActivity(intent);
         } else {
             loadNotifications();
@@ -201,7 +228,7 @@ public class DriverNotificationsActivity extends AppCompatActivity {
     }
     private void navigateToTab(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
-        intent.putExtra("PREV_TAB_INDEX", 3);
+        intent.putExtra("PREV_TAB_INDEX", 0);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(intent);
         overridePendingTransition(0, 0);

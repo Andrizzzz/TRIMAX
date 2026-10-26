@@ -109,7 +109,7 @@
                     android:layout_height="wrap_content"
                     android:contentDescription="My Location"
                     android:src="@drawable/ic_gps_fixed"
-                    app:backgroundTint="#2563EB"
+                    app:backgroundTint="@color/primary_blue"
                     app:fabCustomSize="44dp"
                     app:tint="@android:color/white" />
             </LinearLayout>
@@ -156,7 +156,7 @@
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="3dp"
                     android:text="6 mins (1.8 km)"
-                    android:textColor="#059669"
+                    android:textColor="@color/status_confirmed"
                     android:textSize="11sp"
                     android:textStyle="bold" />
             </RelativeLayout>

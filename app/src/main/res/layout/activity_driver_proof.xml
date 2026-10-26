@@ -50,32 +50,79 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
-            android:paddingTop="12dp"
+            android:paddingTop="8dp"
             android:paddingBottom="36dp">
+
+            <!-- Booking & Customer Info Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Drop-off Verification"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvProofCustomerInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Booking # • Customer"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Card Capture Photo Box -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardCapturePhoto"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
+                android:layout_height="240dp"
                 app:cardBackgroundColor="#EBF2FA"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp">
+                app:cardElevation="3dp">
+
+                <!-- The taken photo (hidden until there is one); tap the card again to retake -->
+                <ImageView
+                    android:id="@+id/ivProofPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Drop-off photo"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
 
                 <RelativeLayout
+                    android:id="@+id/layoutPhotoPlaceholder"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center">
 
                     <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:layout_centerHorizontal="true"
-                        android:contentDescription="Parcel Icon"
-                        android:src="@drawable/ic_check_circle"
+                        android:background="@drawable/bg_icon_badge"
+                        android:backgroundTint="#DCEBFA"
+                        android:contentDescription="Camera Icon"
+                        android:padding="14dp"
+                        android:src="@drawable/ic_add"
                         app:tint="@color/primary_blue" />
 
                     <TextView
@@ -83,54 +130,32 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="80dp"
-                        android:text="Photo Preview / Tap to Capture"
+                        android:layout_marginTop="76dp"
+                        android:text="Tap to capture drop-off photo"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvPhotoLabel"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="4dp"
+                        android:text="Required as delivery proof"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Success Badge Row -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:contentDescription="Success"
-                    android:src="@drawable/ic_check_circle"
-                    app:tint="#10B981" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Proof Submitted!"
-                    android:textColor="#10B981"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Delivery completed successfully."
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
-
-            <!-- Action Button OK -->
+            <!-- Action Button Confirm Delivery -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConfirmDelivery"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="28dp"
                 android:backgroundTint="@color/primary_blue"
-                android:text="OK"
+                android:text="Confirm &amp; Complete Delivery"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
@@ -138,12 +163,6 @@
                 app:cornerRadius="27dp" />
 
             <!-- Hidden compatibility views -->
-            <TextView
-                android:id="@+id/tvProofCustomerInfo"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etRecipientName"
                 android:layout_width="0dp"

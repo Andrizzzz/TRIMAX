@@ -39,7 +39,7 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <!-- STEP PROGRESS INDICATOR (1 Customer -> 2 Pickup -> 3 Delivery Active -> 4 Review) -->
+    <!-- STEP PROGRESS INDICATOR (1 Customer -> 2 Location -> 3 Items (active) -> 4 Review) -->
     <LinearLayout
         android:id="@+id/stepProgressLayout"
         android:layout_width="match_parent"
@@ -61,7 +61,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_icon_badge"
-                android:backgroundTint="#E2E8F0"
+                android:backgroundTint="@color/surface_alt"
                 android:gravity="center"
                 android:text="1"
                 android:textColor="@color/text_secondary"
@@ -94,7 +94,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_icon_badge"
-                android:backgroundTint="#E2E8F0"
+                android:backgroundTint="@color/surface_alt"
                 android:gravity="center"
                 android:text="2"
                 android:textColor="@color/text_secondary"
@@ -105,7 +105,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Pickup"
+                android:text="Location"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>
@@ -138,7 +138,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Delivery"
+                android:text="Items"
                 android:textColor="@color/primary_blue"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -161,7 +161,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_icon_badge"
-                android:backgroundTint="#E2E8F0"
+                android:backgroundTint="@color/surface_alt"
                 android:gravity="center"
                 android:text="4"
                 android:textColor="@color/text_secondary"

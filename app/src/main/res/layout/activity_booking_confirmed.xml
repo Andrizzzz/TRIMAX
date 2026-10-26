@@ -42,7 +42,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="Success Checkmark"
                 android:src="@drawable/ic_check_circle"
-                app:tint="#10B981" />
+                app:tint="@color/status_confirmed" />
         </FrameLayout>
 
         <TextView

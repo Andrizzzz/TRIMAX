@@ -17,9 +17,24 @@
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:fontFamily">sans</item>
+        <!-- Smooth slide + fade between screens (tab switches stay instant) -->
+        <item name="android:windowAnimationStyle">@style/App.ScreenTransitions</item>
+        <!-- Tappable cards dip slightly when pressed -->
+        <item name="cardViewStyle">@style/App.CardView</item>
     </style>
 
     <style name="Theme.TRIMAX" parent="Base.Theme.TRIMAX" />
+
+    <style name="App.ScreenTransitions" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/screen_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/screen_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/screen_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/screen_close_exit</item>
+    </style>
+
+    <style name="App.CardView" parent="CardView">
+        <item name="android:stateListAnimator">@animator/press_scale</item>
+    </style>
 
     <style name="App" />
     <style name="ShapeAppearance" />

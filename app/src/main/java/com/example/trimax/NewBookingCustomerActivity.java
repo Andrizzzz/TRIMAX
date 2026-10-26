@@ -38,6 +38,10 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private String selectedCustomerAddress = "";
     private double selectedCustomerLatitude = 0, selectedCustomerLongitude = 0;
+    /** Phone digits of the customer the pin above belongs to; a different phone means "no pin yet". */
+    private String pinOwnerPhoneDigits = "";
+    /** The agent's bookings on the server (null until loaded): customers booked from any phone. */
+    private List<BookingRecord> serverBookings;
     private boolean directoryOnly = false;
     private ActivityResultLauncher<Intent> addCustomerLauncher;
 
@@ -74,6 +78,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                     if (selectedCustomerAddress == null) selectedCustomerAddress = "";
                     selectedCustomerLatitude = data.getDoubleExtra("CUSTOMER_LAT", 0);
                     selectedCustomerLongitude = data.getDoubleExtra("CUSTOMER_LNG", 0);
+                    pinOwnerPhoneDigits = CustomerDirectory.digits(phone);
                     if (etCustomerName != null) etCustomerName.setText(name);
                     if (etPhone != null) etPhone.setText(phone);
                     if (etEmail != null) etEmail.setText(email);
@@ -97,6 +102,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etEmail = findViewById(R.id.etEmail);
         etCustomerAddress = findViewById(R.id.etCustomerAddress);
+        TextInputEditText etSearchCustomer = findViewById(R.id.etSearchCustomer);
         if (etCustomerAddress != null) {
             etCustomerAddress.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -110,8 +116,36 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 @Override public void afterTextChanged(Editable s) {}
             });
         }
+        if (etSearchCustomer != null) {
+            etSearchCustomer.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String query = s != null ? s.toString().trim() : "";
+                    configureInlineCustomerSelection(query);
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
         // Populate real saved customers and keep inline selection mutually exclusive.
-        configureInlineCustomerSelection();
+        configureInlineCustomerSelection("");
+        // Add the customers this agent booked on the server (other phones, reinstalls).
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(NewBookingCustomerActivity.this)) return;
+                serverBookings = records;
+                String q = etSearchCustomer != null && etSearchCustomer.getText() != null
+                        ? etSearchCustomer.getText().toString().trim() : "";
+                configureInlineCustomerSelection(q);
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(NewBookingCustomerActivity.this)) return;
+                SessionGuard.handle(NewBookingCustomerActivity.this, error);
+                // Offline: the customers saved on this phone are still listed.
+            }
+        });
 
         MaterialButton btnChooseCustomer = findViewById(R.id.btnChooseCustomer);
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
@@ -155,6 +189,12 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                     btnNext.setEnabled(false);
                     selectedCustomerAddress = etCustomerAddress != null && etCustomerAddress.getText() != null
                             ? etCustomerAddress.getText().toString().trim() : selectedCustomerAddress;
+                    // The pin travels only with the customer it was saved for. If the phone was changed to
+                    // someone else after picking a customer, start without a pin (the next step asks for one).
+                    if (!cleanPhone.equals(pinOwnerPhoneDigits)) {
+                        selectedCustomerLatitude = 0;
+                        selectedCustomerLongitude = 0;
+                    }
                     dbHelper.saveCustomer(name, phone, email, selectedCustomerAddress, selectedCustomerLatitude, selectedCustomerLongitude);
 
                     Intent intent = new Intent(NewBookingCustomerActivity.this, NewBookingLocationActivity.class);
@@ -184,15 +224,21 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     }
 
     private void configureInlineCustomerSelection() {
+        configureInlineCustomerSelection("");
+    }
+
+    private void configureInlineCustomerSelection(String query) {
         LinearLayout container = findViewById(R.id.containerCustomerList);
         if (container == null) return;
 
-        // Replace static sample rows with every saved customer.
+        // Replace static sample rows with saved customers matching search query.
         container.removeAllViews();
-        List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers("");
+        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, query != null ? query : "");
         if (customers == null || customers.isEmpty()) {
             TextView empty = new TextView(this);
-            empty.setText("No saved customers yet. Tap + Add New Customer to create one.");
+            empty.setText(TextUtils.isEmpty(query)
+                    ? "No saved customers yet. Tap + Add New Customer to create one."
+                    : "No matching saved customers found.");
             empty.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
             empty.setTextSize(14);
             empty.setPadding(dp(16), dp(18), dp(16), dp(18));
@@ -242,7 +288,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 if (etCustomerName != null) etCustomerName.setText(customer.getName());
                 if (etPhone != null) etPhone.setText(customer.getPhone());
                 if (etEmail != null) etEmail.setText(customer.getEmail());
-                selectedCustomerAddress = customer.getAddress() == null ? "" : customer.getAddress();
+                selectedCustomerAddress = customer.getAddress() == null ? "" : customer.getAddress().trim();
+                pinOwnerPhoneDigits = CustomerDirectory.digits(customer.getPhone());
                 selectedCustomerLatitude = customer.getLatitude();
                 selectedCustomerLongitude = customer.getLongitude();
                 if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);
@@ -277,7 +324,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     }
 
     private void showSavedCustomers() {
-        List<DatabaseHelper.SavedCustomer> allCustomers = dbHelper.getSavedCustomers("");
+        List<DatabaseHelper.SavedCustomer> allCustomers = CustomerDirectory.list(dbHelper, serverBookings, "");
         if (allCustomers.isEmpty()) {
             new AlertDialog.Builder(this)
                     .setTitle("Saved Customers")
@@ -307,7 +354,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     String query = s != null ? s.toString().trim() : "";
-                    List<DatabaseHelper.SavedCustomer> filtered = dbHelper.getSavedCustomers(query);
+                    List<DatabaseHelper.SavedCustomer> filtered = CustomerDirectory.list(dbHelper, serverBookings, query);
                     populateSavedCustomerList(containerSavedCustomers, filtered, bottomSheetDialog);
                 }
                 @Override public void afterTextChanged(Editable s) {}
@@ -409,7 +456,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 if (etCustomerName != null) etCustomerName.setText(customer.getName());
                 if (etPhone != null) etPhone.setText(customer.getPhone());
                 if (etEmail != null) etEmail.setText(customer.getEmail());
-                selectedCustomerAddress = customer.getAddress() != null ? customer.getAddress() : "";
+                selectedCustomerAddress = customer.getAddress() != null ? customer.getAddress().trim() : "";
+                pinOwnerPhoneDigits = CustomerDirectory.digits(customer.getPhone());
                 selectedCustomerLatitude = customer.getLatitude();
                 selectedCustomerLongitude = customer.getLongitude();
                 if (etCustomerAddress != null) etCustomerAddress.setText(selectedCustomerAddress);

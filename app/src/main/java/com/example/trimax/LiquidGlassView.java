@@ -250,13 +250,13 @@ public class LiquidGlassView extends FrameLayout {
         boolean night = isNightMode();
 
         sheenPaint.setShader(new LinearGradient(0, 0, 0, h * 0.6f,
-                Color.argb(night ? 20 : 65, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
+                Color.argb(night ? 30 : 95, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
 
         rimPaint.setShader(new LinearGradient(0, 0, 0, h,
                 new int[]{
-                        Color.argb(night ? 60 : 180, 255, 255, 255),
-                        Color.argb(night ? 15 : 50, 255, 255, 255),
-                        Color.argb(night ? 30 : 110, 255, 255, 255)},
+                        Color.argb(night ? 80 : 240, 255, 255, 255),
+                        Color.argb(night ? 18 : 70, 255, 255, 255),
+                        Color.argb(night ? 40 : 150, 255, 255, 255)},
                 new float[]{0f, 0.55f, 1f}, Shader.TileMode.CLAMP));
 
         hairlinePaint.setColor(night ? Color.argb(90, 0, 0, 0) : Color.argb(22, 15, 23, 42));
@@ -286,10 +286,10 @@ public class LiquidGlassView extends FrameLayout {
         int save = canvas.save();
         canvas.clipPath(clipPath);
 
-        // Subtler glass tint opacity for higher translucency
+        // tint alpha depends on whether a real backdrop exists (crystal clear near-transparent glass)
         boolean night = isNightMode();
-        tintPaint.setColor(night ? Color.argb(hasBackdrop ? 70 : 140, 15, 23, 42)
-                : Color.argb(hasBackdrop ? 50 : 150, 255, 255, 255));
+        tintPaint.setColor(night ? Color.argb(hasBackdrop ? 15 : 40, 15, 23, 42)
+                : Color.argb(hasBackdrop ? 10 : 30, 255, 255, 255));
 
         if (hasBackdrop && backdrop != null && !backdrop.isRecycled()) {
             srcRect.set(0, 0, backdrop.getWidth(), backdrop.getHeight());

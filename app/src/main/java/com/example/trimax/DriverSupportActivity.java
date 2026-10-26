@@ -66,39 +66,46 @@ public class DriverSupportActivity extends AppCompatActivity {
 
         if (cardContactDispatch != null) {
             cardContactDispatch.setOnClickListener(v -> {
-                Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:0281234567"));
+                Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getString(R.string.office_phone)));
                 startActivity(dial);
             });
         }
 
         if (btnEmergencySos != null) {
             btnEmergencySos.setOnClickListener(v -> {
-                double lat = locationHelper.getLatitude();
-                double lng = locationHelper.getLongitude();
-                String gpsStr = String.format(Locale.US, "(%.4f, %.4f)", lat, lng);
+                String where = locationHelper.hasValidLocationFix()
+                        ? String.format(Locale.US, "your location (%.4f, %.4f)",
+                                locationHelper.getLatitude(), locationHelper.getLongitude())
+                        : "an alert (GPS location not available yet)";
 
                 new AlertDialog.Builder(this)
-                        .setTitle("🚨 EMERGENCY SOS BROADCAST")
-                        .setMessage(String.format("Broadcasting current GPS location %s to TRI-MAX Dispatch and emergency hotline?", gpsStr))
-                        .setPositiveButton("SEND SOS NOW", (dialog, which) -> {
-                            boolean saved = dbHelper.saveProblemReport(
-                                    "EMERGENCY_SOS",
-                                    session.getUsername(),
-                                    "EMERGENCY_SOS",
-                                    "Emergency SOS alert broadcasted from mobile app.",
-                                    lat,
-                                    lng
-                            );
-                            if (saved) {
-                                Toast.makeText(this, "🚨 SOS Alert saved locally in audit log. Dispatch server sync pending.", Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(this, "Failed to save SOS alert locally.", Toast.LENGTH_LONG).show();
-                            }
-                        })
+                        .setTitle("🚨 EMERGENCY SOS")
+                        .setMessage("Send " + where + " to the TRI-MAX office now? "
+                                + "If you are in danger, also call the office or 911.")
+                        .setPositiveButton("SEND SOS NOW", (dialog, which) ->
+                                // Kept on this phone and sent to the admin as an SOS alert (retried when offline).
+                                IssueReporter.send(this, true, null, "SOS",
+                                        "Emergency SOS from the mobile app.", locationHelper))
+                        .setNeutralButton("Call office", (dialog, which) -> startActivity(new Intent(Intent.ACTION_DIAL,
+                                Uri.parse("tel:" + getString(R.string.office_phone)))))
                         .setNegativeButton("Cancel", null)
                         .show();
             });
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // GPS for this screen, so an SOS or a vehicle report carries where the driver is.
+        if (!locationHelper.isTrackingActive()) locationHelper.startLocationUpdates(null);
+        IssueReporter.flush(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationHelper.stopLocationUpdates();
     }
 
     private void handleBackNavigation() {
@@ -122,19 +129,8 @@ public class DriverSupportActivity extends AppCompatActivity {
                     String desc = etDesc.getText().toString().trim();
                     if (desc.isEmpty()) desc = "Vehicle breakdown reported.";
 
-                    boolean saved = dbHelper.saveProblemReport(
-                            "VEHICLE_ISSUE",
-                            session.getUsername(),
-                            "VEHICLE_BREAKDOWN",
-                            desc,
-                            locationHelper.getLatitude(),
-                            locationHelper.getLongitude()
-                    );
-                    if (saved) {
-                        Toast.makeText(this, "Vehicle issue report saved locally. Dispatch sync pending.", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(this, "Failed to save vehicle report locally.", Toast.LENGTH_SHORT).show();
-                    }
+                    // Kept on this phone and sent to the admin (queued and retried when offline).
+                    IssueReporter.send(this, false, null, "Vehicle breakdown", desc, locationHelper);
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

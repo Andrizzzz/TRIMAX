@@ -27,14 +27,14 @@
             android:focusable="true"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#E53935" />
+            app:tint="@color/status_cancelled" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="SOS"
-            android:textColor="#E53935"
+            android:textColor="@color/status_cancelled"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -53,7 +53,7 @@
             android:layout_width="140dp"
             android:layout_height="140dp"
             android:background="@drawable/bg_pill_unselected"
-            android:backgroundTint="#EF4444"
+            android:backgroundTint="@color/status_cancelled"
             android:gravity="center">
 
             <TextView

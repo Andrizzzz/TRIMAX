@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,6 +12,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -188,7 +190,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (cardCall != null) {
             cardCall.setOnClickListener(v -> {
                 try {
-                    Intent dial = new Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:0281234567"));
+                    Intent dial = new Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + getString(R.string.office_phone)));
                     startActivity(dial);
                 } catch (Exception ignored) {
                     Toast.makeText(this, "Unable to launch dialer", Toast.LENGTH_SHORT).show();
@@ -228,26 +230,58 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showThemePickerDialog() {
-        String[] options = {"System Default 📱", "Light Mode ☀️", "Dark Mode 🌙"};
+        String[] titles = {"System Default", "Light Mode", "Dark Mode"};
+        int[] icons = {R.drawable.ic_settings, R.drawable.ic_sun, R.drawable.ic_moon};
         String current = ThemeHelper.getSelectedTheme(this);
         int selectedIndex = 0;
         if (ThemeHelper.THEME_LIGHT.equalsIgnoreCase(current)) selectedIndex = 1;
         else if (ThemeHelper.THEME_DARK.equalsIgnoreCase(current)) selectedIndex = 2;
 
-        new AlertDialog.Builder(this)
-                .setTitle("Select App Theme")
-                .setSingleChoiceItems(options, selectedIndex, (dialog, which) -> {
-                    dialog.dismiss();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_theme, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        LinearLayout container = dialogView.findViewById(R.id.containerThemeOptions);
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        if (container != null) {
+            container.removeAllViews();
+            for (int i = 0; i < titles.length; i++) {
+                final int index = i;
+                View row = getLayoutInflater().inflate(R.layout.item_theme_option, container, false);
+
+                ImageView ivIcon = row.findViewById(R.id.ivThemeIcon);
+                TextView tvTitle = row.findViewById(R.id.tvThemeTitle);
+                ImageView ivCheck = row.findViewById(R.id.ivCheck);
+
+                if (ivIcon != null) ivIcon.setImageResource(icons[i]);
+                if (tvTitle != null) tvTitle.setText(titles[i]);
+                if (ivCheck != null) {
+                    ivCheck.setVisibility(selectedIndex == index ? View.VISIBLE : View.GONE);
+                }
+
+                if (selectedIndex == index && tvTitle != null) {
+                    tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvTitle.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+                }
+
+                row.setOnClickListener(v -> {
                     String newMode = ThemeHelper.THEME_SYSTEM;
-                    if (which == 1) newMode = ThemeHelper.THEME_LIGHT;
-                    else if (which == 2) newMode = ThemeHelper.THEME_DARK;
+                    if (index == 1) newMode = ThemeHelper.THEME_LIGHT;
+                    else if (index == 2) newMode = ThemeHelper.THEME_DARK;
 
                     ThemeHelper.setTheme(SettingsActivity.this, newMode);
                     updateThemeSubtitle();
-                    Toast.makeText(this, "Theme updated to " + options[which], Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                    Toast.makeText(this, "Theme updated to " + titles[index], Toast.LENGTH_SHORT).show();
+                    bottomSheetDialog.dismiss();
+                });
+
+                container.addView(row);
+            }
+        }
+        bottomSheetDialog.show();
     }
 
     /**

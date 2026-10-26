@@ -104,7 +104,7 @@
                                 android:layout_marginEnd="4dp"
                                 android:layout_marginTop="4dp"
                                 android:background="@drawable/bg_icon_badge"
-                                android:backgroundTint="#EF4444" />
+                                android:backgroundTint="@color/status_cancelled" />
                         </RelativeLayout>
                     </LinearLayout>
 
@@ -416,7 +416,7 @@
                             android:paddingHorizontal="10dp"
                             android:paddingVertical="5dp"
                             android:text="@string/status_off_duty"
-                            android:textColor="#EF4444"
+                            android:textColor="@color/status_cancelled"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -492,7 +492,7 @@
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="3dp"
                                 android:text="@string/status_in_transit"
-                                android:textColor="#16A34A"
+                                android:textColor="@color/status_confirmed"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
@@ -623,7 +623,7 @@
                                 android:paddingHorizontal="10dp"
                                 android:paddingVertical="3dp"
                                 android:text="@string/status_completed"
-                                android:textColor="#16A34A"
+                                android:textColor="@color/status_confirmed"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
                         </RelativeLayout>

@@ -62,6 +62,9 @@ public class SupabaseClientTest {
     /** Access tokens the fake REST endpoint accepts. */
     private final List<String> validTokens = Collections.synchronizedList(new ArrayList<>());
     private volatile boolean refreshBroken;
+    /** Storage: object paths already stored, and whether the bucket exists. */
+    private final java.util.Set<String> storedObjects = Collections.synchronizedSet(new java.util.HashSet<>());
+    private volatile boolean bucketMissing;
 
     @Before
     public void start() throws Exception {
@@ -105,10 +108,29 @@ public class SupabaseClientTest {
                 String token = auth == null ? "" : auth.replace("Bearer ", "");
                 if (!validTokens.contains(token)) {
                     return reply(401, "{\"code\":\"PGRST301\",\"message\":\"JWT expired\"}");
+                } else if (path.endsWith("/trimax_driver_update_delivery_status")) {
+                    // The live server's rule for this test: only ASSIGNED -> STARTED is accepted here.
+                    JSONObject in = new JSONObject(body);
+                    String step = in.getString("p_expected_status") + ">" + in.getString("p_new_status");
+                    if (!"ASSIGNED>STARTED".equals(step)) {
+                        String[] p = step.split(">");
+                        return reply(400, "{\"code\":\"TM422\",\"details\":null,\"hint\":null,\"message\":"
+                                + "\"A delivery cannot go from " + p[0] + " to " + p[1] + ".\"}");
+                    }
+                    return reply(200, BookingRecordTest.STARTED_REPLY);
                 } else if (path.endsWith("/trimax_fail")) {
                     return reply(400, "{\"code\":\"TM409\",\"details\":\"STARTED\",\"hint\":null,\"message\":\"Changed meanwhile.\"}");
                 }
                 return reply(200, "{\"echo\":" + body + "}");
+            } else if (path != null && path.startsWith("/storage/v1/object/")) {
+                // Supabase Storage answers 400 with the real status inside the JSON body.
+                if (bucketMissing) {
+                    return reply(400, "{\"statusCode\":\"404\",\"error\":\"Bucket not found\",\"message\":\"Bucket not found\"}");
+                }
+                if (!storedObjects.add(path)) {
+                    return reply(400, "{\"statusCode\":\"409\",\"error\":\"Duplicate\",\"message\":\"The resource already exists\"}");
+                }
+                return reply(200, "{\"Key\":\"" + path + "\"}");
             }
             return reply(404, "{}");
         } catch (Exception e) {
@@ -233,6 +255,49 @@ public class SupabaseClientTest {
         assertTrue("a rule error does not end the session", c.hasSession());
     }
 
+    private static JSONObject startArgs() throws Exception {
+        JSONObject args = new JSONObject();
+        args.put("p_booking_id", 2);
+        args.put("p_expected_status", DeliveryProgress.ASSIGNED);
+        args.put("p_new_status", DeliveryProgress.nextStep("Confirmed", "ASSIGNED").target);
+        args.put("p_latitude", 14.7827);
+        args.put("p_longitude", 121.0476);
+        args.put("p_note", JSONObject.NULL);
+        args.put("p_recipient_name", JSONObject.NULL);
+        return args;
+    }
+
+    @Test
+    public void startDeliverySendsStartedAndTheScreenShowsTheServerReply() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        BookingRecord saved = BookingRecord.parse(c.rpc("trimax_driver_update_delivery_status", startArgs()));
+        Seen sent = requests.get(requests.size() - 1);
+        assertEquals("/rest/v1/rpc/trimax_driver_update_delivery_status", sent.path);
+        JSONObject in = new JSONObject(sent.body);
+        assertEquals("ASSIGNED", in.getString("p_expected_status"));
+        assertEquals("STARTED", in.getString("p_new_status"));
+        assertEquals("STARTED", saved.deliveryStatus);
+        assertEquals("STARTED", saved.toDelivery(true).getStatus());
+        assertTrue(DeliveryProgress.nextStep(saved.status, saved.deliveryStatus).opensProof);
+    }
+
+    @Test
+    public void aStepTheServerRefusesIsAnInvalidRequestNotASignOut() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        JSONObject args = startArgs();
+        args.put("p_new_status", DeliveryProgress.DELIVERED);   // skipping Start is refused
+        try {
+            c.rpc("trimax_driver_update_delivery_status", args);
+            fail();
+        } catch (ApiException e) {
+            assertEquals(ApiException.Kind.INVALID, e.getKind());
+            assertEquals("A delivery cannot go from ASSIGNED to DELIVERED.", e.getMessage());
+        }
+        assertTrue("a refused step does not end the session", c.hasSession());
+    }
+
     @Test
     public void noSessionMeansSignIn() {
         try {
@@ -266,6 +331,32 @@ public class SupabaseClientTest {
             assertEquals(ApiException.Kind.NETWORK, e.getKind());
         }
         assertTrue("going offline does not sign the user out", store.load() != null);
+    }
+
+    @Test
+    public void retryOfAnAlreadyStoredPhotoIsNotAnError() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        byte[] jpeg = {(byte) 0xFF, (byte) 0xD8, 1, (byte) 0xFF, (byte) 0xD9};
+        c.uploadJpeg("delivery-proofs", "00000000-0000-0000-0000-00000000a0a0/proof_12_1_abcd1234.jpg", jpeg);
+        c.uploadJpeg("delivery-proofs", "00000000-0000-0000-0000-00000000a0a0/proof_12_1_abcd1234.jpg", jpeg);
+        assertEquals(1, storedObjects.size());
+        Seen upload = requests.get(requests.size() - 1);
+        assertEquals("/storage/v1/object/delivery-proofs/00000000-0000-0000-0000-00000000a0a0/proof_12_1_abcd1234.jpg", upload.path);
+        assertEquals("Bearer access-1", upload.authorization);
+    }
+
+    @Test
+    public void missingBucketMeansTheServerIsNotSetUpYet() throws Exception {
+        SupabaseClient c = client();
+        c.signIn("ana@example.test", "secret-pw");
+        bucketMissing = true;
+        try {
+            c.uploadJpeg("delivery-proofs", "00000000-0000-0000-0000-00000000a0a0/p.jpg", new byte[]{1, 2, 3});
+            fail();
+        } catch (ApiException e) {
+            assertEquals("kept for a later retry, not a permission problem", ApiException.Kind.SERVER, e.getKind());
+        }
     }
 
     @Test

@@ -20,12 +20,16 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ClientsActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private LinearLayout clientsListContainer;
     private TextInputEditText etSearch;
+    /** The agent's bookings on the server (null until loaded): customers booked from any phone. */
+    private List<BookingRecord> serverBookings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +80,29 @@ public class ClientsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        renderCustomers(etSearch != null && etSearch.getText() != null ? etSearch.getText().toString() : "");
+        renderCustomers(currentQuery());
+        TrimaxApi.get(this).listMyBookings(new TrimaxApi.Callback<List<BookingRecord>>() {
+            @Override
+            public void onSuccess(List<BookingRecord> records) {
+                if (SessionGuard.isGone(ClientsActivity.this)) return;
+                serverBookings = records;
+                renderCustomers(currentQuery());
+                if (clientsListContainer != null) clientsListContainer.scheduleLayoutAnimation();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(ClientsActivity.this)) return;
+                SessionGuard.handle(ClientsActivity.this, error);
+                // Offline: the customers saved on this phone are still listed.
+            }
+        });
     }
+
+    private String currentQuery() {
+        return etSearch != null && etSearch.getText() != null ? etSearch.getText().toString() : "";
+    }
+
 
     private void renderCustomers(String query) {
         if (clientsListContainer == null || dbHelper == null) return;
@@ -108,7 +133,7 @@ public class ClientsActivity extends AppCompatActivity {
             intent.putExtra("CUSTOMER_DIRECTORY_ONLY", true);
             startActivity(intent);
         });
-        List<DatabaseHelper.SavedCustomer> customers = dbHelper.getSavedCustomers(query);
+        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, query);
         if (customers.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText(query == null || query.trim().isEmpty()
