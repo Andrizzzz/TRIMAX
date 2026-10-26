@@ -14,6 +14,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -33,6 +34,10 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
     private List<ServicePackage> servicePackages;
     private final java.util.Map<String, Integer> stockByPackage = new java.util.HashMap<>();
+    /** Products as the server listed them (for "Less": allowed or not, and the most per piece). */
+    private final java.util.Map<String, Product> productByPackage = new java.util.HashMap<>();
+    /** "Less" per piece the agent picked on an item card (only items the Admin allows). */
+    private final java.util.Map<String, java.math.BigDecimal> lessByPackage = new java.util.HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +96,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 }
                 StringBuilder serviceBuilder = new StringBuilder();
                 double totalPrice = 0;
+                double totalLess = 0;
                 int totalQuantity = 0;
                 List<ServicePackage> chosen = new ArrayList<>();
 
@@ -101,6 +107,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                         }
                         serviceBuilder.append(pkg.getName()).append(" (x").append(pkg.getQuantity()).append(")");
                         totalPrice += pkg.getStartingPrice() * pkg.getQuantity();
+                        totalLess += lessOf(pkg).doubleValue() * pkg.getQuantity();
                         totalQuantity += pkg.getQuantity();
                         chosen.add(pkg);
                     }
@@ -108,9 +115,11 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 // Products and quantities travel to the summary; the server prices them again when saving.
                 int[] productIds = new int[chosen.size()];
                 int[] productQuantities = new int[chosen.size()];
+                double[] productLess = new double[chosen.size()];
                 for (int i = 0; i < chosen.size(); i++) {
                     productIds[i] = productIdOf(chosen.get(i));
                     productQuantities[i] = chosen.get(i).getQuantity();
+                    productLess[i] = lessOf(chosen.get(i)).doubleValue();
                 }
 
                 if (serviceBuilder.length() == 0) {
@@ -140,7 +149,9 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 summaryIntent.putExtra("DEST_LNG", destLng);
                 summaryIntent.putExtra("PRODUCT_IDS", productIds);
                 summaryIntent.putExtra("PRODUCT_QUANTITIES", productQuantities);
-                summaryIntent.putExtra("ESTIMATED_TOTAL", totalPrice);
+                summaryIntent.putExtra("ESTIMATED_TOTAL", totalPrice);           // before any discount
+                summaryIntent.putExtra("PRODUCT_DISCOUNTS", productLess);       // less per piece, same order
+                summaryIntent.putExtra("ESTIMATED_DISCOUNT", totalLess);
                 startActivity(summaryIntent);
             });
         }
@@ -158,6 +169,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 if (SessionGuard.isGone(NewBookingDetailsActivity.this)) return;
                 servicePackages = new ArrayList<>();
                 stockByPackage.clear();
+                productByPackage.clear();
                 for (Product p : products) {
                     ServicePackage pkg = new ServicePackage("product:" + p.id, p.name,
                             p.stock > 0 ? "In stock: " + p.stock : "Out of stock",
@@ -165,6 +177,13 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                     pkg.setImageUrl(p.imageUrl());   // picture set by the admin on the Desktop, if any
                     servicePackages.add(pkg);
                     stockByPackage.put(pkg.getId(), p.stock);
+                    productByPackage.put(pkg.getId(), p);
+                }
+                // A "Less" picked before a refresh stays only if the item still allows it.
+                for (java.util.Iterator<java.util.Map.Entry<String, java.math.BigDecimal>> it = lessByPackage.entrySet().iterator(); it.hasNext(); ) {
+                    java.util.Map.Entry<String, java.math.BigDecimal> e = it.next();
+                    Product p = productByPackage.get(e.getKey());
+                    if (p == null || ItemDiscounts.problem(p.discountLine(1), e.getValue()) != null) it.remove();
                 }
                 if (servicePackages.isEmpty()) {
                     showProductMessage("No products are available. Ask your administrator.", true);
@@ -220,6 +239,56 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         }
     }
 
+    private java.math.BigDecimal lessOf(ServicePackage pkg) {
+        java.math.BigDecimal v = lessByPackage.get(pkg.getId());
+        return v == null ? ItemDiscounts.scale(null) : v;
+    }
+
+    /** Price line of a card: "₱ 25.00", or with a discount "<s>₱ 25.00</s>  ₱ 23.00 each" and a green Less button. */
+    private void showPrice(ServicePackage pkg, TextView tvPrice, TextView tvNet, Chip chipLess) {
+        Product product = productByPackage.get(pkg.getId());
+        java.math.BigDecimal less = lessOf(pkg);
+        boolean on = less.signum() > 0;
+        if (tvPrice != null) {
+            tvPrice.setText(String.format(Locale.US, "₱ %.2f", pkg.getStartingPrice()));
+            ItemLessSheet.strike(tvPrice, on);
+            tvPrice.setTextColor(androidx.core.content.ContextCompat.getColor(this, on ? R.color.text_secondary : R.color.primary_blue));
+            tvPrice.setTypeface(null, on ? android.graphics.Typeface.NORMAL : android.graphics.Typeface.BOLD);
+        }
+        if (tvNet != null) {
+            tvNet.setVisibility(on ? View.VISIBLE : View.GONE);
+            if (on) {
+                tvNet.setText(String.format(Locale.US, "₱ %.2f each",
+                        ItemDiscounts.net(java.math.BigDecimal.valueOf(pkg.getStartingPrice()), less)));
+            }
+        }
+        if (chipLess == null) return;
+        if (product == null || !product.discountAllowed) {
+            chipLess.setVisibility(View.GONE);
+            return;
+        }
+        chipLess.setVisibility(View.VISIBLE);
+        chipLess.setText(ItemDiscounts.buttonText(less));
+        int fg = androidx.core.content.ContextCompat.getColor(this, on ? R.color.status_confirmed : R.color.primary_blue);
+        int bg = androidx.core.content.ContextCompat.getColor(this, on ? R.color.status_confirmed_bg : R.color.surface_alt);
+        chipLess.setTextColor(fg);
+        chipLess.setChipIconTint(android.content.res.ColorStateList.valueOf(fg));
+        chipLess.setCloseIconTint(android.content.res.ColorStateList.valueOf(fg));
+        chipLess.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(bg));
+        chipLess.setContentDescription(on ? "Less " + DiscountCalc.peso(less) + " per piece. Tap to change."
+                : "Take something off each piece of " + pkg.getName());
+    }
+
+    private void openLess(ServicePackage pkg, TextView tvPrice, TextView tvNet, Chip chipLess) {
+        Product product = productByPackage.get(pkg.getId());
+        if (product == null || !product.discountAllowed) return;
+        ItemLessSheet.show(this, product.discountLine(Math.max(1, pkg.getQuantity())), lessOf(pkg), perUnit -> {
+            if (perUnit.signum() > 0) lessByPackage.put(pkg.getId(), perUnit);
+            else lessByPackage.remove(pkg.getId());
+            showPrice(pkg, tvPrice, tvNet, chipLess);
+        });
+    }
+
     private void populatePackageCards() {
         if (containerPackageCards == null) return;
         containerPackageCards.removeAllViews();
@@ -230,6 +299,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             TextView tvName = cardView.findViewById(R.id.tvPackageName);
             TextView tvDesc = cardView.findViewById(R.id.tvPackageDescription);
             TextView tvPrice = cardView.findViewById(R.id.tvPackagePrice);
+            TextView tvNet = cardView.findViewById(R.id.tvPackageNetPrice);
+            Chip chipLess = cardView.findViewById(R.id.chipLess);
             TextView tvItemQuantity = cardView.findViewById(R.id.tvItemQuantity);
             MaterialButton btnMinus = cardView.findViewById(R.id.btnMinus);
             MaterialButton btnPlus = cardView.findViewById(R.id.btnPlus);
@@ -240,7 +311,11 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             }
             if (tvName != null) tvName.setText(pkg.getName());
             if (tvDesc != null) tvDesc.setText(pkg.getDescription());
-            if (tvPrice != null) tvPrice.setText(String.format(Locale.US, "₱ %.2f", pkg.getStartingPrice()));
+            showPrice(pkg, tvPrice, tvNet, chipLess);
+            if (chipLess != null) {
+                chipLess.setOnClickListener(v -> openLess(pkg, tvPrice, tvNet, chipLess));
+                chipLess.setOnCloseIconClickListener(v -> openLess(pkg, tvPrice, tvNet, chipLess));
+            }
             if (tvItemQuantity != null) tvItemQuantity.setText(String.valueOf(pkg.getQuantity()));
 
             if (btnMinus != null) {

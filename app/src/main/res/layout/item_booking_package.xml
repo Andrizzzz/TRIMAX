@@ -48,15 +48,57 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/tvPackagePrice"
+            <!-- Price; with a discount the old price is struck through and the new one shows beside it -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="₱ 180.00"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvPackagePrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₱ 180.00"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvPackageNetPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/status_confirmed"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Only on items the Admin allows: opens the "Less per piece" sheet -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipLess"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Less"
                 android:textColor="@color/primary_blue"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:chipBackgroundColor="@color/surface_alt"
+                app:chipCornerRadius="14dp"
+                app:chipIcon="@drawable/ic_tag_less"
+                app:chipIconSize="14dp"
+                app:chipIconTint="@color/primary_blue"
+                app:chipMinHeight="28dp"
+                app:chipStrokeWidth="0dp"
+                app:closeIcon="@drawable/ic_chevron_down_small"
+                app:closeIconSize="14dp"
+                app:closeIconTint="@color/primary_blue"
+                app:closeIconVisible="true"
+                app:ensureMinTouchTargetSize="false" />
         </LinearLayout>
 
         <!-- Quantity Stepper (- [0] +) -->

@@ -16,17 +16,37 @@ public final class Product {
     public final int stock;
     /** Path of the product picture in the public product-images bucket, or null (no picture / older server). */
     public final String imagePath;
+    /**
+     * Whether the Admin lets agents take something off each piece of this item, and the most per piece
+     * (the server works this out from the price, puhunan and minimum patong; the phone never sees those).
+     * An older server sends neither, so the item simply has no "Less" button.
+     */
+    public final boolean discountAllowed;
+    public final java.math.BigDecimal maxDiscountPerUnit;
 
     public Product(int id, String name, double price, int stock) {
         this(id, name, price, stock, null);
     }
 
     public Product(int id, String name, double price, int stock, String imagePath) {
+        this(id, name, price, stock, imagePath, false, null);
+    }
+
+    public Product(int id, String name, double price, int stock, String imagePath, boolean discountAllowed,
+                   java.math.BigDecimal maxDiscountPerUnit) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.stock = stock;
         this.imagePath = imagePath;
+        this.maxDiscountPerUnit = ItemDiscounts.scale(maxDiscountPerUnit);
+        this.discountAllowed = discountAllowed && this.maxDiscountPerUnit.signum() > 0;
+    }
+
+    /** The item as a discount line ("Less" on the item card), for the given quantity. */
+    ItemDiscounts.Line discountLine(int quantity) {
+        return new ItemDiscounts.Line(id, name, quantity, java.math.BigDecimal.valueOf(price), maxDiscountPerUnit,
+                discountAllowed, discountAllowed ? null : "The Admin does not allow a discount on this item.");
     }
 
     /** Public address of the picture, or null when the product has none. */
@@ -44,7 +64,10 @@ public final class Product {
             String name = Json.text(o, "product_name");
             Double price = Json.number(o, "price");
             if (id <= 0 || name == null || price == null) continue;
-            list.add(new Product(id, name, price, Json.integer(o, "stock", 0), Json.text(o, "image_path")));
+            Boolean allowed = Json.bool(o, "discount_allowed");
+            Double max = Json.number(o, "max_discount_per_unit");
+            list.add(new Product(id, name, price, Json.integer(o, "stock", 0), Json.text(o, "image_path"),
+                    allowed != null && allowed, max == null ? null : java.math.BigDecimal.valueOf(max)));
         }
         return list;
     }

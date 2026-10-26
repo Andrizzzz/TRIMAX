@@ -74,4 +74,49 @@ public class ItemDiscountsTest {
         assertEquals("No discount is allowed on Water.", ItemDiscounts.problem(l, BigDecimal.ONE));
         assertEquals("Water × 1 · ₱10.00 each", l.title());
     }
+
+    // ------------------------------------------------------------ "Less" on the item card
+
+    @Test
+    public void lessButtonAndNetPrice() {
+        assertEquals("Less", ItemDiscounts.buttonText(null));
+        assertEquals("Less", ItemDiscounts.buttonText(BigDecimal.ZERO));
+        assertEquals("Less ₱2.00", ItemDiscounts.buttonText(new BigDecimal("2")));
+        assertEquals(new BigDecimal("23.00"), ItemDiscounts.net(new BigDecimal("25"), new BigDecimal("2")));
+        assertEquals(new BigDecimal("0.00"), ItemDiscounts.net(new BigDecimal("1"), new BigDecimal("5")));
+    }
+
+    @Test
+    public void sliderSnapsToQuartersAndNeverPassesTheMaximum() {
+        BigDecimal max = new BigDecimal("4.00");
+        assertEquals(new BigDecimal("0.00"), ItemDiscounts.snap(0.05, max));
+        assertEquals(new BigDecimal("1.25"), ItemDiscounts.snap(1.2, max));
+        assertEquals(new BigDecimal("2.00"), ItemDiscounts.snap(2.1, max));
+        assertEquals(new BigDecimal("4.00"), ItemDiscounts.snap(3.9, max));
+        assertEquals(new BigDecimal("4.00"), ItemDiscounts.snap(9, max));
+        assertEquals(new BigDecimal("0.00"), ItemDiscounts.snap(Double.NaN, max));
+        // an odd maximum is still reachable at the end of the slider and never passed
+        BigDecimal odd = new BigDecimal("3.10");
+        assertEquals(odd, ItemDiscounts.snap(3.05, odd));
+        assertEquals(new BigDecimal("3.00"), ItemDiscounts.snap(2.95, odd));
+    }
+
+    @Test
+    public void quickAmountsAreRoundStepsBelowTheMaximumThenTheMaximum() {
+        assertEquals("[1.00, 2.00, 4.00]", ItemDiscounts.quickAmounts(new BigDecimal("4")).toString());
+        assertEquals("[1.00, 2.00, 5.00, 30.00]", ItemDiscounts.quickAmounts(new BigDecimal("30")).toString());
+        assertEquals("[0.50]", ItemDiscounts.quickAmounts(new BigDecimal("0.5")).toString());
+        assertEquals("[1.00]", ItemDiscounts.quickAmounts(new BigDecimal("1")).toString());
+        assertTrue(ItemDiscounts.quickAmounts(BigDecimal.ZERO).isEmpty());
+    }
+
+    @Test
+    public void lessCarriedToTheReviewStep() {
+        Map<Integer, BigDecimal> m = ItemDiscounts.fromArrays(new int[]{201, 202, 203}, new double[]{2, 0, 1.5});
+        assertEquals(2, m.size());
+        assertEquals(new BigDecimal("2.00"), m.get(201));
+        assertEquals(new BigDecimal("1.50"), m.get(203));
+        assertTrue(ItemDiscounts.fromArrays(new int[]{1}, null).isEmpty());
+        assertTrue("lengths must match", ItemDiscounts.fromArrays(new int[]{1, 2}, new double[]{1}).isEmpty());
+    }
 }

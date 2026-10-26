@@ -38,6 +38,9 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
     private BigDecimal estimatedSubtotal = BigDecimal.ZERO;
     private final List<CreateBookingRequest.Line> quoteLines = new ArrayList<>();
     private ItemDiscountRows itemRows;
+    /** "Less" picked on the item list (product id -> per piece); fills the boxes the first time the quote arrives. */
+    private java.util.Map<Integer, BigDecimal> lessFromItems = new java.util.HashMap<>();
+    private BigDecimal estimatedLess = BigDecimal.ZERO;
     private TextView tvDiscountLimit, tvSubtotalAmount, tvDiscountAmount, tvDiscountLabel, tvTotal;
     private View rowSubtotal, rowDiscount;
     private androidx.activity.result.ActivityResultLauncher<Intent> addCustomerLauncher;
@@ -122,6 +125,10 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         final int[] productQuantities = intent.getIntArrayExtra("PRODUCT_QUANTITIES");
 
         tvTotal = tvTotalAmount;
+        lessFromItems = ItemDiscounts.fromArrays(productIds, intent.getDoubleArrayExtra("PRODUCT_DISCOUNTS"));
+        double less = intent.getDoubleExtra("ESTIMATED_DISCOUNT", 0);
+        estimatedLess = Double.isFinite(less) && less > 0
+                ? BigDecimal.valueOf(less).setScale(2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
         estimatedSubtotal = Double.isFinite(total) && total > 0
                 ? BigDecimal.valueOf(total).setScale(2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
         if (productIds != null && productQuantities != null && productIds.length == productQuantities.length) {
@@ -278,6 +285,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         if (tvDiscountLimit != null) tvDiscountLimit.setOnClickListener(v -> {
             if (quote == null && !quoteLoading) loadQuote();
         });
+        refreshDiscount();
         loadQuote();
     }
 
@@ -291,6 +299,10 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
                 quoteLoading = false;
                 java.util.Map<Integer, BigDecimal> typed = itemRows != null ? itemRows.values() : null;
+                if ((typed == null || typed.isEmpty()) && lessFromItems != null && !lessFromItems.isEmpty()) {
+                    typed = lessFromItems;      // what the agent picked with "Less" on the item list
+                }
+                lessFromItems = null;
                 quote = result;
                 if (itemRows != null) itemRows.show(result.items, typed);
                 if (tvDiscountLimit != null) {
@@ -306,7 +318,10 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
                 quoteLoading = false;
                 if (SessionGuard.handle(NewBookingSummaryActivity.this, error)) return;
-                // Without the quote there are no discount boxes: the booking can still be confirmed at full price.
+                // Without the quote there are no discount boxes: the booking can still be confirmed at full price,
+                // so the "Less" estimate from the item list is no longer shown as if it applied.
+                estimatedLess = BigDecimal.ZERO;
+                refreshDiscount();
                 if (tvDiscountLimit != null) {
                     tvDiscountLimit.setText("Could not check which items can be discounted (" + error.getMessage()
                             + "). Tap here to try again.");
@@ -323,6 +338,8 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         } else {
             t = new ItemDiscounts.Totals();
             t.subtotal = ItemDiscounts.scale(estimatedSubtotal);
+            // Until the server's quote arrives, show the "Less" picked on the item list as an estimate.
+            if (estimatedLess.compareTo(t.subtotal) <= 0) t.discount = ItemDiscounts.scale(estimatedLess);
         }
         boolean show = t.discount.signum() > 0;
         if (rowSubtotal != null) rowSubtotal.setVisibility(show ? View.VISIBLE : View.GONE);

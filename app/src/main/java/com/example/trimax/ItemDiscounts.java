@@ -109,6 +109,53 @@ final class ItemDiscounts {
         return out;
     }
 
+    // ------------------------------------------------------------ the "Less" button on an item card
+
+    /** Price per piece after the discount (never below zero). */
+    static BigDecimal net(BigDecimal unitPrice, BigDecimal perUnit) {
+        BigDecimal n = scale(unitPrice).subtract(scale(perUnit));
+        return n.signum() < 0 ? scale(BigDecimal.ZERO) : n;
+    }
+
+    /** Text on the small button under the price: "Less" or "Less ₱2.00". */
+    static String buttonText(BigDecimal perUnit) {
+        return perUnit == null || perUnit.signum() <= 0 ? "Less" : "Less " + DiscountCalc.peso(perUnit);
+    }
+
+    /** Slider position to an amount: steps of ₱0.25, never above the maximum, the very end is the maximum. */
+    static BigDecimal snap(double raw, BigDecimal max) {
+        BigDecimal m = scale(max);
+        if (!(raw > 0) || m.signum() <= 0) return scale(BigDecimal.ZERO);
+        if (raw >= m.doubleValue() - 0.125) return m;
+        BigDecimal quarters = BigDecimal.valueOf(raw).multiply(BigDecimal.valueOf(4)).setScale(0, RoundingMode.HALF_UP);
+        BigDecimal v = scale(quarters.divide(BigDecimal.valueOf(4)));
+        return v.compareTo(m) > 0 ? m : v;
+    }
+
+    /** Quick amounts in the sheet: up to three round amounts below the maximum, then the maximum itself. */
+    static List<BigDecimal> quickAmounts(BigDecimal max) {
+        List<BigDecimal> out = new ArrayList<>();
+        BigDecimal m = scale(max);
+        if (m.signum() <= 0) return out;
+        int[] steps = {1, 2, 5, 10, 20, 50, 100};
+        for (int step : steps) {
+            BigDecimal v = scale(BigDecimal.valueOf(step));
+            if (v.compareTo(m) < 0 && out.size() < 3) out.add(v);
+        }
+        out.add(m);
+        return out;
+    }
+
+    /** Amounts per piece carried from the item list to the review step (same order as the product ids). */
+    static Map<Integer, BigDecimal> fromArrays(int[] productIds, double[] perUnit) {
+        Map<Integer, BigDecimal> out = new LinkedHashMap<>();
+        if (productIds == null || perUnit == null || productIds.length != perUnit.length) return out;
+        for (int i = 0; i < productIds.length; i++) {
+            if (Double.isFinite(perUnit[i]) && perUnit[i] > 0) out.put(productIds[i], scale(BigDecimal.valueOf(perUnit[i])));
+        }
+        return out;
+    }
+
     static BigDecimal scale(BigDecimal v) {
         return (v == null ? BigDecimal.ZERO : v).setScale(2, RoundingMode.HALF_UP);
     }
