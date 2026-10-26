@@ -34,6 +34,6 @@ public class PasswordSetupFormTest {
         StringBuilder longOne = new StringBuilder("a1");
         for (int i = 0; i < 71; i++) longOne.append('x');
         assertNotNull(PasswordSetupForm.problem("tim@example.test", "ABCD2345", longOne.toString(), longOne.toString()));
-        assertNull(PasswordSetupForm.problem("tim@example.test", "ABCD2345", "Ñandú2026", "Ñandú2026"));
+        assertNull(PasswordSetupForm.problem("tim@example.test", "ABCD2345", "\u00d1and\u00fa2026", "\u00d1and\u00fa2026"));
     }
 }
