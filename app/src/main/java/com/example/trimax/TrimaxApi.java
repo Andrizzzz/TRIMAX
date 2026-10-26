@@ -173,7 +173,7 @@ public final class TrimaxApi {
 
     // ------------------------------------------------------------------ agent: discounts
 
-    /** The largest discount allowed for these lines (never the puhunan itself). */
+    /** Per item: may it be discounted, and the most per piece (never the puhunan itself). */
     public void discountQuote(List<CreateBookingRequest.Line> lines, Callback<DiscountQuote> cb) {
         run(() -> {
             JSONArray items = new JSONArray();
@@ -189,15 +189,24 @@ public final class TrimaxApi {
         }, cb);
     }
 
-    /** Changes (value 0 removes) the discount of one of this agent's Pending bookings. */
-    public void setBookingDiscount(int bookingId, DiscountCalc.Type type, java.math.BigDecimal value,
-                                   Callback<BookingRecord> cb) {
+    /**
+     * Sets the discount per piece of each item of one of this agent's Pending bookings
+     * ({product id -> pesos off one piece}; items not in the map go back to full price; empty = none).
+     */
+    public void setItemDiscounts(int bookingId, java.util.Map<Integer, java.math.BigDecimal> perUnit,
+                                 Callback<BookingRecord> cb) {
         run(() -> {
+            JSONArray items = new JSONArray();
+            for (java.util.Map.Entry<Integer, java.math.BigDecimal> e : ItemDiscounts.nonZero(perUnit).entrySet()) {
+                JSONObject i = new JSONObject();
+                i.put("product_id", e.getKey());
+                i.put("discount_per_unit", e.getValue().toPlainString());
+                items.put(i);
+            }
             JSONObject args = new JSONObject();
             args.put("p_booking_id", bookingId);
-            args.put("p_discount_type", type == DiscountCalc.Type.PERCENT ? "PERCENT" : "AMOUNT");
-            args.put("p_discount_value", value == null ? 0 : value.doubleValue());
-            return BookingRecord.parse(client.rpc("trimax_agent_set_discount", args));
+            args.put("p_items", items);
+            return BookingRecord.parse(client.rpc("trimax_agent_set_item_discounts", args));
         }, cb);
     }
 

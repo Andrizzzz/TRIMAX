@@ -18,6 +18,8 @@ public final class CreateBookingRequest {
     public static final class Line {
         public final int productId;
         public final int quantity;
+        /** Pesos off each piece (agent discount per item, 20261027_04); null or 0 = full price. */
+        public java.math.BigDecimal discountPerUnit;
 
         public Line(int productId, int quantity) {
             this.productId = productId;
@@ -34,9 +36,6 @@ public final class CreateBookingRequest {
     public String schedule;
     public String instructions;
     public final List<Line> lines = new ArrayList<>();
-    /** Agent discount (optional): a peso amount or a percent. The server checks the minimum price. */
-    public DiscountCalc.Type discountType = DiscountCalc.Type.AMOUNT;
-    public java.math.BigDecimal discountValue;
 
     public CreateBookingRequest(String requestId) {
         this.requestId = requestId != null ? requestId : UUID.randomUUID().toString();
@@ -64,11 +63,9 @@ public final class CreateBookingRequest {
         for (Line l : lines) {
             if (l.productId <= 0) return "Refresh the product list and try again.";
             if (l.quantity < 1 || l.quantity > 1000) return "Each quantity must be between 1 and 1000.";
-        }
-        if (discountValue != null) {
-            if (discountValue.signum() < 0) return "A discount cannot be negative.";
-            if (discountType == DiscountCalc.Type.PERCENT && discountValue.compareTo(new java.math.BigDecimal(100)) > 0) {
-                return "A percent discount must be from 0 to 100.";
+            if (l.discountPerUnit != null) {
+                if (l.discountPerUnit.signum() < 0) return "A discount cannot be negative.";
+                if (l.discountPerUnit.stripTrailingZeros().scale() > 2) return "Use at most 2 decimals for a discount.";
             }
         }
         return null;
@@ -88,21 +85,21 @@ public final class CreateBookingRequest {
             JSONObject i = new JSONObject();
             i.put("product_id", l.productId);
             i.put("quantity", l.quantity);
+            // Only sent when there is a discount, so a booking without one also works on an older server.
+            if (l.discountPerUnit != null && l.discountPerUnit.signum() > 0) {
+                i.put("discount_per_unit", l.discountPerUnit.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
+            }
             items.put(i);
         }
         a.put("p_items", items);
         a.put("p_requested_schedule", isBlank(schedule) ? JSONObject.NULL : schedule.trim());
         a.put("p_special_instructions", isBlank(instructions) ? JSONObject.NULL : instructions.trim());
-        // Only sent when there is a discount, so a booking without one also works on an older server.
-        if (hasDiscount()) {
-            a.put("p_discount_type", discountType == DiscountCalc.Type.PERCENT ? "PERCENT" : "AMOUNT");
-            a.put("p_discount_value", discountValue);
-        }
         return a;
     }
 
     public boolean hasDiscount() {
-        return discountValue != null && discountValue.signum() > 0;
+        for (Line l : lines) if (l.discountPerUnit != null && l.discountPerUnit.signum() > 0) return true;
+        return false;
     }
 
     private static boolean isBlank(String s) {

@@ -79,34 +79,34 @@ public class CreateBookingRequestTest {
     }
 
     @Test
-    public void discountIsSentOnlyWhenGiven() throws Exception {
+    public void discountIsSentPerItemAndOnlyWhenGiven() throws Exception {
         CreateBookingRequest r = valid();
+        r.lines.add(new CreateBookingRequest.Line(7, 3));
         JSONObject args = r.toRpcArgs();
-        assertFalse(args.has("p_discount_type"));
-        assertFalse(args.has("p_discount_value"));
+        assertFalse("never the old whole-order discount", args.has("p_discount_type") || args.has("p_discount_value"));
+        assertFalse(args.getJSONArray("p_items").getJSONObject(0).has("discount_per_unit"));
 
-        r.discountType = DiscountCalc.Type.AMOUNT;
-        r.discountValue = java.math.BigDecimal.ZERO;
-        assertFalse(r.toRpcArgs().has("p_discount_type"));
+        r.lines.get(0).discountPerUnit = java.math.BigDecimal.ZERO;
+        assertFalse(r.toRpcArgs().getJSONArray("p_items").getJSONObject(0).has("discount_per_unit"));
+        assertFalse(r.hasDiscount());
 
-        r.discountType = DiscountCalc.Type.PERCENT;
-        r.discountValue = new java.math.BigDecimal("12.50");
+        r.lines.get(1).discountPerUnit = new java.math.BigDecimal("2");
         assertNull(r.validate());
+        assertTrue(r.hasDiscount());
         args = r.toRpcArgs();
-        assertEquals("PERCENT", args.getString("p_discount_type"));
-        assertEquals(12.5, args.getDouble("p_discount_value"), 1e-9);
-        assertTrue(args.toString().contains("\"p_discount_value\":12.5"));
+        assertFalse(args.getJSONArray("p_items").getJSONObject(0).has("discount_per_unit"));
+        assertEquals("2.00", args.getJSONArray("p_items").getJSONObject(1).getString("discount_per_unit"));
+        assertFalse(args.has("p_discount_type") || args.has("p_discount_value"));
     }
 
     @Test
     public void impossibleDiscountsAreCaughtBeforeSending() {
         CreateBookingRequest r = valid();
-        r.discountValue = new java.math.BigDecimal("-1");
+        r.lines.get(0).discountPerUnit = new java.math.BigDecimal("-1");
         assertNotNull(r.validate());
-        r.discountType = DiscountCalc.Type.PERCENT;
-        r.discountValue = new java.math.BigDecimal("100.5");
+        r.lines.get(0).discountPerUnit = new java.math.BigDecimal("1.005");
         assertNotNull(r.validate());
-        r.discountValue = new java.math.BigDecimal("100");
+        r.lines.get(0).discountPerUnit = new java.math.BigDecimal("1.50");
         assertNull(r.validate());
     }
 }

@@ -235,4 +235,27 @@ public class BookingRecordTest {
         assertEquals(540.00, b.subtotalAmount, 1e-9);
         assertEquals("", b.discountText());
     }
+
+    /** booking_json with discounts per item (20261027_04): Sprite x2 less 2.00 each, Coke x1 at full price. */
+    static final String PER_ITEM = "{\"items\": [{\"quantity\": 2, \"subtotal\": 50.00, \"line_total\": 46.00, \"product_id\": 201, "
+            + "\"unit_price\": 25.00, \"product_name\": \"Sprite 1L\", \"discount_per_unit\": 2.00}, {\"quantity\": 1, \"subtotal\": 25.00, "
+            + "\"line_total\": 25.00, \"product_id\": 202, \"unit_price\": 25.00, \"product_name\": \"Coke 1L\", \"discount_per_unit\": 0.00}], "
+            + "\"driver\": null, \"events\": null, \"status\": \"Pending\", \"customer\": {\"name\": \"Shop\", \"address\": \"X\", "
+            + "\"contact\": \"09180000000\", \"client_id\": 3}, \"delivery\": {\"address\": \"X\", \"latitude\": 14.8, \"schedule\": null, "
+            + "\"longitude\": 121.0, \"instructions\": null}, \"discount\": {\"at\": \"2026-10-27T04:30:00+08:00\", \"by\": \"agent.ana\", "
+            + "\"type\": \"PER_ITEM\", \"value\": null, \"amount\": 4.00}, \"booking_id\": 40, \"created_at\": \"2026-10-27T04:30:00+08:00\", "
+            + "\"assigned_at\": null, \"created_via\": \"mobile\", \"total_amount\": 71.00, \"delivery_status\": null, "
+            + "\"last_changed_at\": null, \"subtotal_amount\": 75.00, \"delivery_status_at\": null}";
+
+    @Test
+    public void discountPerItem() throws Exception {
+        BookingRecord b = BookingRecord.parse(PER_ITEM);
+        assertTrue(b.hasDiscount());
+        assertEquals("₱4.00 off items", b.discountText());
+        assertEquals(2.00, b.items.get(0).discountPerUnit, 1e-9);
+        assertEquals(46.00, b.items.get(0).lineTotal(), 1e-9);
+        assertEquals(0.00, b.items.get(1).discountPerUnit, 1e-9);
+        assertEquals("Sprite 1L x2 (less ₱2.00 each), Coke 1L x1", b.itemsSummary());
+        assertEquals(71.00, b.toDelivery(false).getCurrentTotal(), 1e-9);
+    }
 }
