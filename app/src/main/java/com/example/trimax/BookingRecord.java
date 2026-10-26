@@ -42,6 +42,12 @@ public final class BookingRecord {
     public String assignedAt;
     public String lastChangedAt;
     public double totalAmount;
+    /** Before the agent's discount (equals totalAmount when there is none). */
+    public double subtotalAmount;
+    /** The agent's discount: amount in pesos (0 = none), how it was typed, who gave it. */
+    public double discountAmount;
+    public String discountType, discountBy, discountAt;
+    public Double discountValue;
     public String createdVia;
 
     public Integer clientId;
@@ -60,6 +66,21 @@ public final class BookingRecord {
     /** Only on create: true when the server returned an earlier booking for the same request id. */
     public boolean alreadyExisted;
     public boolean customerMatchedExisting;
+
+    public boolean hasDiscount() {
+        return discountAmount > 0;
+    }
+
+    /** "10% (₱20.00)" or "₱20.00", for the booking screens. */
+    public String discountText() {
+        if (!hasDiscount()) return "";
+        String amount = String.format(Locale.US, "\u20B1%,.2f", discountAmount);
+        if ("PERCENT".equals(discountType) && discountValue != null) {
+            String pct = discountValue % 1 == 0 ? String.valueOf(discountValue.longValue()) : String.valueOf(discountValue);
+            return pct + "% (" + amount + ")";
+        }
+        return amount;
+    }
 
     public String idText() {
         return String.valueOf(bookingId);
@@ -154,6 +175,17 @@ public final class BookingRecord {
         b.lastChangedAt = Json.text(o, "last_changed_at");
         Double total = Json.number(o, "total_amount");
         b.totalAmount = total != null ? total : 0;
+        Double sub = Json.number(o, "subtotal_amount");
+        b.subtotalAmount = sub != null ? sub : b.totalAmount;
+        JSONObject disc = Json.object(o, "discount");
+        if (disc != null) {
+            Double amt = Json.number(disc, "amount");
+            b.discountAmount = amt != null ? amt : 0;
+            b.discountType = Json.text(disc, "type");
+            b.discountValue = Json.number(disc, "value");
+            b.discountBy = Json.text(disc, "by");
+            b.discountAt = Json.text(disc, "at");
+        }
         b.createdVia = Json.text(o, "created_via");
         b.sequence = Json.integer(o, "sequence", 0);
         b.alreadyExisted = Boolean.TRUE.equals(Json.bool(o, "already_existed"));

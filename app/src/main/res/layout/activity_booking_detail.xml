@@ -309,6 +309,60 @@
                         android:text="Not yet assigned"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
+                    <!-- AGENT DISCOUNT (only when one was given) -->
+                    <LinearLayout
+                        android:id="@+id/llDiscountBreakdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Original price"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvOriginalAmount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp" />
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp">
+
+                            <TextView
+                                android:id="@+id/tvDiscountGiven"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_toStartOf="@+id/tvDiscountGivenAmount"
+                                android:text="Discount"
+                                android:textColor="@color/status_delivered"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvDiscountGivenAmount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_marginStart="8dp"
+                                android:textColor="@color/status_delivered"
+                                android:textSize="13sp" />
+                        </RelativeLayout>
+                    </LinearLayout>
+
                     <!-- TOTAL -->
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -335,6 +389,20 @@
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- Agent discount: only while the booking is Pending -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditDiscount"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp"
+                android:text="Give a discount"
+                android:textAllCaps="false"
+                android:textColor="@color/primary_blue"
+                android:visibility="gone"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/primary_blue" />
 
             <!-- Action Buttons -->
             <com.google.android.material.button.MaterialButton

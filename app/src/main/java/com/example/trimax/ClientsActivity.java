@@ -30,6 +30,8 @@ public class ClientsActivity extends AppCompatActivity {
     private TextInputEditText etSearch;
     /** The agent's bookings on the server (null until loaded): customers booked from any phone. */
     private List<BookingRecord> serverBookings;
+    /** The agent's customers saved on the server, with their photo paths (null until loaded). */
+    private List<ServerCustomer> serverCustomers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +99,21 @@ public class ClientsActivity extends AppCompatActivity {
                 // Offline: the customers saved on this phone are still listed.
             }
         });
+        TrimaxApi.get(this).listCustomers(new TrimaxApi.Callback<List<ServerCustomer>>() {
+            @Override
+            public void onSuccess(List<ServerCustomer> result) {
+                if (SessionGuard.isGone(ClientsActivity.this)) return;
+                serverCustomers = result;
+                renderCustomers(currentQuery());
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(ClientsActivity.this)) return;
+                SessionGuard.handle(ClientsActivity.this, error);
+                // Offline or an older server: photos saved on this phone are still shown.
+            }
+        });
     }
 
     private String currentQuery() {
@@ -133,7 +150,7 @@ public class ClientsActivity extends AppCompatActivity {
             intent.putExtra("CUSTOMER_DIRECTORY_ONLY", true);
             startActivity(intent);
         });
-        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, query);
+        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, serverCustomers, query);
         if (customers.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText(query == null || query.trim().isEmpty()
@@ -170,6 +187,8 @@ public class ClientsActivity extends AppCompatActivity {
         row.setGravity(android.view.Gravity.CENTER_VERTICAL);
         row.setPadding(dp(16), dp(16), dp(16), dp(16));
 
+        // Initial as the placeholder; the customer's photo covers it once loaded.
+        android.widget.FrameLayout avatarBox = new android.widget.FrameLayout(this);
         TextView avatar = new TextView(this);
         avatar.setText(customer.getName() == null || customer.getName().trim().isEmpty()
                 ? "?" : customer.getName().trim().substring(0, 1).toUpperCase());
@@ -177,9 +196,19 @@ public class ClientsActivity extends AppCompatActivity {
         avatar.setTextSize(18);
         avatar.setGravity(android.view.Gravity.CENTER);
         avatar.setBackgroundResource(R.drawable.bg_icon_badge);
+        avatarBox.addView(avatar, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
+        android.widget.ImageView photo = new android.widget.ImageView(this);
+        photo.setBackgroundResource(R.drawable.bg_icon_badge);
+        photo.setContentDescription("Customer photo");
+        photo.setVisibility(View.GONE);
+        avatarBox.addView(photo, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
+        CustomerAvatars.bind(this, photo, customer.getPhone(), customer.getPhotoPath(), dp(96), false,
+                (state, message) -> photo.setVisibility(state == CustomerAvatars.State.SHOWN ? View.VISIBLE : View.GONE));
         LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(48), dp(48));
         avatarParams.rightMargin = dp(14);
-        row.addView(avatar, avatarParams);
+        row.addView(avatarBox, avatarParams);
 
         LinearLayout details = new LinearLayout(this);
         details.setOrientation(LinearLayout.VERTICAL);
@@ -247,6 +276,9 @@ public class ClientsActivity extends AppCompatActivity {
         intent.putExtra("CLIENT_EMAIL", customer.getEmail());
         intent.putExtra("CLIENT_ADDRESS", customer.getAddress());
         intent.putExtra("BOOKINGS_COUNT", String.valueOf(customer.getBookingCount()));
+        intent.putExtra("CLIENT_LAT", customer.getLatitude());
+        intent.putExtra("CLIENT_LNG", customer.getLongitude());
+        intent.putExtra("CLIENT_PHOTO_PATH", customer.getPhotoPath());
         startActivity(intent);
     }
 

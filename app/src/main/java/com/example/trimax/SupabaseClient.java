@@ -303,6 +303,80 @@ public final class SupabaseClient {
         throw new ApiException(ApiException.Kind.SERVER, "The server had a problem (" + r.status + "). Please try again.");
     }
 
+    /**
+     * Downloads a photo from Storage as the signed-in user (the bucket's read policy decides which
+     * folders that user may read: for customer photos, the agent's own folder).
+     */
+    public byte[] downloadJpeg(String bucket, String objectPath) throws ApiException {
+        if (bucket == null || !BUCKET_NAME.matcher(bucket).matches()
+                || objectPath == null || !OBJECT_PATH.matcher(objectPath).matches()) {
+            throw new IllegalArgumentException("Bad storage path");
+        }
+        String path = "/storage/v1/object/authenticated/" + bucket + "/" + objectPath;
+        AuthSession session = validSession(null, false);
+        BytesResponse r = get(path, session.accessToken);
+        if (r.status == 401 || (r.status == 400 && r.text().toLowerCase(java.util.Locale.ROOT).contains("jwt"))) {
+            session = validSession(session, true);
+            r = get(path, session.accessToken);
+        }
+        if (r.status >= 200 && r.status < 300 && r.bytes.length > 0) return r.bytes;
+        String body = r.text().toLowerCase(java.util.Locale.ROOT);
+        if (r.status == 404 || body.contains("not_found") || body.contains("object not found")) {
+            throw new ApiException(ApiException.Kind.NOT_FOUND, "The photo is not on the server.");
+        }
+        if (r.status >= 400 && r.status < 500) {
+            throw new ApiException(ApiException.Kind.FORBIDDEN, "This photo cannot be opened on this phone.");
+        }
+        throw new ApiException(ApiException.Kind.SERVER, "The server had a problem (" + r.status + "). Please try again.");
+    }
+
+    static final class BytesResponse {
+        final int status;
+        final byte[] bytes;
+
+        BytesResponse(int status, byte[] bytes) {
+            this.status = status;
+            this.bytes = bytes == null ? new byte[0] : bytes;
+        }
+
+        String text() {
+            return new String(bytes, 0, Math.min(bytes.length, 2000), StandardCharsets.UTF_8);
+        }
+    }
+
+    private BytesResponse get(String path, String accessToken) throws ApiException {
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(baseUrl + path).openConnection();
+            c.setRequestMethod("GET");
+            c.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            c.setReadTimeout(READ_TIMEOUT_MS);
+            c.setUseCaches(false);
+            c.setInstanceFollowRedirects(false);
+            c.setRequestProperty("apikey", apiKey);
+            c.setRequestProperty("Authorization", "Bearer " + (accessToken != null ? accessToken : apiKey));
+            int status = c.getResponseCode();
+            InputStream in = status >= 200 && status < 300 ? c.getInputStream() : c.getErrorStream();
+            if (in == null) return new BytesResponse(status, new byte[0]);
+            try (InputStream input = in) {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                byte[] chunk = new byte[8192];
+                int n;
+                while ((n = input.read(chunk)) != -1) {
+                    buffer.write(chunk, 0, n);
+                    if (buffer.size() > 8_000_000) throw new IOException("Response too large");
+                }
+                return new BytesResponse(status, buffer.toByteArray());
+            }
+        } catch (SocketTimeoutException e) {
+            throw ApiException.timeout();
+        } catch (IOException e) {
+            throw ApiException.network();
+        } finally {
+            if (c != null) c.disconnect();
+        }
+    }
+
     // =====================================================================================
     // HTTP
     // =====================================================================================

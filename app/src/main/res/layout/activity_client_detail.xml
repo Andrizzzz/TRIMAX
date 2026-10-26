@@ -78,14 +78,48 @@
                     android:orientation="vertical"
                     android:padding="24dp">
 
-                    <ImageView
-                        android:layout_width="72dp"
-                        android:layout_height="72dp"
-                        android:background="@drawable/bg_icon_badge"
-                        android:contentDescription="Avatar"
-                        android:padding="16dp"
-                        android:src="@drawable/ic_user"
-                        app:tint="@color/primary_blue" />
+                    <FrameLayout
+                        android:layout_width="96dp"
+                        android:layout_height="96dp">
+
+                        <ImageView
+                            android:id="@+id/ivClientPhoto"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_icon_badge"
+                            android:contentDescription="Customer photo"
+                            android:padding="24dp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_user"
+                            app:tint="@color/primary_blue" />
+
+                        <ProgressBar
+                            android:id="@+id/progressClientPhoto"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvClientPhotoStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClientPhoto"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="36dp"
+                        android:text="Add photo"
+                        android:textAllCaps="false"
+                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/tvClientName"

@@ -12,6 +12,7 @@
     <color name="nav_selected_bg">#0D2F80ED</color>
     <color name="nav_selected_fg">#7DB4FF</color>
     <color name="surface_alt">#1B304A</color>
+    <color name="icon_badge_bg">#1B304A</color>
     <color name="border_subtle">#263B55</color>
     <color name="text_primary">#F3F7FC</color>
     <color name="text_secondary">#A9B8CC</color>

@@ -1230,6 +1230,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         public double getLatitude(){return latitude;}
         public double getLongitude(){return longitude;}
         public int getBookingCount(){return bookingCount;}
+        /** Path of the customer's photo on the server (customer-photos bucket), or null. */
+        private String photoPath;
+        public String getPhotoPath(){return photoPath;}
+        public void setPhotoPath(String photoPath){this.photoPath=photoPath;}
+        /** True when this customer is saved on the TRIMAX server (so a booking for them is accepted). */
+        private boolean onServer;
+        public boolean isOnServer(){return onServer;}
+        public void setOnServer(boolean onServer){this.onServer=onServer;}
         @Override public String toString(){return name+" • "+phone;}
     }
 
