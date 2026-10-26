@@ -27,6 +27,8 @@ Supabase project; without it every server call fails with a clear message.**
 | SOS and problem reports | `trimax_report_issue` |
 | Drop-off photo | Storage bucket `delivery-proofs`, then `trimax_driver_attach_proof` |
 | Price list pictures | public bucket `product-images` (after the Stage F database update) |
+| Add customer (photo required), customers list and details | Storage bucket `customer-photos` (own folder), then `trimax_agent_save_customer`; `trimax_agent_list_customers` (after `20261027_01`) |
+| Booking discount (summary, booking details while Pending) | `trimax_agent_discount_quote`, `trimax_agent_create_booking` (discount arguments), `trimax_agent_set_discount` (after `20261027_01`) |
 
 Driver delivery flow (same rules as the live server): **START DELIVERY** sends ASSIGNED -> STARTED (the
 booking must be Confirmed by the administrator; it becomes In Progress). The drop-off button then opens the
@@ -36,7 +38,22 @@ proof screen, which sends STARTED -> DELIVERED with the recipient's name (the bo
 Start/End Duty never changes a delivery. A repeated request (double tap, retry after a timeout) is answered
 with the saved booking, so it changes the status only once.
 
-Still only on the phone (the app says so where relevant): saved-customer list, notifications, the local
+Customer photos (`AddCustomerActivity`, `CustomerPhotos`, `CustomerAvatars`): a new customer needs a photo
+from the camera (asks for the camera permission) or the gallery (JPG, PNG, WEBP or HEIC, up to 20 MB).
+The app turns it upright, shrinks it to 1024 px and under 4.5 MB, shows a preview (kept across rotation),
+uploads it into the agent's own folder and then saves the customer on the server. Errors keep the photo
+and the form, with Retry. New Booking sends a customer who is not on the server yet to Add customer,
+prefilled, and continues after saving; if the server still refuses (`customer_photo_required`), the
+summary offers Add customer. Lists show the phone's copy, or download the photo once; older customers keep
+a placeholder and can get a photo from the customer screen.
+
+Discounts (`NewBookingSummaryActivity`, `BookingDetailActivity`, `DiscountCalc`): peso amount or percent.
+The app asks the server for the **maximum** discount for the chosen products (never the puhunan) and shows
+original, discount and final price while typing. The server checks again on Confirm and when a Pending
+booking's discount is changed (`discount_too_big`, `discount_not_configured` are shown on the discount
+field). Booking details show original / discount / final and who gave it.
+
+Still only on the phone (the app says so where relevant): notifications, the local
 driver location log, deposits, damage charges, profile edits.
 OTP proof of delivery is not implemented; the recipient's name is required.
 
@@ -76,3 +93,6 @@ git checkout feature/mobile-booking-integration
 Unit tests (`app/src/test`): JSON parsing of real server responses, delivery-status rules, error mapping,
 booking validation, filters, timestamps, and `SupabaseClient` against a local fake server (sign-in,
 refresh, retry after 401, expired refresh token, typed errors, sign-out, unsafe config refused).
+Customer photos and discounts: `DiscountCalcTest`, `DiscountQuoteTest`, `ServerCustomerTest`,
+`CustomerPhotosTest`, `CustomerPhotoDownloadTest`, plus cases in `BookingRecordTest`,
+`CreateBookingRequestTest` and `CustomerDirectoryTest`.
