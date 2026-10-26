@@ -57,7 +57,7 @@ public class ApiExceptionTest {
                 "{\"code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}", true);
         assertEquals(ApiException.Kind.BAD_CREDENTIALS, bad.getKind());
         assertTrue(bad.getMessage().startsWith("Wrong email or password."));
-        assertTrue("explains that desktop accounts need a mobile sign-in", bad.getMessage().contains("administrator"));
+        assertTrue("points first-time users to the temporary password", bad.getMessage().contains("temporary password"));
         // Current Supabase Auth shape: numeric "code", text "error_code". Same for an unknown email.
         ApiException noSuchUser = ApiException.fromResponse(400,
                 "{\"code\":400,\"error_code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}", true);

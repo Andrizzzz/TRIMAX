@@ -12,6 +12,8 @@ public final class MobileAccount {
     public final String contact;
     /** "AGENT" or "DRIVER". */
     public final String role;
+    /** Signed in with a temporary password from the administrator: choose a new one first. */
+    public boolean mustChangePassword;
 
     public MobileAccount(String username, String fullName, String email, String contact, String role) {
         this.username = username;

@@ -45,8 +45,21 @@ PR #8 (`feature/supabase-auth-migration`) is superseded: do **not** apply its `d
 
 ## Accounts
 
-An agent or driver can sign in only after the administrator (1) creates a Supabase Auth user with the
-same email as their TRIMAX account and (2) clicks **Link mobile sign-in** on the desktop. Agent and Rider
+When the administrator creates an Agent or Driver on the desktop (**Create Employee Account**, or
+**Create mobile sign-in** on an older account), the desktop also creates the person's Supabase sign-in,
+links it and gives it a temporary password (first name + 4 random characters, e.g. `Kenjie-7Q4M`), shown
+once to the administrator and emailed (Edge Function `trimax-accounts`, desktop
+`sql/20261026_01_employee_mobile_sign_in.sql`). Nobody adds users in the Supabase Dashboard any more.
+
+The person signs in with the email and the temporary password. Because the sign-in carries
+`user_metadata.must_change_password`, `LoginActivity` opens `ChangePasswordActivity` in first-sign-in
+mode: they must choose their own password (8+ characters, a letter and a number) before the app opens;
+going back signs them out. Changing the password clears the flag.
+
+A forgotten password later: the administrator presses **Send new setup code**; in the app **Set up or
+reset password** (`ForgotPasswordActivity`) takes the email, the code and a new password.
+
+Sign-ins made by hand earlier keep working (**Link mobile sign-in** on the desktop). Agent and Rider
 accounts get the agent screens; Driver accounts get the driver screens.
 
 ## Build and test (PowerShell)

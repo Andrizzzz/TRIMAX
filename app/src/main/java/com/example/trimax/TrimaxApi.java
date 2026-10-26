@@ -54,7 +54,9 @@ public final class TrimaxApi {
         run(() -> {
             client.signIn(email, password);
             try {
-                return MobileAccount.parse(client.rpc("trimax_my_account", new JSONObject()));
+                MobileAccount account = MobileAccount.parse(client.rpc("trimax_my_account", new JSONObject()));
+                account.mustChangePassword = client.lastSignInMustChangePassword();
+                return account;
             } catch (Exception e) {
                 client.signOut();          // signed in to Supabase, but not allowed into TRIMAX: drop the tokens
                 throw e;
@@ -78,6 +80,16 @@ public final class TrimaxApi {
                 throw e;
             }
             client.updatePassword(newPassword);
+            return Boolean.TRUE;
+        }, cb);
+    }
+
+    /** Sets the password with the one-time code from the TRIMAX email (first sign-in or forgotten password). */
+    public void setPasswordWithCode(String email, String code, String newPassword, Callback<Boolean> cb) {
+        run(() -> {
+            String problem = PasswordSetupForm.problem(email, code, newPassword, newPassword);
+            if (problem != null) throw new ApiException(ApiException.Kind.INVALID, problem);
+            client.setPasswordWithCode(email.trim(), PasswordSetupForm.normalizeCode(code), newPassword);
             return Boolean.TRUE;
         }, cb);
     }
