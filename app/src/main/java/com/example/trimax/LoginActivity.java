@@ -93,6 +93,17 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(MobileAccount account) {
                         if (SessionGuard.isGone(LoginActivity.this)) return;
+                        if (account.mustChangePassword) {
+                            // Temporary password from the administrator: choose your own before anything else.
+                            Toast.makeText(LoginActivity.this, "Welcome " + account.fullName
+                                    + "! Choose your own password first.", Toast.LENGTH_LONG).show();
+                            Intent first = new Intent(LoginActivity.this, ChangePasswordActivity.class);
+                            first.putExtra(ChangePasswordActivity.EXTRA_FIRST_SIGN_IN, true);
+                            first.putExtra(ForgotPasswordActivity.EXTRA_EMAIL, usernameInput);
+                            startActivity(first);
+                            finish();
+                            return;
+                        }
                         session.createLoginSession(account.toUser());
                         Toast.makeText(LoginActivity.this, "Welcome " + account.fullName + "!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(LoginActivity.this,

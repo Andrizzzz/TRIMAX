@@ -54,7 +54,9 @@ public final class TrimaxApi {
         run(() -> {
             client.signIn(email, password);
             try {
-                return MobileAccount.parse(client.rpc("trimax_my_account", new JSONObject()));
+                MobileAccount account = MobileAccount.parse(client.rpc("trimax_my_account", new JSONObject()));
+                account.mustChangePassword = client.lastSignInMustChangePassword();
+                return account;
             } catch (Exception e) {
                 client.signOut();          // signed in to Supabase, but not allowed into TRIMAX: drop the tokens
                 throw e;

@@ -46,15 +46,18 @@ PR #8 (`feature/supabase-auth-migration`) is superseded: do **not** apply its `d
 ## Accounts
 
 When the administrator creates an Agent or Driver on the desktop (**Create Employee Account**, or
-**Create mobile sign-in** on an older account), the desktop also creates the person's Supabase sign-in
-and links it (Edge Function `trimax-accounts`, desktop `sql/20261026_01_employee_mobile_sign_in.sql`).
-Nobody adds users in the Supabase Dashboard any more.
+**Create mobile sign-in** on an older account), the desktop also creates the person's Supabase sign-in,
+links it and gives it a temporary password (first name + 4 random characters, e.g. `Kenjie-7Q4M`), shown
+once to the administrator and emailed (Edge Function `trimax-accounts`, desktop
+`sql/20261026_01_employee_mobile_sign_in.sql`). Nobody adds users in the Supabase Dashboard any more.
 
-The person gets an email with a one-time code (24 hours). In the app: **Set up or reset password** on the
-sign-in screen (`ForgotPasswordActivity`), then email, code and a new password (at least 8 characters,
-a letter and a number). The app sends them to `trimax-accounts` (`set_password`) without any session;
-the server checks the code and sets the password in Supabase Auth. Then they sign in as usual. A new code
-(expired, or a forgotten password): the administrator presses **Send new setup code** on the desktop.
+The person signs in with the email and the temporary password. Because the sign-in carries
+`user_metadata.must_change_password`, `LoginActivity` opens `ChangePasswordActivity` in first-sign-in
+mode: they must choose their own password (8+ characters, a letter and a number) before the app opens;
+going back signs them out. Changing the password clears the flag.
+
+A forgotten password later: the administrator presses **Send new setup code**; in the app **Set up or
+reset password** (`ForgotPasswordActivity`) takes the email, the code and a new password.
 
 Sign-ins made by hand earlier keep working (**Link mobile sign-in** on the desktop). Agent and Rider
 accounts get the agent screens; Driver accounts get the driver screens.

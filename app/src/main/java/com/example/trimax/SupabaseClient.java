@@ -80,8 +80,29 @@ public final class SupabaseClient {
         Response r = send("/auth/v1/token?grant_type=password", body.toString(), null);
         if (!r.ok()) throw ApiException.fromResponse(r.status, r.body, true);
         AuthSession session = parseSession(r.body, email);
+        lastSignInMustChangePassword = mustChangePassword(r.body);
         store.save(session);
         return session;
+    }
+
+    private volatile boolean lastSignInMustChangePassword;
+
+    /**
+     * True when the last successful {@link #signIn} used a temporary password from the administrator
+     * (user_metadata.must_change_password): the app then asks for a new password before anything else.
+     */
+    public boolean lastSignInMustChangePassword() {
+        return lastSignInMustChangePassword;
+    }
+
+    static boolean mustChangePassword(String signInBody) {
+        try {
+            JSONObject user = Json.object(new JSONObject(signInBody), "user");
+            JSONObject meta = user == null ? null : Json.object(user, "user_metadata");
+            return meta != null && meta.optBoolean("must_change_password", false);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean hasSession() {
@@ -148,6 +169,8 @@ public final class SupabaseClient {
         JSONObject body = new JSONObject();
         try {
             body.put("password", newPassword);
+            // A temporary password from the administrator is replaced now: stop asking for a new one.
+            body.put("data", new JSONObject().put("must_change_password", false));
         } catch (Exception e) {
             throw new ApiException(ApiException.Kind.INVALID, "Enter a new password.");
         }
