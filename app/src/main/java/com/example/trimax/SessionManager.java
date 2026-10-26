@@ -82,6 +82,21 @@ public class SessionManager {
         return role;
     }
 
+    /** The last vehicle answer from the server for this sign-in (cleared at logout with the session). */
+    public String getLastVehicleJson() {
+        return pref.getString("lastVehicleJson", null);
+    }
+
+    public long getLastVehicleAt() {
+        return pref.getLong("lastVehicleAt", 0L);
+    }
+
+    public void setLastVehicle(String json, long atMillis) {
+        editor.putString("lastVehicleJson", json);
+        editor.putLong("lastVehicleAt", atMillis);
+        editor.apply();
+    }
+
     public String getProfilePhotoUri() {
         return profilePrefs.getString("photo_" + getUsername(), "");
     }
@@ -123,6 +138,10 @@ public class SessionManager {
 
     /** Clears the local profile and the server sign-in (revoked on the server in the background). */
     public void logoutUser() {
+        // Customers and their photos saved on this phone belong to the agent who signs out; another
+        // agent signing in on the same phone must not see them. Their real list comes from the server.
+        try { new DatabaseHelper(appContext).clearLocalCustomers(); } catch (Exception ignored) { }
+        try { CustomerPhotos.clearAll(appContext); } catch (Exception ignored) { }
         editor.clear();
         editor.apply();
         TrimaxApi.get(appContext).signOut();

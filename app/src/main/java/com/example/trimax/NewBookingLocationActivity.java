@@ -118,6 +118,10 @@ public class NewBookingLocationActivity extends AppCompatActivity {
         MaterialButton btnUseCurrentLocation = findViewById(R.id.btnUseCurrentLocation);
         TextView btnChangeCustomerLocation = findViewById(R.id.btnChangeCustomerLocation);
         MaterialButton btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
+        // Opened from Add customer only to pick the pin: it goes back to the form, so it is not "Next".
+        if (btnConfirmLocation != null && getIntent().getBooleanExtra("CUSTOMER_LOCATION_PICKER_ONLY", false)) {
+            btnConfirmLocation.setText("Use this location");
+        }
 
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
 

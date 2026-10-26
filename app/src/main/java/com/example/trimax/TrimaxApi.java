@@ -266,6 +266,21 @@ public final class TrimaxApi {
         }, cb);
     }
 
+    // ------------------------------------------------------------------ driver: assigned vehicle
+
+    /**
+     * The signed-in driver's assigned vehicle(s) as the server's JSON
+     * ({"vehicles":[{"plate_number","vehicle_type","status"}],"checked_at":...}); parse with
+     * {@link DriverVehicle#parse(String)}. Raw JSON so the screen can keep the last answer for offline use.
+     */
+    public void loadMyVehicle(Callback<String> cb) {
+        run(() -> {
+            String json = client.rpc("trimax_driver_my_vehicle", new JSONObject());
+            DriverVehicle.parse(json);   // fail here (not on screen) if the answer is not what we expect
+            return json;
+        }, cb);
+    }
+
     // ------------------------------------------------------------------ duty (attendance)
 
     /** Whether the server has the signed-in person on duty (false when they never started one). */

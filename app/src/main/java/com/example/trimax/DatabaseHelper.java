@@ -18,7 +18,7 @@ import javax.crypto.spec.PBEKeySpec;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "trimax.db";
-    private static final int DATABASE_VERSION = 12; // Kept at 12 so phones that installed the older master build (v12) upgrade cleanly
+    private static final int DATABASE_VERSION = 13; // 13: customers.owner_username (each agent sees only their own saved customers on a shared phone)
 
     // Table Names
     public static final String TABLE_USERS = "users";
@@ -242,7 +242,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_CUSTOMERS + " ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "full_name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, address TEXT, "
-                + "latitude REAL DEFAULT 0, longitude REAL DEFAULT 0, created_at TEXT, updated_at TEXT)");
+                + "latitude REAL DEFAULT 0, longitude REAL DEFAULT 0, created_at TEXT, updated_at TEXT, "
+                + "owner_username TEXT)");
+        // Phones upgrading from v12 or older: rows saved before this have no owner and are never shown
+        // (the agent's real customers come back from the server, which only returns their own).
+        try { db.execSQL("ALTER TABLE " + TABLE_CUSTOMERS + " ADD COLUMN owner_username TEXT"); } catch (Exception ignored) {}
+    }
+
+    /** The signed-in username, or "" when nobody is signed in. Local customers belong to one agent. */
+    private String currentOwner() {
+        String u = new SessionManager(context).getUsername();
+        return u == null ? "" : u.trim();
+    }
+
+    /** Removes every customer saved on this phone (all agents). Called at logout. */
+    public void clearLocalCustomers() {
+        getWritableDatabase().delete(TABLE_CUSTOMERS, null, null);
     }
 
     private void syncCustomersFromBookings(SQLiteDatabase db) {
@@ -1248,10 +1263,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "COALESCE(NULLIF(c.latitude, 0), (SELECT d.destination_latitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.destination_latitude<>0 ORDER BY d.id DESC LIMIT 1), (SELECT d.pickup_latitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.pickup_latitude<>0 ORDER BY d.id DESC LIMIT 1), 0) AS lat, "
                 + "COALESCE(NULLIF(c.longitude, 0), (SELECT d.destination_longitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.destination_longitude<>0 ORDER BY d.id DESC LIMIT 1), (SELECT d.pickup_longitude FROM " + TABLE_DELIVERIES + " d WHERE (d.customer_phone=c.phone OR d.customer_name=c.full_name) AND d.pickup_longitude<>0 ORDER BY d.id DESC LIMIT 1), 0) AS lng, "
                 + "(SELECT COUNT(*) FROM " + TABLE_DELIVERIES + " d WHERE d.customer_phone=c.phone OR d.customer_name=c.full_name) "
-                + "FROM " + TABLE_CUSTOMERS + " c";
+                + "FROM " + TABLE_CUSTOMERS + " c WHERE c.owner_username = ?";
         List<String> args = new ArrayList<>();
+        String owner = currentOwner();
+        if (owner.isEmpty()) return list;
+        args.add(owner);
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            query += " WHERE LOWER(c.full_name) LIKE ? OR LOWER(c.phone) LIKE ? OR LOWER(COALESCE(c.email,'')) LIKE ?";
+            query += " AND (LOWER(c.full_name) LIKE ? OR LOWER(c.phone) LIKE ? OR LOWER(COALESCE(c.email,'')) LIKE ?)";
             String pattern = "%" + searchQuery.trim().toLowerCase(Locale.ROOT) + "%";
             args.add(pattern); args.add(pattern); args.add(pattern);
         }
@@ -1269,8 +1287,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public String getCustomerCodeByPhone(String phone) {
         if (phone == null || phone.trim().isEmpty()) return null;
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM " + TABLE_CUSTOMERS + " WHERE phone=? ORDER BY id LIMIT 1",
-                new String[]{phone.trim()});
+        Cursor cursor = db.rawQuery("SELECT id FROM " + TABLE_CUSTOMERS + " WHERE phone=? AND owner_username=? ORDER BY id LIMIT 1",
+                new String[]{phone.trim(), currentOwner()});
         String code = null;
         if (cursor != null) {
             if (cursor.moveToFirst()) code = "CUST-" + cursor.getLong(0);
@@ -1285,6 +1303,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean saveCustomer(String name, String phone, String email, String address, double latitude, double longitude) {
         if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) return false;
+        String owner = currentOwner();
+        if (owner.isEmpty()) return false;   // nobody signed in: nothing is kept on the phone
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("full_name", name.trim()); values.put("phone", phone.trim());
@@ -1292,7 +1312,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("address", address != null ? address.trim() : "");
         values.put("updated_at", String.valueOf(System.currentTimeMillis()));
         Cursor cursor = db.rawQuery("SELECT id, address, email, latitude, longitude FROM " + TABLE_CUSTOMERS
-                + " WHERE phone=? ORDER BY id LIMIT 1", new String[]{phone.trim()});
+                + " WHERE phone=? AND owner_username=? ORDER BY id LIMIT 1", new String[]{phone.trim(), owner});
         long existingId = -1; String existingAddress = "", existingEmail = "";
         double existingLatitude = 0, existingLongitude = 0;
         if (cursor != null) {
@@ -1311,6 +1331,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         values.put("latitude", latitude); values.put("longitude", longitude);
         values.put("created_at", String.valueOf(System.currentTimeMillis()));
+        values.put("owner_username", owner);
         return db.insert(TABLE_CUSTOMERS, null, values) != -1;
     }
 

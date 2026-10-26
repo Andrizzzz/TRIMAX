@@ -203,6 +203,11 @@ public class DriverProfileActivity extends AppCompatActivity {
         ImageView photo = findViewById(R.id.ivDriverProfilePhoto);
         if (tvDriverName != null) tvDriverName.setText(session.getFullName());
         if (tvDriverEmail != null) tvDriverEmail.setText(session.getEmail());
+        TextView tvDriverRole = findViewById(R.id.tvDriverRole);
+        if (tvDriverRole != null) {
+            String user = session.getUsername();
+            tvDriverRole.setText("Authorized TRI-MAX Driver" + (user == null || user.isEmpty() ? "" : " \u2022 " + user));
+        }
         if (photo != null) {
             String photoUri = session.getProfilePhotoUri();
             if (photoUri != null && !photoUri.isEmpty()) {
@@ -224,6 +229,70 @@ public class DriverProfileActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateProfileHeader();
+        loadVehicle();
+    }
+
+    // ------------------------------------------------------------------ assigned vehicle
+
+    private boolean loadingVehicle;
+
+    /**
+     * Asks the server for this driver's assigned vehicle each time the profile is shown (not on a
+     * timer), so an Admin's change of type or plate number appears without reinstalling. When the
+     * server cannot be reached, the last answer for this sign-in is shown and marked as not current.
+     */
+    private void loadVehicle() {
+        TextView info = findViewById(R.id.tvVehicleInfo);
+        TextView note = findViewById(R.id.tvVehicleNote);
+        if (info == null || loadingVehicle) return;
+        loadingVehicle = true;
+        if (session.getLastVehicleJson() == null) info.setText("Loading your vehicle...");
+        info.setOnClickListener(null);
+        TrimaxApi.get(this).loadMyVehicle(new TrimaxApi.Callback<String>() {
+            @Override
+            public void onSuccess(String json) {
+                loadingVehicle = false;
+                if (SessionGuard.isGone(DriverProfileActivity.this)) return;
+                session.setLastVehicle(json, System.currentTimeMillis());
+                showVehicle(json, null);
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                loadingVehicle = false;
+                if (SessionGuard.isGone(DriverProfileActivity.this)) return;
+                if (SessionGuard.handle(DriverProfileActivity.this, error)) return;
+                String cached = session.getLastVehicleJson();
+                if (cached != null) {
+                    long at = session.getLastVehicleAt();
+                    showVehicle(cached, "Could not refresh (" + error.getMessage() + "). Showing what the server said "
+                            + android.text.format.DateUtils.getRelativeTimeSpanString(at) + ". Tap to try again.");
+                } else {
+                    info.setText("Vehicle details are not available right now.");
+                    if (note != null) {
+                        note.setText(error.getMessage() + " Tap to try again.");
+                        note.setVisibility(android.view.View.VISIBLE);
+                    }
+                }
+                info.setOnClickListener(v -> loadVehicle());
+                if (note != null) note.setOnClickListener(v -> loadVehicle());
+            }
+        });
+    }
+
+    private void showVehicle(String json, String warning) {
+        TextView info = findViewById(R.id.tvVehicleInfo);
+        TextView note = findViewById(R.id.tvVehicleNote);
+        if (info == null) return;
+        try {
+            info.setText(DriverVehicle.describe(DriverVehicle.parse(json)));
+        } catch (org.json.JSONException e) {
+            info.setText("Vehicle details are not available right now.");
+        }
+        if (note != null) {
+            note.setText(warning == null ? "" : warning);
+            note.setVisibility(warning == null ? android.view.View.GONE : android.view.View.VISIBLE);
+        }
     }
 
     private void showLogoutDialog() {

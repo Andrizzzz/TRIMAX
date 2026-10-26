@@ -120,7 +120,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="© 2026 TRI-MAX Express Logistics Inc.\nAll rights reserved."
+            android:text="© 2026 TRI-MAX Consumer Goods Trading\nAll rights reserved."
             android:textColor="@color/text_secondary"
             android:textSize="11sp" />
 
