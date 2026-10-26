@@ -68,8 +68,8 @@ public final class ApiException extends Exception {
         return kind == Kind.SESSION_EXPIRED || kind == Kind.NOT_LINKED;
     }
 
-    static final String BAD_CREDENTIALS_MESSAGE = "Wrong email or password. If you have not used the mobile app "
-            + "before, ask your administrator to set up your mobile sign-in (your desktop password does not work here).";
+    static final String BAD_CREDENTIALS_MESSAGE = "Wrong email or password. First time on the app? Tap "
+            + "\"Set up or reset password\" and use the code from your TRIMAX email.";
 
     static ApiException network() {
         return new ApiException(Kind.NETWORK, "No internet connection. Check your connection and try again.");

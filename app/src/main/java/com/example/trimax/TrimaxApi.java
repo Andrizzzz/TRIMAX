@@ -82,6 +82,16 @@ public final class TrimaxApi {
         }, cb);
     }
 
+    /** Sets the password with the one-time code from the TRIMAX email (first sign-in or forgotten password). */
+    public void setPasswordWithCode(String email, String code, String newPassword, Callback<Boolean> cb) {
+        run(() -> {
+            String problem = PasswordSetupForm.problem(email, code, newPassword, newPassword);
+            if (problem != null) throw new ApiException(ApiException.Kind.INVALID, problem);
+            client.setPasswordWithCode(email.trim(), PasswordSetupForm.normalizeCode(code), newPassword);
+            return Boolean.TRUE;
+        }, cb);
+    }
+
     /** Signs out on this phone immediately and tells the server in the background. */
     public void signOut() {
         AuthSession previous = client.clearLocalSession();

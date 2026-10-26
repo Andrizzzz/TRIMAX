@@ -50,9 +50,12 @@ public class LoginActivity extends AppCompatActivity {
         if (tvForgotPassword != null) {
             tvForgotPassword.setOnClickListener(v -> {
                 Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+                String typed = etEmail != null && etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+                if (typed.contains("@")) intent.putExtra(ForgotPasswordActivity.EXTRA_EMAIL, typed);
                 startActivity(intent);
             });
         }
+        showSetupResult(getIntent());
 
         if (btnLogin != null) {
             btnLogin.setOnClickListener(v -> {
@@ -107,6 +110,29 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 });
             });
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        showSetupResult(intent);
+    }
+
+    /** After "Set up or reset password": the email is filled in and the person is told to sign in. */
+    private void showSetupResult(Intent intent) {
+        if (intent == null) return;
+        String email = intent.getStringExtra(ForgotPasswordActivity.EXTRA_EMAIL);
+        String notice = intent.getStringExtra(ForgotPasswordActivity.EXTRA_NOTICE);
+        if (email != null && etEmail != null) etEmail.setText(email);
+        if (notice != null) {
+            if (etPassword != null) {
+                etPassword.setText("");
+                etPassword.requestFocus();
+            }
+            Toast.makeText(this, notice, Toast.LENGTH_LONG).show();
+            intent.removeExtra(ForgotPasswordActivity.EXTRA_NOTICE);   // not again after rotation
         }
     }
 }

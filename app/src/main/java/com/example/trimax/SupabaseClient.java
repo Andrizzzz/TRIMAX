@@ -33,6 +33,8 @@ public final class SupabaseClient {
     static final int READ_TIMEOUT_MS = 20_000;
     /** Refresh the access token when it has less than this many seconds left. */
     static final long REFRESH_MARGIN_SECONDS = 60;
+    /** Edge Function for employee sign-ins (set the password with an emailed code). */
+    static final String ACCOUNTS_FUNCTION = "/functions/v1/trimax-accounts";
     private static final Pattern FUNCTION_NAME = Pattern.compile("[a-z_][a-z0-9_]{0,62}");
     private static final Pattern BUCKET_NAME = Pattern.compile("[a-z0-9][a-z0-9_-]{0,62}");
     private static final Pattern OBJECT_PATH = Pattern.compile("[A-Za-z0-9-]{1,64}/[A-Za-z0-9_.-]{1,120}\\.jpg");
@@ -169,6 +171,44 @@ public final class SupabaseClient {
         throw new ApiException(ApiException.Kind.SERVER, "The server had a problem (" + r.status + "). Please try again.");
     }
 
+    /**
+     * First-time setup or reset: sets this person's password with the one-time code the TRIMAX desktop
+     * emailed. Needs no session. The Edge Function "trimax-accounts" checks the code (single use, a few
+     * tries, expiry) and sets the password in Supabase Auth; TRIMAX never stores it.
+     */
+    public void setPasswordWithCode(String email, String code, String newPassword) throws ApiException {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("action", "set_password");
+            body.put("email", email);
+            body.put("code", code);
+            body.put("password", newPassword);
+        } catch (Exception e) {
+            throw new ApiException(ApiException.Kind.INVALID, "Enter your email, the code and a new password.");
+        }
+        byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
+        // The code is the authorization here; no access token, and the key is not sent as a Bearer token.
+        Response r = send("POST", ACCOUNTS_FUNCTION, bytes, "application/json; charset=utf-8", null, false);
+        if (r.ok()) return;
+        String message = null;
+        try {
+            message = Json.text(new JSONObject(r.body), "error");
+        } catch (Exception ignored) {
+            // generic message below
+        }
+        if (r.status == 400) {
+            throw new ApiException(ApiException.Kind.INVALID, message != null ? message : "The code was not accepted.");
+        }
+        if (r.status == 404) {
+            throw new ApiException(ApiException.Kind.SERVER, "Password setup is not available yet. Ask your administrator.");
+        }
+        if (r.status == 429) {
+            throw new ApiException(ApiException.Kind.SERVER, "Too many attempts. Wait a minute and try again.");
+        }
+        throw new ApiException(ApiException.Kind.SERVER,
+                message != null ? message : "The server had a problem (" + r.status + "). Please try again.");
+    }
+
     // =====================================================================================
     // Database functions
     // =====================================================================================
@@ -267,6 +307,11 @@ public final class SupabaseClient {
     }
 
     private Response send(String method, String path, byte[] bytes, String contentType, String accessToken) throws ApiException {
+        return send(method, path, bytes, contentType, accessToken, true);
+    }
+
+    private Response send(String method, String path, byte[] bytes, String contentType, String accessToken,
+                          boolean bearer) throws ApiException {
         HttpURLConnection c = null;
         try {
             c = (HttpURLConnection) new URL(baseUrl + path).openConnection();
@@ -276,7 +321,9 @@ public final class SupabaseClient {
             c.setUseCaches(false);
             c.setInstanceFollowRedirects(false);
             c.setRequestProperty("apikey", apiKey);
-            c.setRequestProperty("Authorization", "Bearer " + (accessToken != null ? accessToken : apiKey));
+            if (bearer || accessToken != null) {
+                c.setRequestProperty("Authorization", "Bearer " + (accessToken != null ? accessToken : apiKey));
+            }
             c.setRequestProperty("Accept", "application/json");
             c.setRequestProperty("Content-Type", contentType);
             c.setDoOutput(true);
