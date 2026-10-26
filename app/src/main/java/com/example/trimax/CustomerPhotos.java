@@ -41,6 +41,15 @@ final class CustomerPhotos {
         return new File(dir, k + ".jpg");
     }
 
+    /** Deletes every customer photo kept on this phone (at logout; the server keeps the originals). */
+    static int clearAll(Context context) {
+        File dir = new File(context.getFilesDir(), "customer_photos");
+        File[] files = dir.listFiles();
+        int n = 0;
+        if (files != null) for (File f : files) if (f.isFile() && f.delete()) n++;
+        return n;
+    }
+
     static boolean has(Context context, String phone) {
         File f = file(context, phone);
         return f != null && f.isFile() && f.length() > 0;

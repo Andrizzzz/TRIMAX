@@ -143,7 +143,7 @@ public class SettingsActivity extends AppCompatActivity {
             cardBusinessDetails.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
                         .setTitle("Real Business Details")
-                        .setMessage("TRI-MAX Express Logistics Inc.\n"
+                        .setMessage("TRI-MAX Consumer Goods Trading\n"
                                 + "Registered DTI & SEC Logistics Enterprise\n\n"
                                 + "📍 Main Hub: Quirino Highway, San Jose del Monte, Bulacan, Philippines\n"
                                 + "📞 Hotline: +63 (02) 8123-4567 / 0917-888-TRIMAX\n"

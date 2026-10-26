@@ -92,16 +92,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Test Driver"
+                        android:text=""
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvDriverRole"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Authorized TRI-MAX Driver • ID: DRV-001"
+                        android:text="Authorized TRI-MAX Driver"
                         android:textColor="@color/primary_blue"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -141,29 +142,25 @@
                     android:orientation="vertical"
                     android:padding="10dp">
 
+                    <!-- Filled from the server (trimax_driver_my_vehicle); never sample values. -->
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvVehicleInfo"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="🏍  Vehicle Type: Motorcycle"
+                        android:text="Loading your vehicle..."
                         android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvVehicleNote"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Model: Honda Click 125i"
+                        android:text=""
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Plate Number: ABC 1234 • Color: Black"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:textSize="12sp"
+                        android:visibility="gone" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

@@ -47,16 +47,24 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     private boolean directoryOnly = false;
     /** Go on to the next step once the customer has been saved with a photo. */
     private boolean continueAfterAdd = false;
+    private static final String STATE_CONTINUE_AFTER_ADD = "continue_after_add";
     private ActivityResultLauncher<Intent> addCustomerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         directoryOnly = getIntent().getBooleanExtra("CUSTOMER_DIRECTORY_ONLY", false);
+        // Survives the screen being recreated while Add customer is open (camera, low memory, rotation).
+        if (savedInstanceState != null) continueAfterAdd = savedInstanceState.getBoolean(STATE_CONTINUE_AFTER_ADD, false);
 
         // Prevent bypassing the dashboard's duty check through direct navigation.
+        // The same rule as the Bookings screen's New Booking button (server duty status or an open
+        // attendance on this phone). A stricter check here closed this screen when Android recreated it
+        // (for example after the camera in Add customer) and dropped the agent back on Bookings.
         SessionManager dutySession = new SessionManager(this);
-        if (!directoryOnly && !dutySession.isDutyOnline()) {
+        boolean onDuty = dutySession.isDutyOnline()
+                || new DatabaseHelper(this).getActiveAttendance(dutySession.getUsername()) != null;
+        if (!directoryOnly && !onDuty) {
             new AlertDialog.Builder(this)
                     .setTitle("Attendance Required")
                     .setMessage("You must be clocked in and on duty before creating a new booking. Please start duty first.")
@@ -172,7 +180,14 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> navigateBack());
         if (btnChooseCustomer != null) btnChooseCustomer.setOnClickListener(v -> showSavedCustomers());
         if (btnAddCustomer != null) btnAddCustomer.setOnClickListener(v -> {
+            // In the booking flow a new customer is added in order to book for them: after saving, go on
+            // to the next step (Location, already filled with the customer's pin) instead of stopping here.
+            continueAfterAdd = !directoryOnly;
             Intent addIntent = new Intent(NewBookingCustomerActivity.this, AddCustomerActivity.class);
+            if (!directoryOnly) {
+                addIntent.putExtra(AddCustomerActivity.EXTRA_NOTICE,
+                        "Save the customer with a photo and location. The booking continues after saving.");
+            }
             addCustomerLauncher.launch(addIntent);
         });
         if (btnSaveCustomer != null) btnSaveCustomer.setOnClickListener(v -> saveCustomerFromForm());
@@ -591,6 +606,12 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Unable to save customer. Check the required details.", Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_CONTINUE_AFTER_ADD, continueAfterAdd);
     }
 
     private void navigateBack() {
