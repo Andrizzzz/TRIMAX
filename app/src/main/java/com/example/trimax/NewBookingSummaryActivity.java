@@ -14,9 +14,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,14 +31,13 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
     private String requestId;
     private boolean submitting;
 
-    // Discount: the server's quote says how much may be given (never the puhunan itself).
+    // Discount per item: the server's quote says, per item, whether it may be discounted and the most per
+    // piece (never the puhunan itself).
     private DiscountQuote quote;
     private boolean quoteLoading;
     private BigDecimal estimatedSubtotal = BigDecimal.ZERO;
-    private DiscountCalc.Type discountType = DiscountCalc.Type.AMOUNT;
     private final List<CreateBookingRequest.Line> quoteLines = new ArrayList<>();
-    private TextInputLayout tilDiscount;
-    private TextInputEditText etDiscount;
+    private ItemDiscountRows itemRows;
     private TextView tvDiscountLimit, tvSubtotalAmount, tvDiscountAmount, tvDiscountLabel, tvTotal;
     private View rowSubtotal, rowDiscount;
     private androidx.activity.result.ActivityResultLauncher<Intent> addCustomerLauncher;
@@ -176,21 +172,14 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             for (int i = 0; i < productIds.length; i++) {
                 request.lines.add(new CreateBookingRequest.Line(productIds[i], productQuantities[i]));
             }
-            BigDecimal discountValue;
-            try {
-                discountValue = DiscountCalc.parse(etDiscount != null && etDiscount.getText() != null
-                        ? etDiscount.getText().toString() : "");
-            } catch (IllegalArgumentException bad) {
-                showDiscountError(bad.getMessage());
-                return;
-            }
-            String discountProblem = discountProblem(discountValue);
+            String discountProblem = itemRows != null ? itemRows.firstProblem() : null;
             if (discountProblem != null) {
                 showDiscountError(discountProblem);
                 return;
             }
-            request.discountType = discountType;
-            request.discountValue = discountValue;
+            java.util.Map<Integer, BigDecimal> perUnit = itemRows != null
+                    ? ItemDiscounts.nonZero(itemRows.values()) : new java.util.HashMap<>();
+            for (CreateBookingRequest.Line l : request.lines) l.discountPerUnit = perUnit.get(l.productId);
             String problem = request.validate();
             if (problem != null) {
                 Toast.makeText(this, problem, Toast.LENGTH_LONG).show();
@@ -249,7 +238,8 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                                 .show();
                         return;
                     }
-                    if ("discount_too_big".equals(detail) || "discount_not_configured".equals(detail)) {
+                    if ("discount_too_big".equals(detail) || "discount_not_configured".equals(detail)
+                            || "discount_not_allowed".equals(detail) || "discount_per_item_only".equals(detail)) {
                         showDiscountError(error.getMessage());
                         loadQuote();   // prices or the minimum may have changed
                         return;
@@ -276,30 +266,15 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
     // ------------------------------------------------------------------ discount
 
     private void setUpDiscount() {
-        tilDiscount = findViewById(R.id.tilDiscount);
-        etDiscount = findViewById(R.id.etDiscount);
         tvDiscountLimit = findViewById(R.id.tvDiscountLimit);
         tvSubtotalAmount = findViewById(R.id.tvSubtotalAmount);
         tvDiscountAmount = findViewById(R.id.tvDiscountAmount);
         tvDiscountLabel = findViewById(R.id.tvDiscountLabel);
         rowSubtotal = findViewById(R.id.rowSubtotal);
         rowDiscount = findViewById(R.id.rowDiscount);
-        MaterialButtonToggleGroup toggle = findViewById(R.id.toggleDiscountType);
-        if (etDiscount == null || toggle == null) return;
-
-        toggle.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (!isChecked) return;
-            discountType = checkedId == R.id.btnDiscountPercent ? DiscountCalc.Type.PERCENT : DiscountCalc.Type.AMOUNT;
-            if (tilDiscount != null) {
-                tilDiscount.setHint(discountType == DiscountCalc.Type.PERCENT ? "Discount in percent" : "Discount in pesos");
-            }
-            refreshDiscount();
-        });
-        etDiscount.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(android.text.Editable s) { refreshDiscount(); }
-        });
+        android.widget.LinearLayout list = findViewById(R.id.llItemDiscounts);
+        if (list == null) return;
+        itemRows = new ItemDiscountRows(this, list, this::refreshDiscount);
         if (tvDiscountLimit != null) tvDiscountLimit.setOnClickListener(v -> {
             if (quote == null && !quoteLoading) loadQuote();
         });
@@ -309,18 +284,19 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
     private void loadQuote() {
         if (quoteLines.isEmpty() || quoteLoading) return;
         quoteLoading = true;
-        if (tvDiscountLimit != null) tvDiscountLimit.setText("Checking the allowed discount...");
+        if (tvDiscountLimit != null) tvDiscountLimit.setText("Checking which items can be discounted...");
         TrimaxApi.get(this).discountQuote(quoteLines, new TrimaxApi.Callback<DiscountQuote>() {
             @Override
             public void onSuccess(DiscountQuote result) {
                 if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
                 quoteLoading = false;
+                java.util.Map<Integer, BigDecimal> typed = itemRows != null ? itemRows.values() : null;
                 quote = result;
-                if (etDiscount != null) etDiscount.setEnabled(result.available);
+                if (itemRows != null) itemRows.show(result.items, typed);
                 if (tvDiscountLimit != null) {
-                    tvDiscountLimit.setText(result.available
-                            ? "You can give up to " + DiscountCalc.peso(result.maxDiscount) + " off this order."
-                            : (result.reason != null ? result.reason : "No discount is possible for this order."));
+                    tvDiscountLimit.setText(result.items.isEmpty()
+                            ? "Discounts are not available on this server yet."
+                            : ItemDiscounts.summary(result.items));
                 }
                 refreshDiscount();
             }
@@ -330,58 +306,36 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
                 quoteLoading = false;
                 if (SessionGuard.handle(NewBookingSummaryActivity.this, error)) return;
-                // Typing a discount still works: the server checks it when the booking is confirmed.
+                // Without the quote there are no discount boxes: the booking can still be confirmed at full price.
                 if (tvDiscountLimit != null) {
-                    tvDiscountLimit.setText("Could not check the allowed discount (" + error.getMessage()
+                    tvDiscountLimit.setText("Could not check which items can be discounted (" + error.getMessage()
                             + "). Tap here to try again.");
                 }
             }
         });
     }
 
-    private BigDecimal subtotal() {
-        return quote != null ? quote.subtotal : estimatedSubtotal;
-    }
-
-    private String discountProblem(BigDecimal value) {
-        return DiscountCalc.problem(subtotal(), discountType, value,
-                quote != null ? quote.maxDiscount : null, quote != null ? quote.available : null,
-                quote != null ? quote.reason : null);
-    }
-
     /** Original price, discount and final price while the agent types. */
     private void refreshDiscount() {
-        BigDecimal sub = subtotal();
-        BigDecimal value = null;
-        String problem;
-        try {
-            value = DiscountCalc.parse(etDiscount != null && etDiscount.getText() != null
-                    ? etDiscount.getText().toString() : "");
-            problem = discountProblem(value);
-        } catch (IllegalArgumentException bad) {
-            problem = bad.getMessage();
+        ItemDiscounts.Totals t;
+        if (quote != null && !quote.items.isEmpty()) {
+            t = ItemDiscounts.totals(quote.items, itemRows != null ? itemRows.values() : null);
+        } else {
+            t = new ItemDiscounts.Totals();
+            t.subtotal = ItemDiscounts.scale(estimatedSubtotal);
         }
-        if (tilDiscount != null) tilDiscount.setError(problem);
-        BigDecimal off = problem == null ? DiscountCalc.amount(sub, discountType, value) : BigDecimal.ZERO;
-        boolean show = off.signum() > 0;
+        boolean show = t.discount.signum() > 0;
         if (rowSubtotal != null) rowSubtotal.setVisibility(show ? View.VISIBLE : View.GONE);
         if (rowDiscount != null) rowDiscount.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (tvSubtotalAmount != null) tvSubtotalAmount.setText(DiscountCalc.peso(sub));
-        if (tvDiscountAmount != null) tvDiscountAmount.setText("- " + DiscountCalc.peso(off));
-        if (tvDiscountLabel != null) {
-            tvDiscountLabel.setText(discountType == DiscountCalc.Type.PERCENT && value != null
-                    ? "Discount (" + value.stripTrailingZeros().toPlainString() + "%)" : "Discount");
-        }
-        if (tvTotal != null) tvTotal.setText(String.format(Locale.US, "₱ %,.2f", sub.subtract(off)));
+        if (tvSubtotalAmount != null) tvSubtotalAmount.setText(DiscountCalc.peso(t.subtotal));
+        if (tvDiscountAmount != null) tvDiscountAmount.setText("- " + DiscountCalc.peso(t.discount));
+        if (tvDiscountLabel != null) tvDiscountLabel.setText("Discount on items");
+        if (tvTotal != null) tvTotal.setText(String.format(Locale.US, "₱ %,.2f", t.total()));
     }
 
     private void showDiscountError(String message) {
-        if (tilDiscount != null) {
-            tilDiscount.setError(message);
-            tilDiscount.requestFocus();
-        } else {
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        }
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        if (tvDiscountLimit != null) tvDiscountLimit.setText(message);
     }
 
     private void navigateBack() {

@@ -314,7 +314,7 @@ public class BookingDetailActivity extends AppCompatActivity {
                 if (label != null) {
                     String text = "PERCENT".equals(currentRecord.discountType) && currentRecord.discountValue != null
                             ? "Discount (" + java.math.BigDecimal.valueOf(currentRecord.discountValue).stripTrailingZeros().toPlainString() + "%)"
-                            : "Discount";
+                            : "PER_ITEM".equals(currentRecord.discountType) ? "Discount on items" : "Discount";
                     if (currentRecord.discountBy != null) text += " by " + currentRecord.discountBy;
                     label.setText(text);
                 }
@@ -333,54 +333,43 @@ public class BookingDetailActivity extends AppCompatActivity {
         }
     }
 
-    /** Peso or percent discount on this Pending booking; the server refuses anything below the minimum price. */
+    /**
+     * Discount per item on this Pending booking (only items the Admin allows, never below puhunan + minimum
+     * patong). Empty boxes = full price; the server checks every line again.
+     */
     private void showDiscountDialog() {
         if (currentRecord == null) return;
         final BookingRecord record = currentRecord;
-        View view = getLayoutInflater().inflate(R.layout.dialog_booking_discount, null);
-        com.google.android.material.button.MaterialButtonToggleGroup toggle = view.findViewById(R.id.toggleEditDiscountType);
-        com.google.android.material.textfield.TextInputLayout til = view.findViewById(R.id.tilEditDiscount);
-        com.google.android.material.textfield.TextInputEditText et = view.findViewById(R.id.etEditDiscount);
-        TextView tvLimit = view.findViewById(R.id.tvEditDiscountLimit);
-        TextView tvPreview = view.findViewById(R.id.tvEditDiscountPreview);
+        android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = Math.round(20 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad / 2, pad, 0);
+        android.widget.LinearLayout rowsBox = new android.widget.LinearLayout(this);
+        rowsBox.setOrientation(android.widget.LinearLayout.VERTICAL);
+        TextView tvLimit = new TextView(this);
+        tvLimit.setText("Checking which items can be discounted...");
+        tvLimit.setTextSize(12);
+        TextView tvPreview = new TextView(this);
+        tvPreview.setPadding(0, pad / 2, 0, 0);
+        box.addView(rowsBox);
+        box.addView(tvLimit);
+        box.addView(tvPreview);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(this);
+        scroll.addView(box);
 
-        final java.math.BigDecimal subtotal = java.math.BigDecimal.valueOf(record.subtotalAmount > 0
-                ? record.subtotalAmount : record.totalAmount).setScale(2, java.math.RoundingMode.HALF_UP);
-        final DiscountQuote[] quote = new DiscountQuote[1];
-        final DiscountCalc.Type[] type = {"PERCENT".equals(record.discountType) ? DiscountCalc.Type.PERCENT : DiscountCalc.Type.AMOUNT};
-        if (type[0] == DiscountCalc.Type.PERCENT) toggle.check(R.id.btnEditDiscountPercent);
-        if (record.hasDiscount() && record.discountValue != null) {
-            et.setText(java.math.BigDecimal.valueOf(record.discountValue).stripTrailingZeros().toPlainString());
+        final java.util.Map<Integer, java.math.BigDecimal> current = new java.util.HashMap<>();
+        for (BookingRecord.Item it : record.items) {
+            if (it.discountPerUnit > 0) current.put(it.productId, java.math.BigDecimal.valueOf(it.discountPerUnit));
         }
-
+        final DiscountQuote[] quote = new DiscountQuote[1];
+        final ItemDiscountRows[] rows = new ItemDiscountRows[1];
         Runnable refresh = () -> {
-            String problem;
-            java.math.BigDecimal value = null;
-            try {
-                value = DiscountCalc.parse(et.getText() == null ? "" : et.getText().toString());
-                problem = DiscountCalc.problem(subtotal, type[0], value,
-                        quote[0] != null ? quote[0].maxDiscount : null, quote[0] != null ? quote[0].available : null,
-                        quote[0] != null ? quote[0].reason : null);
-            } catch (IllegalArgumentException bad) {
-                problem = bad.getMessage();
-            }
-            til.setError(problem);
-            java.math.BigDecimal off = problem == null ? DiscountCalc.amount(subtotal, type[0], value) : java.math.BigDecimal.ZERO;
-            tvPreview.setText("Original " + DiscountCalc.peso(subtotal) + "   Discount " + DiscountCalc.peso(off)
-                    + "\nFinal " + DiscountCalc.peso(subtotal.subtract(off)));
+            if (quote[0] == null || quote[0].items.isEmpty()) return;
+            ItemDiscounts.Totals t = ItemDiscounts.totals(quote[0].items, rows[0].values());
+            tvPreview.setText("Original " + DiscountCalc.peso(t.subtotal) + "   Discount " + DiscountCalc.peso(t.discount)
+                    + "\nFinal " + DiscountCalc.peso(t.total()));
         };
-        toggle.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (!isChecked) return;
-            type[0] = checkedId == R.id.btnEditDiscountPercent ? DiscountCalc.Type.PERCENT : DiscountCalc.Type.AMOUNT;
-            til.setHint(type[0] == DiscountCalc.Type.PERCENT ? "Discount in percent (0 removes it)" : "Discount in pesos (0 removes it)");
-            refresh.run();
-        });
-        et.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
-            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
-            @Override public void afterTextChanged(android.text.Editable s) { refresh.run(); }
-        });
-        refresh.run();
+        rows[0] = new ItemDiscountRows(this, rowsBox, refresh);
 
         java.util.List<CreateBookingRequest.Line> lines = new java.util.ArrayList<>();
         for (BookingRecord.Item it : record.items) lines.add(new CreateBookingRequest.Line(it.productId, it.quantity));
@@ -389,37 +378,37 @@ public class BookingDetailActivity extends AppCompatActivity {
             public void onSuccess(DiscountQuote result) {
                 if (SessionGuard.isGone(BookingDetailActivity.this)) return;
                 quote[0] = result;
-                tvLimit.setText(result.available
-                        ? "You can give up to about " + DiscountCalc.peso(result.maxDiscount) + " off this booking."
-                        : (result.reason != null ? result.reason : "No discount is possible for this booking."));
+                rows[0].show(result.items, current);
+                tvLimit.setText(result.items.isEmpty() ? "Discounts are not available on this server yet."
+                        : ItemDiscounts.summary(result.items));
                 refresh.run();
             }
 
             @Override
             public void onError(ApiException error) {
                 if (SessionGuard.isGone(BookingDetailActivity.this)) return;
-                tvLimit.setText("Could not check the allowed discount (" + error.getMessage() + "). The server checks it when you save.");
+                tvLimit.setText("Could not check which items can be discounted (" + error.getMessage() + "). Close and try again.");
             }
         });
 
         androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(record.hasDiscount() ? "Change discount" : "Give a discount")
-                .setView(view)
+                .setTitle(record.hasDiscount() ? "Change discount per item" : "Discount per item")
+                .setView(scroll)
                 .setPositiveButton("Save", null)
                 .setNegativeButton("Cancel", null)
                 .create();
         dialog.setOnShowListener(d -> dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener(b -> {
-            java.math.BigDecimal value;
-            try {
-                value = DiscountCalc.parse(et.getText() == null ? "" : et.getText().toString());
-            } catch (IllegalArgumentException bad) {
-                til.setError(bad.getMessage());
+            if (quote[0] == null) {
+                tvLimit.setText("Wait until the items are checked, then save.");
                 return;
             }
-            if (value == null) value = java.math.BigDecimal.ZERO;
-            if (til.getError() != null) return;
+            String problem = rows[0].firstProblem();
+            if (problem != null) {
+                tvLimit.setText(problem);
+                return;
+            }
             b.setEnabled(false);
-            TrimaxApi.get(this).setBookingDiscount(record.bookingId, type[0], value, new TrimaxApi.Callback<BookingRecord>() {
+            TrimaxApi.get(this).setItemDiscounts(record.bookingId, rows[0].values(), new TrimaxApi.Callback<BookingRecord>() {
                 @Override
                 public void onSuccess(BookingRecord updated) {
                     if (SessionGuard.isGone(BookingDetailActivity.this)) return;
@@ -439,7 +428,7 @@ public class BookingDetailActivity extends AppCompatActivity {
                         dialog.dismiss();
                         return;
                     }
-                    til.setError(error.getMessage());
+                    tvLimit.setText(error.getMessage());
                 }
             });
         }));

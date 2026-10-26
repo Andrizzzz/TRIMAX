@@ -445,7 +445,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 3. DISCOUNT (optional): the server keeps the price at or above the Admin's minimum -->
+            <!-- 3. DISCOUNT PER ITEM (optional): only items the Admin allows; never below puhunan + minimum patong -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardDiscount"
                 android:layout_width="match_parent"
@@ -464,54 +464,18 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Discount (optional)"
+                        android:text="Discount per item (optional)"
                         android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/toggleDiscountType"
+                    <!-- One "less per piece" box per item the Admin allows (filled from the server's quote). -->
+                    <LinearLayout
+                        android:id="@+id/llItemDiscounts"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        app:checkedButton="@+id/btnDiscountAmount"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDiscountAmount"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Peso amount"
-                            android:textAllCaps="false" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDiscountPercent"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Percent"
-                            android:textAllCaps="false" />
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilDiscount"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:hint="Discount in pesos">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etDiscount"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal"
-                            android:maxLength="12" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical" />
 
                     <TextView
                         android:id="@+id/tvDiscountLimit"

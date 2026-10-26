@@ -26,6 +26,13 @@ public final class BookingRecord {
         public int quantity;
         public double unitPrice;
         public double subtotal;
+        /** Pesos taken off each piece by the agent (20261027_04); 0 = full price. */
+        public double discountPerUnit;
+
+        /** What this line costs after its discount. */
+        public double lineTotal() {
+            return subtotal - quantity * discountPerUnit;
+        }
     }
 
     public static final class Event {
@@ -71,7 +78,7 @@ public final class BookingRecord {
         return discountAmount > 0;
     }
 
-    /** "10% (₱20.00)" or "₱20.00", for the booking screens. */
+    /** "10% (₱20.00)", "₱20.00" or (discount per item) "₱20.00 off items", for the booking screens. */
     public String discountText() {
         if (!hasDiscount()) return "";
         String amount = String.format(Locale.US, "\u20B1%,.2f", discountAmount);
@@ -79,6 +86,7 @@ public final class BookingRecord {
             String pct = discountValue % 1 == 0 ? String.valueOf(discountValue.longValue()) : String.valueOf(discountValue);
             return pct + "% (" + amount + ")";
         }
+        if ("PER_ITEM".equals(discountType)) return amount + " off items";
         return amount;
     }
 
@@ -97,6 +105,7 @@ public final class BookingRecord {
         for (Item i : items) {
             if (sb.length() > 0) sb.append(", ");
             sb.append(i.productName != null ? i.productName : "Product " + i.productId).append(" x").append(i.quantity);
+            if (i.discountPerUnit > 0) sb.append(String.format(Locale.US, " (less \u20B1%,.2f each)", i.discountPerUnit));
         }
         return sb.toString();
     }
@@ -228,6 +237,8 @@ public final class BookingRecord {
                 Double st = Json.number(it, "subtotal");
                 item.unitPrice = up != null ? up : 0;
                 item.subtotal = st != null ? st : 0;
+                Double dpu = Json.number(it, "discount_per_unit");
+                item.discountPerUnit = dpu != null ? dpu : 0;
                 b.items.add(item);
             }
         }
