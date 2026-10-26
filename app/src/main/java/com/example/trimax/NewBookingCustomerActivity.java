@@ -42,7 +42,11 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     private String pinOwnerPhoneDigits = "";
     /** The agent's bookings on the server (null until loaded): customers booked from any phone. */
     private List<BookingRecord> serverBookings;
+    /** The agent's customers saved on the server (null until loaded); a booking needs one of these. */
+    private List<ServerCustomer> serverCustomers;
     private boolean directoryOnly = false;
+    /** Go on to the next step once the customer has been saved with a photo. */
+    private boolean continueAfterAdd = false;
     private ActivityResultLauncher<Intent> addCustomerLauncher;
 
     @Override
@@ -68,8 +72,16 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
 
         addCustomerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(), result -> {
+                    boolean thenContinue = continueAfterAdd;
+                    continueAfterAdd = false;
                     if (result.getResultCode() != RESULT_OK || result.getData() == null) return;
                     Intent data = result.getData();
+                    if (directoryOnly) {
+                        finish();   // Add customer already confirmed the save
+                        return;
+                    }
+                    rememberServerCustomer(data.getStringExtra("CUSTOMER_NAME"), data.getStringExtra("CUSTOMER_PHONE"));
+                    loadServerCustomers();
                     configureInlineCustomerSelection();
                     String name = data.getStringExtra("CUSTOMER_NAME");
                     String phone = data.getStringExtra("CUSTOMER_PHONE");
@@ -86,6 +98,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                     LinearLayout form = findViewById(R.id.llNewCustomerForm);
                     if (form != null) form.setVisibility(View.VISIBLE);
                     Toast.makeText(this, "Customer saved and selected.", Toast.LENGTH_SHORT).show();
+                    if (thenContinue) goNext();
                 });
 
         View root = findViewById(R.id.topBar) != null ? (View) findViewById(R.id.topBar).getParent() : findViewById(android.R.id.content);
@@ -146,6 +159,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 // Offline: the customers saved on this phone are still listed.
             }
         });
+        loadServerCustomers();
 
         MaterialButton btnChooseCustomer = findViewById(R.id.btnChooseCustomer);
         MaterialButton btnAddCustomer = findViewById(R.id.btnAddCustomer);
@@ -163,55 +177,117 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         });
         if (btnSaveCustomer != null) btnSaveCustomer.setOnClickListener(v -> saveCustomerFromForm());
 
-        if (btnNext != null) {
-            btnNext.setOnClickListener(v -> {
-                String name = etCustomerName != null && etCustomerName.getText() != null ? etCustomerName.getText().toString().trim() : "";
-                String phone = etPhone != null && etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
-                String email = etEmail != null && etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+        if (btnNext != null) btnNext.setOnClickListener(v -> goNext());
+    }
 
-                String cleanPhone = phone.replaceAll("[^0-9]", "");
-                if (name.isEmpty()) {
-                    if (etCustomerName != null) {
-                        etCustomerName.setError("Customer name is required");
-                        etCustomerName.requestFocus();
-                    }
-                } else if (phone.isEmpty() || cleanPhone.length() < 7) {
-                    if (etPhone != null) {
-                        etPhone.setError("Valid phone number is required");
-                        etPhone.requestFocus();
-                    }
-                } else if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                    if (etEmail != null) {
-                        etEmail.setError("Valid email address is required");
-                        etEmail.requestFocus();
-                    }
-                } else {
-                    btnNext.setEnabled(false);
-                    selectedCustomerAddress = etCustomerAddress != null && etCustomerAddress.getText() != null
-                            ? etCustomerAddress.getText().toString().trim() : selectedCustomerAddress;
-                    // The pin travels only with the customer it was saved for. If the phone was changed to
-                    // someone else after picking a customer, start without a pin (the next step asks for one).
-                    if (!cleanPhone.equals(pinOwnerPhoneDigits)) {
-                        selectedCustomerLatitude = 0;
-                        selectedCustomerLongitude = 0;
-                    }
-                    dbHelper.saveCustomer(name, phone, email, selectedCustomerAddress, selectedCustomerLatitude, selectedCustomerLongitude);
+    /** Checks the customer and goes on to the location step (a customer not on the server is saved first). */
+    private void goNext() {
+        MaterialButton btnNext = findViewById(R.id.btnNext);
+        String name = etCustomerName != null && etCustomerName.getText() != null ? etCustomerName.getText().toString().trim() : "";
+        String phone = etPhone != null && etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
+        String email = etEmail != null && etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
 
-                    Intent intent = new Intent(NewBookingCustomerActivity.this, NewBookingLocationActivity.class);
-                    intent.putExtra("CUSTOMER_NAME", name);
-                    intent.putExtra("CUSTOMER_PHONE", phone);
-                    intent.putExtra("CUSTOMER_EMAIL", email);
-                    intent.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
-                    intent.putExtra("CUSTOMER_LAT", selectedCustomerLatitude);
-                    intent.putExtra("CUSTOMER_LNG", selectedCustomerLongitude);
-                    if (getIntent().hasExtra("SELECTED_PACKAGE")) {
-                        intent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
-                        intent.putExtra("SELECTED_PRICE", getIntent().getDoubleExtra("SELECTED_PRICE", 99.00));
-                    }
-                    startActivity(intent);
-                }
-            });
+        String cleanPhone = phone.replaceAll("[^0-9]", "");
+        if (name.isEmpty()) {
+            if (etCustomerName != null) {
+                etCustomerName.setError("Customer name is required");
+                etCustomerName.requestFocus();
+            }
+            return;
         }
+        if (phone.isEmpty() || cleanPhone.length() < 7) {
+            if (etPhone != null) {
+                etPhone.setError("Valid phone number is required");
+                etPhone.requestFocus();
+            }
+            return;
+        }
+        if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            if (etEmail != null) {
+                etEmail.setError("Valid email address is required");
+                etEmail.requestFocus();
+            }
+            return;
+        }
+        selectedCustomerAddress = etCustomerAddress != null && etCustomerAddress.getText() != null
+                ? etCustomerAddress.getText().toString().trim() : selectedCustomerAddress;
+        // The pin travels only with the customer it was saved for. If the phone was changed to
+        // someone else after picking a customer, start without a pin (the next step asks for one).
+        if (!cleanPhone.equals(pinOwnerPhoneDigits)) {
+            selectedCustomerLatitude = 0;
+            selectedCustomerLongitude = 0;
+        }
+        // A booking needs a customer saved on the server with a photo. When the list is known and this
+        // customer is not in it, save them first (with a photo), then continue. When the list could not be
+        // loaded (offline, older server), go on: the server checks again when the booking is confirmed.
+        if (serverCustomers != null && !CustomerDirectory.onServer(serverCustomers, name, phone)) {
+            continueAfterAdd = true;
+            openAddCustomer(name, phone, email,
+                    "New customer: take or choose their photo and confirm the location to save them. "
+                            + "The booking continues after saving.");
+            return;
+        }
+        if (btnNext != null) btnNext.setEnabled(false);
+        dbHelper.saveCustomer(name, phone, email, selectedCustomerAddress, selectedCustomerLatitude, selectedCustomerLongitude);
+
+        Intent intent = new Intent(NewBookingCustomerActivity.this, NewBookingLocationActivity.class);
+        intent.putExtra("CUSTOMER_NAME", name);
+        intent.putExtra("CUSTOMER_PHONE", phone);
+        intent.putExtra("CUSTOMER_EMAIL", email);
+        intent.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
+        intent.putExtra("CUSTOMER_LAT", selectedCustomerLatitude);
+        intent.putExtra("CUSTOMER_LNG", selectedCustomerLongitude);
+        if (getIntent().hasExtra("SELECTED_PACKAGE")) {
+            intent.putExtra("SELECTED_PACKAGE", getIntent().getStringExtra("SELECTED_PACKAGE"));
+            intent.putExtra("SELECTED_PRICE", getIntent().getDoubleExtra("SELECTED_PRICE", 99.00));
+        }
+        startActivity(intent);
+    }
+
+    /** Opens Add customer prefilled with what is on this screen. */
+    private void openAddCustomer(String name, String phone, String email, String notice) {
+        Intent addIntent = new Intent(this, AddCustomerActivity.class);
+        addIntent.putExtra("CUSTOMER_NAME", name);
+        addIntent.putExtra("CUSTOMER_PHONE", phone);
+        addIntent.putExtra("CUSTOMER_EMAIL", email);
+        if (CustomerDirectory.digits(phone).equals(pinOwnerPhoneDigits)) {
+            addIntent.putExtra("CUSTOMER_ADDRESS", selectedCustomerAddress);
+            addIntent.putExtra("CUSTOMER_LAT", selectedCustomerLatitude);
+            addIntent.putExtra("CUSTOMER_LNG", selectedCustomerLongitude);
+        }
+        if (notice != null) addIntent.putExtra(AddCustomerActivity.EXTRA_NOTICE, notice);
+        addCustomerLauncher.launch(addIntent);
+    }
+
+    /** The agent's customers on the server (with photos); refreshes the lists when they arrive. */
+    private void loadServerCustomers() {
+        TrimaxApi.get(this).listCustomers(new TrimaxApi.Callback<List<ServerCustomer>>() {
+            @Override
+            public void onSuccess(List<ServerCustomer> result) {
+                if (SessionGuard.isGone(NewBookingCustomerActivity.this)) return;
+                serverCustomers = result;
+                TextInputEditText search = findViewById(R.id.etSearchCustomer);
+                configureInlineCustomerSelection(search != null && search.getText() != null
+                        ? search.getText().toString().trim() : "");
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(NewBookingCustomerActivity.this)) return;
+                SessionGuard.handle(NewBookingCustomerActivity.this, error);
+                // Older server or offline: keep going; the server checks the customer at booking time.
+            }
+        });
+    }
+
+    /** Until the list is reloaded: the customer just saved counts as on the server. */
+    private void rememberServerCustomer(String name, String phone) {
+        if (serverCustomers == null) return;
+        ServerCustomer sc = new ServerCustomer();
+        sc.name = name;
+        sc.contact = phone;
+        serverCustomers = new java.util.ArrayList<>(serverCustomers);
+        serverCustomers.add(sc);
     }
 
     @Override
@@ -233,7 +309,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
 
         // Replace static sample rows with saved customers matching search query.
         container.removeAllViews();
-        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, query != null ? query : "");
+        List<DatabaseHelper.SavedCustomer> customers = CustomerDirectory.list(dbHelper, serverBookings, serverCustomers, query != null ? query : "");
         if (customers == null || customers.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText(TextUtils.isEmpty(query)
@@ -256,6 +332,18 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
             row.setClickable(true);
             row.setFocusable(true);
             row.setBackgroundResource(android.R.drawable.list_selector_background);
+
+            ImageView rowAvatar = new ImageView(this);
+            LinearLayout.LayoutParams rowAvatarParams = new LinearLayout.LayoutParams(dp(36), dp(36));
+            rowAvatarParams.setMarginEnd(dp(12));
+            rowAvatar.setLayoutParams(rowAvatarParams);
+            rowAvatar.setImageResource(R.drawable.ic_user);
+            rowAvatar.setBackgroundResource(R.drawable.bg_icon_badge);
+            rowAvatar.setPadding(dp(8), dp(8), dp(8), dp(8));
+            rowAvatar.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.text_secondary)));
+            rowAvatar.setContentDescription("Customer photo");
+            CustomerAvatars.bind(this, rowAvatar, customer.getPhone(), customer.getPhotoPath(), dp(72), false, null);
+            row.addView(rowAvatar);
 
             LinearLayout info = new LinearLayout(this);
             info.setOrientation(LinearLayout.VERTICAL);
@@ -324,7 +412,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
     }
 
     private void showSavedCustomers() {
-        List<DatabaseHelper.SavedCustomer> allCustomers = CustomerDirectory.list(dbHelper, serverBookings, "");
+        List<DatabaseHelper.SavedCustomer> allCustomers = CustomerDirectory.list(dbHelper, serverBookings, serverCustomers, "");
         if (allCustomers.isEmpty()) {
             new AlertDialog.Builder(this)
                     .setTitle("Saved Customers")
@@ -354,7 +442,7 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     String query = s != null ? s.toString().trim() : "";
-                    List<DatabaseHelper.SavedCustomer> filtered = CustomerDirectory.list(dbHelper, serverBookings, query);
+                    List<DatabaseHelper.SavedCustomer> filtered = CustomerDirectory.list(dbHelper, serverBookings, serverCustomers, query);
                     populateSavedCustomerList(containerSavedCustomers, filtered, bottomSheetDialog);
                 }
                 @Override public void afterTextChanged(Editable s) {}
@@ -405,6 +493,8 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
             avatar.setBackgroundResource(R.drawable.bg_icon_badge);
             avatar.setPadding(dp(10), dp(10), dp(10), dp(10));
             avatar.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.primary_blue)));
+            avatar.setContentDescription("Customer photo");
+            CustomerAvatars.bind(this, avatar, customer.getPhone(), customer.getPhotoPath(), dp(88), false, null);
 
             // Text Info Container
             LinearLayout textContainer = new LinearLayout(this);
@@ -486,6 +576,13 @@ public class NewBookingCustomerActivity extends AppCompatActivity {
         }
         if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.setError("Valid email address is required"); etEmail.requestFocus(); return;
+        }
+        // A new customer is saved on the server with a photo (Add customer); one already there is only
+        // remembered on this phone.
+        if (!CustomerDirectory.onServer(serverCustomers, name, phone)) {
+            openAddCustomer(name, phone, email, "A new customer needs a photo. Take or choose one, check the "
+                    + "location, then save.");
+            return;
         }
         if (dbHelper.saveCustomer(name, phone, email, address, selectedCustomerLatitude, selectedCustomerLongitude)) {
             selectedCustomerAddress = address;

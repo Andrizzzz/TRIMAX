@@ -202,4 +202,37 @@ public class BookingRecordTest {
         assertEquals("STARTED", b.events.get(0).from);
         assertEquals("DELIVERED", b.events.get(0).to);
     }
+
+    /** booking_json of a booking with an agent discount (5% of 720.00), from a test database on 2026-10-26. */
+    static final String DISCOUNTED = "{\"items\": [{\"quantity\": 4, \"subtotal\": 720.00, \"product_id\": 2, \"unit_price\": 180.00, "
+            + "\"product_name\": \"Mineral water 500 ml x24\"}], \"driver\": {\"name\": \"Maria Santos\", \"username\": \"driver_maria\", "
+            + "\"vehicle_id\": \"TST-2002\", \"vehicle_type\": \"Van\"}, \"events\": null, \"status\": \"Pending\", \"customer\": "
+            + "{\"name\": \"Aling Nena Sari-sari Store\", \"address\": \"Tungko, San Jose del Monte, Bulacan\", \"contact\": \"09170001001\", "
+            + "\"client_id\": 1}, \"delivery\": {\"address\": \"Tungko, San Jose del Monte, Bulacan\", \"latitude\": 14.7804, \"schedule\": null, "
+            + "\"longitude\": 121.0632, \"instructions\": null}, \"discount\": {\"at\": \"2026-10-26T22:43:11.054586+08:00\", \"by\": "
+            + "\"agent_rico\", \"type\": \"PERCENT\", \"value\": 5.00, \"amount\": 36.00}, \"booking_id\": 15, \"created_at\": "
+            + "\"2026-10-08T01:23:35.062229+08:00\", \"assigned_at\": \"2026-10-26T11:03:01.193315+08:00\", \"created_via\": \"mobile\", "
+            + "\"total_amount\": 684.00, \"delivery_status\": \"ASSIGNED\", \"last_changed_at\": \"2026-10-26T22:43:11.054586+08:00\", "
+            + "\"subtotal_amount\": 720.00, \"delivery_status_at\": \"2026-10-26T11:03:01.193315+08:00\"}";
+
+    @Test
+    public void discountShowsOriginalDiscountAndFinal() throws Exception {
+        BookingRecord b = BookingRecord.parse(DISCOUNTED);
+        assertTrue(b.hasDiscount());
+        assertEquals(720.00, b.subtotalAmount, 1e-9);
+        assertEquals(36.00, b.discountAmount, 1e-9);
+        assertEquals(684.00, b.totalAmount, 1e-9);
+        assertEquals("PERCENT", b.discountType);
+        assertEquals("agent_rico", b.discountBy);
+        assertEquals("5% (₱36.00)", b.discountText());
+        assertEquals(684.00, b.toDelivery(false).getCurrentTotal(), 1e-9);
+    }
+
+    @Test
+    public void bookingsWithoutADiscountKeepTheirTotal() throws Exception {
+        BookingRecord b = BookingRecord.parse(AGENT_NEW);   // a server without discounts: no such fields
+        assertFalse(b.hasDiscount());
+        assertEquals(540.00, b.subtotalAmount, 1e-9);
+        assertEquals("", b.discountText());
+    }
 }

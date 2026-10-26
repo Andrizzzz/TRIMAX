@@ -19,6 +19,20 @@ final class CustomerDirectory {
     private CustomerDirectory() {}
 
     static List<DatabaseHelper.SavedCustomer> list(DatabaseHelper db, List<BookingRecord> serverBookings, String query) {
+        return list(db.getSavedCustomers(""), serverBookings, null, query);
+    }
+
+    static List<DatabaseHelper.SavedCustomer> list(DatabaseHelper db, List<BookingRecord> serverBookings,
+                                                   List<ServerCustomer> serverCustomers, String query) {
+        return list(db.getSavedCustomers(""), serverBookings, serverCustomers, query);
+    }
+
+    /**
+     * @param serverCustomers the agent's customers saved on the server (with photo paths), or null while
+     *                        not loaded; they are listed even before their first booking
+     */
+    static List<DatabaseHelper.SavedCustomer> list(List<DatabaseHelper.SavedCustomer> local, List<BookingRecord> serverBookings,
+                                                   List<ServerCustomer> serverCustomers, String query) {
         Map<String, DatabaseHelper.SavedCustomer> merged = new LinkedHashMap<>();
         Map<String, Integer> serverCounts = new LinkedHashMap<>();
         Map<String, BookingRecord> serverLatest = new LinkedHashMap<>();
@@ -30,7 +44,7 @@ final class CustomerDirectory {
                 if (!serverLatest.containsKey(key)) serverLatest.put(key, r);
             }
         }
-        for (DatabaseHelper.SavedCustomer c : db.getSavedCustomers("")) {
+        for (DatabaseHelper.SavedCustomer c : local) {
             String key = key(c.getName(), c.getPhone());
             int count = Math.max(c.getBookingCount(), serverCounts.getOrDefault(key, 0));
             double lat = c.getLatitude(), lng = c.getLongitude();
@@ -41,6 +55,28 @@ final class CustomerDirectory {
             }
             merged.put(key, new DatabaseHelper.SavedCustomer(c.getId(), c.getName(), c.getPhone(), c.getEmail(),
                     c.getAddress(), lat, lng, count));
+        }
+        if (serverCustomers != null) {
+            for (ServerCustomer sc : serverCustomers) {
+                if (sc == null || sc.name == null || sc.name.trim().isEmpty()) continue;
+                String key = key(sc.name, sc.contact);
+                DatabaseHelper.SavedCustomer known = merged.get(key);
+                boolean scPin = sc.latitude != null && sc.longitude != null && !(sc.latitude == 0 && sc.longitude == 0);
+                if (known == null) {
+                    known = new DatabaseHelper.SavedCustomer(-1, sc.name.trim(), sc.contact, null, sc.address,
+                            scPin ? sc.latitude : 0, scPin ? sc.longitude : 0, serverCounts.getOrDefault(key, 0));
+                    merged.put(key, known);
+                } else if (known.getLatitude() == 0 && known.getLongitude() == 0 && scPin) {
+                    DatabaseHelper.SavedCustomer withPin = new DatabaseHelper.SavedCustomer(known.getId(), known.getName(),
+                            known.getPhone(), known.getEmail(),
+                            isBlank(known.getAddress()) ? sc.address : known.getAddress(),
+                            sc.latitude, sc.longitude, known.getBookingCount());
+                    merged.put(key, withPin);
+                    known = withPin;
+                }
+                known.setOnServer(true);
+                known.setPhotoPath(sc.photoPath);
+            }
         }
         for (Map.Entry<String, BookingRecord> e : serverLatest.entrySet()) {
             if (merged.containsKey(e.getKey())) continue;
@@ -75,6 +111,20 @@ final class CustomerDirectory {
 
     static String digits(String phone) {
         return phone == null ? "" : phone.replaceAll("[^0-9]", "");
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    /** True when the server list has this customer (same phone key); false also when it is not loaded. */
+    static boolean onServer(List<ServerCustomer> serverCustomers, String name, String phone) {
+        if (serverCustomers == null) return false;
+        String key = key(name, phone);
+        for (ServerCustomer sc : serverCustomers) {
+            if (sc != null && key.equals(key(sc.name, sc.contact))) return true;
+        }
+        return false;
     }
 
     private static boolean contains(String value, String q) {

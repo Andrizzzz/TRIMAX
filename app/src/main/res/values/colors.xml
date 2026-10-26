@@ -22,6 +22,8 @@
     <color name="nav_selected_bg">#1ADCEBFA</color>
     <color name="nav_selected_fg">#0866F5</color>
     <color name="surface_alt">#EBF2FA</color>
+    <!-- Icon / avatar badges (drawable/bg_icon_badge) -->
+    <color name="icon_badge_bg">#F1F5F9</color>
     <color name="border_subtle">#E2EAF5</color>
     <color name="text_primary">#14213D</color>
     <color name="text_secondary">#68758A</color>

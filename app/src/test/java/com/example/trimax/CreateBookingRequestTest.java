@@ -77,4 +77,36 @@ public class CreateBookingRequestTest {
         r.customerName = "x";
         assertNotNull(r.validate());
     }
+
+    @Test
+    public void discountIsSentOnlyWhenGiven() throws Exception {
+        CreateBookingRequest r = valid();
+        JSONObject args = r.toRpcArgs();
+        assertFalse(args.has("p_discount_type"));
+        assertFalse(args.has("p_discount_value"));
+
+        r.discountType = DiscountCalc.Type.AMOUNT;
+        r.discountValue = java.math.BigDecimal.ZERO;
+        assertFalse(r.toRpcArgs().has("p_discount_type"));
+
+        r.discountType = DiscountCalc.Type.PERCENT;
+        r.discountValue = new java.math.BigDecimal("12.50");
+        assertNull(r.validate());
+        args = r.toRpcArgs();
+        assertEquals("PERCENT", args.getString("p_discount_type"));
+        assertEquals(12.5, args.getDouble("p_discount_value"), 1e-9);
+        assertTrue(args.toString().contains("\"p_discount_value\":12.5"));
+    }
+
+    @Test
+    public void impossibleDiscountsAreCaughtBeforeSending() {
+        CreateBookingRequest r = valid();
+        r.discountValue = new java.math.BigDecimal("-1");
+        assertNotNull(r.validate());
+        r.discountType = DiscountCalc.Type.PERCENT;
+        r.discountValue = new java.math.BigDecimal("100.5");
+        assertNotNull(r.validate());
+        r.discountValue = new java.math.BigDecimal("100");
+        assertNull(r.validate());
+    }
 }

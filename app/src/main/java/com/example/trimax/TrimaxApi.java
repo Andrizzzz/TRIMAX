@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -128,6 +129,75 @@ public final class TrimaxApi {
             JSONObject args = new JSONObject();
             args.put("p_booking_id", bookingId);
             return BookingRecord.parse(client.rpc("trimax_agent_get_booking", args));
+        }, cb);
+    }
+
+    // ------------------------------------------------------------------ agent: customers with a photo
+
+    /**
+     * Saves a customer on the server. A new customer needs a photo: the JPEG is uploaded first into this
+     * agent's own folder of the private customer-photos bucket, then trimax_agent_save_customer records it
+     * (the server checks that the upload is really there). jpeg may be null to update an existing
+     * customer without a new photo.
+     */
+    public void saveCustomer(String name, String contact, String address, double latitude, double longitude,
+                             byte[] jpeg, Callback<ServerCustomer> cb) {
+        run(() -> {
+            String photoPath = null;
+            if (jpeg != null) {
+                String uid = client.currentUserId();
+                if (uid == null) throw ApiException.sessionExpired();
+                photoPath = uid + "/" + CustomerPhotos.newObjectName();
+                client.uploadJpeg("customer-photos", photoPath, jpeg);
+            }
+            JSONObject args = new JSONObject();
+            args.put("p_name", name == null ? "" : name.trim());
+            args.put("p_contact", contact == null ? "" : contact.trim());
+            args.put("p_address", address == null ? "" : address.trim());
+            args.put("p_latitude", latitude);
+            args.put("p_longitude", longitude);
+            args.put("p_photo_path", photoPath != null ? photoPath : JSONObject.NULL);
+            return ServerCustomer.parse(client.rpc("trimax_agent_save_customer", args));
+        }, cb);
+    }
+
+    /** This agent's customers on the server, with their photo paths. */
+    public void listCustomers(Callback<List<ServerCustomer>> cb) {
+        run(() -> ServerCustomer.parseList(client.rpc("trimax_agent_list_customers", new JSONObject())), cb);
+    }
+
+    /** Downloads a customer photo this agent took (own folder only). */
+    public void downloadCustomerPhoto(String photoPath, Callback<byte[]> cb) {
+        run(() -> client.downloadJpeg("customer-photos", photoPath), cb);
+    }
+
+    // ------------------------------------------------------------------ agent: discounts
+
+    /** The largest discount allowed for these lines (never the puhunan itself). */
+    public void discountQuote(List<CreateBookingRequest.Line> lines, Callback<DiscountQuote> cb) {
+        run(() -> {
+            JSONArray items = new JSONArray();
+            for (CreateBookingRequest.Line l : lines) {
+                JSONObject i = new JSONObject();
+                i.put("product_id", l.productId);
+                i.put("quantity", l.quantity);
+                items.put(i);
+            }
+            JSONObject args = new JSONObject();
+            args.put("p_items", items);
+            return DiscountQuote.parse(client.rpc("trimax_agent_discount_quote", args));
+        }, cb);
+    }
+
+    /** Changes (value 0 removes) the discount of one of this agent's Pending bookings. */
+    public void setBookingDiscount(int bookingId, DiscountCalc.Type type, java.math.BigDecimal value,
+                                   Callback<BookingRecord> cb) {
+        run(() -> {
+            JSONObject args = new JSONObject();
+            args.put("p_booking_id", bookingId);
+            args.put("p_discount_type", type == DiscountCalc.Type.PERCENT ? "PERCENT" : "AMOUNT");
+            args.put("p_discount_value", value == null ? 0 : value.doubleValue());
+            return BookingRecord.parse(client.rpc("trimax_agent_set_discount", args));
         }, cb);
     }
 

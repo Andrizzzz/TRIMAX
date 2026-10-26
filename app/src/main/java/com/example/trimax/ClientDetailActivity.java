@@ -23,6 +23,8 @@ public class ClientDetailActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private LinearLayout clientBookingHistoryContainer;
+    private String photoPath;
+    private androidx.activity.result.ActivityResultLauncher<Intent> photoLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +89,60 @@ public class ClientDetailActivity extends AppCompatActivity {
             });
         }
 
+        photoPath = intent.getStringExtra("CLIENT_PHOTO_PATH");
+        double lat = intent.getDoubleExtra("CLIENT_LAT", 0), lng = intent.getDoubleExtra("CLIENT_LNG", 0);
+        photoLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() != RESULT_OK) return;
+                    CustomerAvatars.forget(phone);
+                    photoPath = null;   // the new photo is on this phone now
+                    showPhoto(phone, false);
+                });
+        View btnPhoto = findViewById(R.id.btnClientPhoto);
+        if (btnPhoto != null) btnPhoto.setOnClickListener(v -> {
+            Intent edit = new Intent(this, AddCustomerActivity.class);
+            edit.putExtra("CUSTOMER_NAME", name);
+            edit.putExtra("CUSTOMER_PHONE", phone);
+            edit.putExtra("CUSTOMER_EMAIL", email);
+            edit.putExtra("CUSTOMER_ADDRESS", address);
+            edit.putExtra("CUSTOMER_LAT", lat);
+            edit.putExtra("CUSTOMER_LNG", lng);
+            edit.putExtra(AddCustomerActivity.EXTRA_NOTICE,
+                    "Take or choose a photo of this customer, check the details, then save.");
+            photoLauncher.launch(edit);
+        });
+        showPhoto(phone, false);
+
         loadBookingHistory(phone, name);
+    }
+
+    /** The customer's photo (this phone, else the server), a placeholder, or an error with Retry. */
+    private void showPhoto(String phone, boolean retry) {
+        ImageView iv = findViewById(R.id.ivClientPhoto);
+        TextView status = findViewById(R.id.tvClientPhotoStatus);
+        View spinner = findViewById(R.id.progressClientPhoto);
+        com.google.android.material.button.MaterialButton btn = findViewById(R.id.btnClientPhoto);
+        CustomerAvatars.bind(this, iv, phone, photoPath, dp(192), retry, (state, message) -> {
+            if (spinner != null) spinner.setVisibility(state == CustomerAvatars.State.LOADING ? View.VISIBLE : View.GONE);
+            if (status != null) {
+                status.setOnClickListener(null);
+                if (state == CustomerAvatars.State.ERROR) {
+                    status.setText((message == null ? "The photo could not be loaded." : message) + "  Tap to retry.");
+                    status.setOnClickListener(v -> showPhoto(phone, true));
+                    status.setVisibility(View.VISIBLE);
+                } else if (state == CustomerAvatars.State.NO_PHOTO) {
+                    status.setText("No photo yet (saved before photos were required).");
+                    status.setVisibility(View.VISIBLE);
+                } else {
+                    status.setVisibility(View.GONE);
+                }
+            }
+            if (btn != null) {
+                boolean canAdd = CustomerPhotos.key(phone) != null && state != CustomerAvatars.State.LOADING;
+                btn.setVisibility(canAdd ? View.VISIBLE : View.GONE);
+                btn.setText(state == CustomerAvatars.State.SHOWN ? "Update photo" : "Add photo");
+            }
+        });
     }
 
     /** This customer's bookings, from the agent's own bookings on the TRIMAX server. */

@@ -14,7 +14,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class NewBookingSummaryActivity extends AppCompatActivity {
@@ -27,6 +33,18 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
      */
     private String requestId;
     private boolean submitting;
+
+    // Discount: the server's quote says how much may be given (never the puhunan itself).
+    private DiscountQuote quote;
+    private boolean quoteLoading;
+    private BigDecimal estimatedSubtotal = BigDecimal.ZERO;
+    private DiscountCalc.Type discountType = DiscountCalc.Type.AMOUNT;
+    private final List<CreateBookingRequest.Line> quoteLines = new ArrayList<>();
+    private TextInputLayout tilDiscount;
+    private TextInputEditText etDiscount;
+    private TextView tvDiscountLimit, tvSubtotalAmount, tvDiscountAmount, tvDiscountLabel, tvTotal;
+    private View rowSubtotal, rowDiscount;
+    private androidx.activity.result.ActivityResultLauncher<Intent> addCustomerLauncher;
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -107,6 +125,24 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         final int[] productIds = intent.getIntArrayExtra("PRODUCT_IDS");
         final int[] productQuantities = intent.getIntArrayExtra("PRODUCT_QUANTITIES");
 
+        tvTotal = tvTotalAmount;
+        estimatedSubtotal = Double.isFinite(total) && total > 0
+                ? BigDecimal.valueOf(total).setScale(2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        if (productIds != null && productQuantities != null && productIds.length == productQuantities.length) {
+            for (int i = 0; i < productIds.length; i++) {
+                quoteLines.add(new CreateBookingRequest.Line(productIds[i], productQuantities[i]));
+            }
+        }
+        setUpDiscount();
+
+        // A booking needs a customer saved on the server with a photo; offered when the server says so.
+        addCustomerLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Toast.makeText(this, "Customer saved. Tap Confirm Booking again.", Toast.LENGTH_LONG).show();
+                    }
+                });
+
         btnConfirmBooking.setOnClickListener(v -> {
             if (address == null || address.trim().isEmpty()
                     || !Double.isFinite(destLat) || !Double.isFinite(destLng)
@@ -140,6 +176,21 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             for (int i = 0; i < productIds.length; i++) {
                 request.lines.add(new CreateBookingRequest.Line(productIds[i], productQuantities[i]));
             }
+            BigDecimal discountValue;
+            try {
+                discountValue = DiscountCalc.parse(etDiscount != null && etDiscount.getText() != null
+                        ? etDiscount.getText().toString() : "");
+            } catch (IllegalArgumentException bad) {
+                showDiscountError(bad.getMessage());
+                return;
+            }
+            String discountProblem = discountProblem(discountValue);
+            if (discountProblem != null) {
+                showDiscountError(discountProblem);
+                return;
+            }
+            request.discountType = discountType;
+            request.discountValue = discountValue;
             String problem = request.validate();
             if (problem != null) {
                 Toast.makeText(this, problem, Toast.LENGTH_LONG).show();
@@ -176,6 +227,33 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                     btnConfirmBooking.setText(confirmLabel);
                     btnEdit.setEnabled(true);
                     if (SessionGuard.handle(NewBookingSummaryActivity.this, error)) return;
+                    String detail = error.getDetail();
+                    if ("customer_photo_required".equals(detail)) {
+                        new androidx.appcompat.app.AlertDialog.Builder(NewBookingSummaryActivity.this)
+                                .setTitle("Save the customer first")
+                                .setMessage("This customer is not saved yet. Save them with a photo, then confirm "
+                                        + "the booking again.")
+                                .setPositiveButton("Add customer", (d, w) -> {
+                                    Intent add = new Intent(NewBookingSummaryActivity.this, AddCustomerActivity.class);
+                                    add.putExtra("CUSTOMER_NAME", customerName);
+                                    add.putExtra("CUSTOMER_PHONE", customerPhone);
+                                    add.putExtra("CUSTOMER_EMAIL", customerEmail);
+                                    add.putExtra("CUSTOMER_ADDRESS", address);
+                                    add.putExtra("CUSTOMER_LAT", destLat);
+                                    add.putExtra("CUSTOMER_LNG", destLng);
+                                    add.putExtra(AddCustomerActivity.EXTRA_NOTICE,
+                                            "Take or choose the customer's photo to save them. Then confirm the booking.");
+                                    addCustomerLauncher.launch(add);
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                        return;
+                    }
+                    if ("discount_too_big".equals(detail) || "discount_not_configured".equals(detail)) {
+                        showDiscountError(error.getMessage());
+                        loadQuote();   // prices or the minimum may have changed
+                        return;
+                    }
                     String message = error.getMessage();
                     // A time-out or dropped connection can happen after the server saved the booking.
                     // Confirming again from this screen reuses the same request id, so it cannot duplicate it.
@@ -193,6 +271,117 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 }
             });
         });
+    }
+
+    // ------------------------------------------------------------------ discount
+
+    private void setUpDiscount() {
+        tilDiscount = findViewById(R.id.tilDiscount);
+        etDiscount = findViewById(R.id.etDiscount);
+        tvDiscountLimit = findViewById(R.id.tvDiscountLimit);
+        tvSubtotalAmount = findViewById(R.id.tvSubtotalAmount);
+        tvDiscountAmount = findViewById(R.id.tvDiscountAmount);
+        tvDiscountLabel = findViewById(R.id.tvDiscountLabel);
+        rowSubtotal = findViewById(R.id.rowSubtotal);
+        rowDiscount = findViewById(R.id.rowDiscount);
+        MaterialButtonToggleGroup toggle = findViewById(R.id.toggleDiscountType);
+        if (etDiscount == null || toggle == null) return;
+
+        toggle.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return;
+            discountType = checkedId == R.id.btnDiscountPercent ? DiscountCalc.Type.PERCENT : DiscountCalc.Type.AMOUNT;
+            if (tilDiscount != null) {
+                tilDiscount.setHint(discountType == DiscountCalc.Type.PERCENT ? "Discount in percent" : "Discount in pesos");
+            }
+            refreshDiscount();
+        });
+        etDiscount.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(android.text.Editable s) { refreshDiscount(); }
+        });
+        if (tvDiscountLimit != null) tvDiscountLimit.setOnClickListener(v -> {
+            if (quote == null && !quoteLoading) loadQuote();
+        });
+        loadQuote();
+    }
+
+    private void loadQuote() {
+        if (quoteLines.isEmpty() || quoteLoading) return;
+        quoteLoading = true;
+        if (tvDiscountLimit != null) tvDiscountLimit.setText("Checking the allowed discount...");
+        TrimaxApi.get(this).discountQuote(quoteLines, new TrimaxApi.Callback<DiscountQuote>() {
+            @Override
+            public void onSuccess(DiscountQuote result) {
+                if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
+                quoteLoading = false;
+                quote = result;
+                if (etDiscount != null) etDiscount.setEnabled(result.available);
+                if (tvDiscountLimit != null) {
+                    tvDiscountLimit.setText(result.available
+                            ? "You can give up to " + DiscountCalc.peso(result.maxDiscount) + " off this order."
+                            : (result.reason != null ? result.reason : "No discount is possible for this order."));
+                }
+                refreshDiscount();
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(NewBookingSummaryActivity.this)) return;
+                quoteLoading = false;
+                if (SessionGuard.handle(NewBookingSummaryActivity.this, error)) return;
+                // Typing a discount still works: the server checks it when the booking is confirmed.
+                if (tvDiscountLimit != null) {
+                    tvDiscountLimit.setText("Could not check the allowed discount (" + error.getMessage()
+                            + "). Tap here to try again.");
+                }
+            }
+        });
+    }
+
+    private BigDecimal subtotal() {
+        return quote != null ? quote.subtotal : estimatedSubtotal;
+    }
+
+    private String discountProblem(BigDecimal value) {
+        return DiscountCalc.problem(subtotal(), discountType, value,
+                quote != null ? quote.maxDiscount : null, quote != null ? quote.available : null,
+                quote != null ? quote.reason : null);
+    }
+
+    /** Original price, discount and final price while the agent types. */
+    private void refreshDiscount() {
+        BigDecimal sub = subtotal();
+        BigDecimal value = null;
+        String problem;
+        try {
+            value = DiscountCalc.parse(etDiscount != null && etDiscount.getText() != null
+                    ? etDiscount.getText().toString() : "");
+            problem = discountProblem(value);
+        } catch (IllegalArgumentException bad) {
+            problem = bad.getMessage();
+        }
+        if (tilDiscount != null) tilDiscount.setError(problem);
+        BigDecimal off = problem == null ? DiscountCalc.amount(sub, discountType, value) : BigDecimal.ZERO;
+        boolean show = off.signum() > 0;
+        if (rowSubtotal != null) rowSubtotal.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (rowDiscount != null) rowDiscount.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (tvSubtotalAmount != null) tvSubtotalAmount.setText(DiscountCalc.peso(sub));
+        if (tvDiscountAmount != null) tvDiscountAmount.setText("- " + DiscountCalc.peso(off));
+        if (tvDiscountLabel != null) {
+            tvDiscountLabel.setText(discountType == DiscountCalc.Type.PERCENT && value != null
+                    ? "Discount (" + value.stripTrailingZeros().toPlainString() + "%)" : "Discount");
+        }
+        if (tvTotal != null) tvTotal.setText(String.format(Locale.US, "₱ %,.2f", sub.subtract(off)));
+    }
+
+    private void showDiscountError(String message) {
+        if (tilDiscount != null) {
+            tilDiscount.setError(message);
+            tilDiscount.requestFocus();
+        } else {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void navigateBack() {
