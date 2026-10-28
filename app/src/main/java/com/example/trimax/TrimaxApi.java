@@ -181,6 +181,7 @@ public final class TrimaxApi {
                 JSONObject i = new JSONObject();
                 i.put("product_id", l.productId);
                 i.put("quantity", l.quantity);
+                if (l.half) i.put("unit", "HALF");   // half cases (20261028_07)
                 items.put(i);
             }
             JSONObject args = new JSONObject();
@@ -191,7 +192,8 @@ public final class TrimaxApi {
 
     /**
      * Sets the discount per piece of each item of one of this agent's Pending bookings
-     * ({product id -> pesos off one piece}; items not in the map go back to full price; empty = none).
+     * ({line key -> pesos off one piece}, the line key being the product id or minus it for half cases;
+     * items not in the map go back to full price; empty = none).
      */
     public void setItemDiscounts(int bookingId, java.util.Map<Integer, java.math.BigDecimal> perUnit,
                                  Callback<BookingRecord> cb) {
@@ -199,7 +201,8 @@ public final class TrimaxApi {
             JSONArray items = new JSONArray();
             for (java.util.Map.Entry<Integer, java.math.BigDecimal> e : ItemDiscounts.nonZero(perUnit).entrySet()) {
                 JSONObject i = new JSONObject();
-                i.put("product_id", e.getKey());
+                i.put("product_id", ItemDiscounts.productOf(e.getKey()));
+                if (ItemDiscounts.isHalf(e.getKey())) i.put("unit", "HALF");   // 20261028_07
                 i.put("discount_per_unit", e.getValue().toPlainString());
                 items.put(i);
             }

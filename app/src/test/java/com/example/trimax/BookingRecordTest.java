@@ -146,7 +146,7 @@ public class BookingRecordTest {
                 + "\"Coke Case (24 Bottles)\"}, {\"price\": 175.00, \"stock\": 0, \"product_id\": 3, \"product_name\": \"Royal Case\"}, "
                 + "{\"price\": null, \"stock\": 1, \"product_id\": 9, \"product_name\": \"Broken\"}]");
         assertEquals("a product without a price is skipped", 2, products.size());
-        assertEquals(37, products.get(0).stock);
+        assertEquals(37, products.get(0).stock, 0.0001);   // a double since half cases (20261028_07)
         assertEquals(175.0, products.get(1).price, 0.001);
 
         MobileAccount a = MobileAccount.parse("{\"role\": \"DRIVER\", \"email\": \"dan@example.test\", \"username\": "

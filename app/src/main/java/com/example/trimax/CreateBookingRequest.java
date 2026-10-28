@@ -18,12 +18,29 @@ public final class CreateBookingRequest {
     public static final class Line {
         public final int productId;
         public final int quantity;
+        /** Half cases (20261028_07): the quantity is in half cases, each priced at the half case price. */
+        public final boolean half;
         /** Pesos off each piece (agent discount per item, 20261027_04); null or 0 = full price. */
         public java.math.BigDecimal discountPerUnit;
 
         public Line(int productId, int quantity) {
+            this(productId, quantity, false);
+        }
+
+        public Line(int productId, int quantity, boolean half) {
             this.productId = productId;
             this.quantity = quantity;
+            this.half = half;
+        }
+
+        /** A line from a line key (the product id, or minus it for half cases; see ItemDiscounts.key). */
+        public static Line ofKey(int key, int quantity) {
+            return new Line(ItemDiscounts.productOf(key), quantity, ItemDiscounts.isHalf(key));
+        }
+
+        /** The line key: the product id, or minus it for half cases. */
+        public int key() {
+            return ItemDiscounts.key(productId, half);
         }
     }
 
@@ -85,6 +102,8 @@ public final class CreateBookingRequest {
             JSONObject i = new JSONObject();
             i.put("product_id", l.productId);
             i.put("quantity", l.quantity);
+            // Only sent for half cases, so a whole-case booking is the same as before.
+            if (l.half) i.put("unit", "HALF");
             // Only sent when there is a discount, so a booking without one also works on an older server.
             if (l.discountPerUnit != null && l.discountPerUnit.signum() > 0) {
                 i.put("discount_per_unit", l.discountPerUnit.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());

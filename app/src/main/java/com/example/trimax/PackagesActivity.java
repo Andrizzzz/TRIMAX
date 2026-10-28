@@ -88,7 +88,8 @@ public class PackagesActivity extends AppCompatActivity {
                 items.clear();
                 for (Product p : products) {
                     ServicePackage pkg = new ServicePackage("product:" + p.id, p.name,
-                            p.stock > 0 ? "In stock: " + p.stock : "Out of stock",
+                            (p.stock > 0 ? "In stock: " + Product.stockText(p.stock) : "Out of stock")
+                                    + (p.sellsHalfCase() ? String.format(java.util.Locale.US, " · Half case ₱ %.2f", p.halfPrice) : ""),
                             p.price, R.drawable.ic_delivery_van, null, null, null, null);
                     pkg.setImageUrl(p.imageUrl());
                     items.add(pkg);

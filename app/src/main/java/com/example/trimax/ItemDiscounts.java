@@ -18,7 +18,26 @@ final class ItemDiscounts {
     private ItemDiscounts() {
     }
 
-    /** One product of the order as the quote describes it. */
+    // ------------------------------------------------------------ line keys
+    // A booking can have whole cases and half cases of the same product (20261028_07), so the amounts per
+    // piece are kept per line key: the product id for whole cases, minus the product id for half cases.
+
+    /** The key of a line: the product id, or minus it for half cases. */
+    static int key(int productId, boolean half) {
+        return half ? -productId : productId;
+    }
+
+    /** The product of a line key. */
+    static int productOf(int key) {
+        return Math.abs(key);
+    }
+
+    /** True when the line key is a half case line. */
+    static boolean isHalf(int key) {
+        return key < 0;
+    }
+
+    /** One product of the order as the quote describes it (whole cases, or half cases). */
     static final class Line {
         final int productId;
         final String name;
@@ -27,16 +46,30 @@ final class ItemDiscounts {
         final BigDecimal maxPerUnit;
         final boolean allowed;
         final String reason;
+        /** A half case line: the price and the most off are per half case. */
+        final boolean half;
 
         Line(int productId, String name, int quantity, BigDecimal unitPrice, BigDecimal maxPerUnit, boolean allowed,
              String reason) {
+            this(productId, name, quantity, unitPrice, maxPerUnit, allowed, false, reason);
+        }
+
+        Line(int productId, String name, int quantity, BigDecimal unitPrice, BigDecimal maxPerUnit, boolean allowed,
+             boolean half, String reason) {
             this.productId = productId;
-            this.name = name == null || name.trim().isEmpty() ? "Product " + productId : name.trim();
+            String n = name == null || name.trim().isEmpty() ? "Product " + productId : name.trim();
+            this.name = half ? n + " (half case)" : n;
             this.quantity = quantity;
             this.unitPrice = scale(unitPrice);
             this.maxPerUnit = scale(maxPerUnit);
             this.allowed = allowed && this.maxPerUnit.signum() > 0;
             this.reason = reason;
+            this.half = half;
+        }
+
+        /** The line key (see {@link ItemDiscounts#key}). */
+        int key() {
+            return ItemDiscounts.key(productId, half);
         }
 
         /** "Sprite 1L × 2 · ₱25.00 each" */
@@ -83,7 +116,7 @@ final class ItemDiscounts {
         for (Line l : lines) {
             BigDecimal q = BigDecimal.valueOf(l.quantity);
             t.subtotal = t.subtotal.add(l.unitPrice.multiply(q));
-            BigDecimal d = perUnit == null ? null : perUnit.get(l.productId);
+            BigDecimal d = perUnit == null ? null : perUnit.get(l.key());
             if (d != null && d.signum() > 0 && problem(l, d) == null) t.discount = t.discount.add(d.multiply(q));
         }
         t.subtotal = scale(t.subtotal);
@@ -99,7 +132,7 @@ final class ItemDiscounts {
         return "You can take something off: " + String.join(", ", names) + ". Other items keep their price.";
     }
 
-    /** Only the lines with a discount, for the server ({product id -> amount per piece}). */
+    /** Only the lines with a discount, for the server ({line key -> amount per piece}). */
     static Map<Integer, BigDecimal> nonZero(Map<Integer, BigDecimal> perUnit) {
         Map<Integer, BigDecimal> out = new LinkedHashMap<>();
         if (perUnit == null) return out;
@@ -146,7 +179,7 @@ final class ItemDiscounts {
         return out;
     }
 
-    /** Amounts per piece carried from the item list to the review step (same order as the product ids). */
+    /** Amounts per piece carried from the item list to the review step (same order as the line keys). */
     static Map<Integer, BigDecimal> fromArrays(int[] productIds, double[] perUnit) {
         Map<Integer, BigDecimal> out = new LinkedHashMap<>();
         if (productIds == null || perUnit == null || productIds.length != perUnit.length) return out;

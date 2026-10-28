@@ -53,6 +53,18 @@ original, discount and final price while typing. The server checks again on Conf
 booking's discount is changed (`discount_too_big`, `discount_not_configured` are shown on the discount
 field). Booking details show original / discount / final and who gave it.
 
+Half cases (`NewBookingDetailsActivity`, `Product`, `ItemDiscounts`, `CreateBookingRequest`; needs the
+Desktop repository's database update `20261028_07`):
+* A product that the Admin gave a half case price gets a second card on New Booking, "<name> (half case)",
+  at that price.
+* Its whole and half cards share the product's stock. A half case takes 0.5, so stock can be 7.5; + stops
+  when the next case or half case no longer fits.
+* "Less" on a half case card goes up to the half case's own limit (from the server).
+* A half case line is sent as `"unit": "HALF"`. Whole lines are sent without a unit, as before.
+* Discounts are kept per line: the product id for whole cases, minus the product id for half cases.
+* Booking details, the driver's screens and the item list show `... (half case) x2`.
+* An older server sends no `half_price`, so no half case card appears.
+
 Still only on the phone (the app says so where relevant): notifications, the local
 driver location log, deposits, damage charges, profile edits.
 OTP proof of delivery is not implemented; the recipient's name is required.
