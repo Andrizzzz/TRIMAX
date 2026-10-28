@@ -75,7 +75,7 @@ final class ItemDiscountRows {
             TextInputEditText et = new TextInputEditText(til.getContext());
             et.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             et.setFilters(new InputFilter[]{new InputFilter.LengthFilter(10)});
-            BigDecimal start = initial == null ? null : initial.get(l.productId);
+            BigDecimal start = initial == null ? null : initial.get(l.key());
             if (start != null && start.signum() > 0) et.setText(start.stripTrailingZeros().toPlainString());
             et.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
@@ -88,13 +88,13 @@ final class ItemDiscountRows {
             til.addView(et);
             container.addView(til, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT));
-            layouts.put(l.productId, til);
-            fields.put(l.productId, et);
+            layouts.put(l.key(), til);
+            fields.put(l.key(), et);
         }
         container.setVisibility(lines.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
-    /** The amounts typed so far ({product id -> pesos per piece}); lines that cannot be read are left out. */
+    /** The amounts typed so far ({line key -> pesos per piece}); lines that cannot be read are left out. */
     Map<Integer, BigDecimal> values() {
         Map<Integer, BigDecimal> out = new LinkedHashMap<>();
         for (Map.Entry<Integer, TextInputEditText> e : fields.entrySet()) {
@@ -115,7 +115,7 @@ final class ItemDiscountRows {
             String p = check(l);
             if (p != null && first == null) {
                 first = p;
-                TextInputEditText et = fields.get(l.productId);
+                TextInputEditText et = fields.get(l.key());
                 if (et != null) et.requestFocus();
             }
         }
@@ -123,8 +123,8 @@ final class ItemDiscountRows {
     }
 
     private String check(ItemDiscounts.Line l) {
-        TextInputLayout til = layouts.get(l.productId);
-        TextInputEditText et = fields.get(l.productId);
+        TextInputLayout til = layouts.get(l.key());
+        TextInputEditText et = fields.get(l.key());
         if (til == null || et == null) return null;
         String problem;
         try {

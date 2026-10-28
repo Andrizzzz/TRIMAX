@@ -28,6 +28,14 @@ public final class BookingRecord {
         public double subtotal;
         /** Pesos taken off each piece by the agent (20261027_04); 0 = full price. */
         public double discountPerUnit;
+        /** A half case line (20261028_07): quantity in half cases at the half case price. */
+        public boolean half;
+
+        /** "Coke Case (24)" or "Coke Case (24) (half case)". */
+        public String displayName() {
+            String n = productName != null ? productName : "Product " + productId;
+            return half ? n + " (half case)" : n;
+        }
 
         /** What this line costs after its discount. */
         public double lineTotal() {
@@ -104,7 +112,7 @@ public final class BookingRecord {
         StringBuilder sb = new StringBuilder();
         for (Item i : items) {
             if (sb.length() > 0) sb.append(", ");
-            sb.append(i.productName != null ? i.productName : "Product " + i.productId).append(" x").append(i.quantity);
+            sb.append(i.displayName()).append(" x").append(i.quantity);
             if (i.discountPerUnit > 0) sb.append(String.format(Locale.US, " (less \u20B1%,.2f each)", i.discountPerUnit));
         }
         return sb.toString();
@@ -239,6 +247,7 @@ public final class BookingRecord {
                 item.subtotal = st != null ? st : 0;
                 Double dpu = Json.number(it, "discount_per_unit");
                 item.discountPerUnit = dpu != null ? dpu : 0;
+                item.half = "HALF".equals(Json.text(it, "unit"));   // 20261028_07; absent before = whole
                 b.items.add(item);
             }
         }

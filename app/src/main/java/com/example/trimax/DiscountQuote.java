@@ -37,7 +37,9 @@ final class DiscountQuote {
                 if (it == null || !it.has("product_id")) continue;
                 q.items.add(new ItemDiscounts.Line(it.optInt("product_id"), Json.text(it, "product_name"),
                         it.optInt("quantity", 1), money(it, "unit_price"), money(it, "max_discount_per_unit"),
-                        Boolean.TRUE.equals(Json.bool(it, "discount_allowed")), Json.text(it, "reason")));
+                        Boolean.TRUE.equals(Json.bool(it, "discount_allowed")),
+                        "HALF".equals(Json.text(it, "unit")),          // 20261028_07; absent before = whole
+                        Json.text(it, "reason")));
             }
         }
         return q;

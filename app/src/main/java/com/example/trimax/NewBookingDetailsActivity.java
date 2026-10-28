@@ -33,9 +33,13 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
     private double pickupLat, pickupLng, destLat, destLng;
 
     private List<ServicePackage> servicePackages;
-    private final java.util.Map<String, Integer> stockByPackage = new java.util.HashMap<>();
-    /** Products as the server listed them (for "Less": allowed or not, and the most per piece). */
+    /**
+     * Products as the server listed them, by card (for the stock, and for "Less": allowed or not, and the most
+     * per piece). A product with a half case price has a second card, "<name> (half case)" (id ending in
+     * HALF_SUFFIX), at the half case price; both cards share the product's stock (a half case takes 0.5).
+     */
     private final java.util.Map<String, Product> productByPackage = new java.util.HashMap<>();
+    private static final String HALF_SUFFIX = ":HALF";
     /** "Less" per piece the agent picked on an item card (only items the Admin allows). */
     private final java.util.Map<String, java.math.BigDecimal> lessByPackage = new java.util.HashMap<>();
 
@@ -168,22 +172,28 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             public void onSuccess(List<Product> products) {
                 if (SessionGuard.isGone(NewBookingDetailsActivity.this)) return;
                 servicePackages = new ArrayList<>();
-                stockByPackage.clear();
                 productByPackage.clear();
                 for (Product p : products) {
-                    ServicePackage pkg = new ServicePackage("product:" + p.id, p.name,
-                            p.stock > 0 ? "In stock: " + p.stock : "Out of stock",
+                    String stockText = p.stock > 0 ? "In stock: " + Product.stockText(p.stock) : "Out of stock";
+                    ServicePackage pkg = new ServicePackage("product:" + p.id, p.name, stockText,
                             p.price, R.drawable.ic_delivery_van, null, "", "", "");
                     pkg.setImageUrl(p.imageUrl());   // picture set by the admin on the Desktop, if any
                     servicePackages.add(pkg);
-                    stockByPackage.put(pkg.getId(), p.stock);
                     productByPackage.put(pkg.getId(), p);
+                    if (p.sellsHalfCase()) {
+                        // Half case (database update 20261028_07): its own card at the half case price.
+                        ServicePackage half = new ServicePackage("product:" + p.id + HALF_SUFFIX, p.name + " (half case)",
+                                "Half case · " + stockText, p.halfPrice, R.drawable.ic_delivery_van, null, "", "", "");
+                        half.setImageUrl(p.imageUrl());
+                        servicePackages.add(half);
+                        productByPackage.put(half.getId(), p);
+                    }
                 }
                 // A "Less" picked before a refresh stays only if the item still allows it.
                 for (java.util.Iterator<java.util.Map.Entry<String, java.math.BigDecimal>> it = lessByPackage.entrySet().iterator(); it.hasNext(); ) {
                     java.util.Map.Entry<String, java.math.BigDecimal> e = it.next();
                     Product p = productByPackage.get(e.getKey());
-                    if (p == null || ItemDiscounts.problem(p.discountLine(1), e.getValue()) != null) it.remove();
+                    if (p == null || ItemDiscounts.problem(p.discountLine(1, e.getKey().endsWith(HALF_SUFFIX)), e.getValue()) != null) it.remove();
                 }
                 if (servicePackages.isEmpty()) {
                     showProductMessage("No products are available. Ask your administrator.", true);
@@ -193,8 +203,7 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
                 String chosen = getIntent().getStringExtra("SELECTED_PACKAGE");
                 if (chosen != null) {
                     for (ServicePackage pkg : servicePackages) {
-                        Integer stock = stockByPackage.get(pkg.getId());
-                        if (chosen.equalsIgnoreCase(pkg.getName()) && stock != null && stock > 0 && pkg.getQuantity() == 0) {
+                        if (chosen.equalsIgnoreCase(pkg.getName()) && stockProblem(pkg) == null && pkg.getQuantity() == 0) {
                             pkg.setQuantity(1);
                             break;
                         }
@@ -231,12 +240,44 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
         }
     }
 
+    /** The card's line key: the product id, or minus it for the half case card (see ItemDiscounts.key). */
     private static int productIdOf(ServicePackage pkg) {
         try {
-            return Integer.parseInt(pkg.getId().substring("product:".length()));
+            String id = pkg.getId().substring("product:".length());
+            boolean half = id.endsWith(HALF_SUFFIX);
+            if (half) id = id.substring(0, id.length() - HALF_SUFFIX.length());
+            return ItemDiscounts.key(Integer.parseInt(id), half);
         } catch (RuntimeException e) {
             return 0;
         }
+    }
+
+    private static boolean isHalf(ServicePackage pkg) {
+        return pkg.getId() != null && pkg.getId().endsWith(HALF_SUFFIX);
+    }
+
+    /** Cases of this product already in the order (whole cards count 1, half case cards 0.5 each). */
+    private double casesInOrder(Product product) {
+        double n = 0;
+        for (ServicePackage other : servicePackages) {
+            if (other.getQuantity() > 0 && productByPackage.get(other.getId()) == product) {
+                n += other.getQuantity() * (isHalf(other) ? 0.5 : 1);
+            }
+        }
+        return n;
+    }
+
+    /** Why one more of this card does not fit the product's stock, or null when it does. */
+    private String stockProblem(ServicePackage pkg) {
+        Product product = productByPackage.get(pkg.getId());
+        if (product == null) return null;
+        if (product.stock <= 0) return "Out of stock.";
+        double after = casesInOrder(product) + (isHalf(pkg) ? 0.5 : 1);
+        if (after > product.stock + 1e-9) {
+            return "Only " + Product.stockText(product.stock) + " in stock"
+                    + (isHalf(pkg) ? " (a half case takes 0.5)." : ".");
+        }
+        return null;
     }
 
     private java.math.BigDecimal lessOf(ServicePackage pkg) {
@@ -263,7 +304,8 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
             }
         }
         if (chipLess == null) return;
-        if (product == null || !product.discountAllowed) {
+        boolean allowed = product != null && (isHalf(pkg) ? product.halfDiscountAllowed() : product.discountAllowed);
+        if (!allowed) {
             chipLess.setVisibility(View.GONE);
             return;
         }
@@ -281,8 +323,9 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
     private void openLess(ServicePackage pkg, TextView tvPrice, TextView tvNet, Chip chipLess) {
         Product product = productByPackage.get(pkg.getId());
-        if (product == null || !product.discountAllowed) return;
-        ItemLessSheet.show(this, product.discountLine(Math.max(1, pkg.getQuantity())), lessOf(pkg), perUnit -> {
+        boolean half = isHalf(pkg);
+        if (product == null || !(half ? product.halfDiscountAllowed() : product.discountAllowed)) return;
+        ItemLessSheet.show(this, product.discountLine(Math.max(1, pkg.getQuantity()), half), lessOf(pkg), perUnit -> {
             if (perUnit.signum() > 0) lessByPackage.put(pkg.getId(), perUnit);
             else lessByPackage.remove(pkg.getId());
             showPrice(pkg, tvPrice, tvNet, chipLess);
@@ -329,10 +372,10 @@ public class NewBookingDetailsActivity extends AppCompatActivity {
 
             if (btnPlus != null) {
                 btnPlus.setOnClickListener(v -> {
-                    Integer stock = stockByPackage.get(pkg.getId());
-                    if (stock != null && pkg.getQuantity() >= stock) {
-                        android.widget.Toast.makeText(this, stock > 0 ? "Only " + stock + " in stock." : "Out of stock.",
-                                android.widget.Toast.LENGTH_SHORT).show();
+                    // Whole and half case cards of a product share its stock (a half case takes 0.5).
+                    String problem = stockProblem(pkg);
+                    if (problem != null) {
+                        android.widget.Toast.makeText(this, problem, android.widget.Toast.LENGTH_SHORT).show();
                         return;
                     }
                     pkg.setQuantity(pkg.getQuantity() + 1);

@@ -359,7 +359,7 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         final java.util.Map<Integer, java.math.BigDecimal> current = new java.util.HashMap<>();
         for (BookingRecord.Item it : record.items) {
-            if (it.discountPerUnit > 0) current.put(it.productId, java.math.BigDecimal.valueOf(it.discountPerUnit));
+            if (it.discountPerUnit > 0) current.put(ItemDiscounts.key(it.productId, it.half), java.math.BigDecimal.valueOf(it.discountPerUnit));
         }
         final DiscountQuote[] quote = new DiscountQuote[1];
         final ItemDiscountRows[] rows = new ItemDiscountRows[1];
@@ -372,7 +372,7 @@ public class BookingDetailActivity extends AppCompatActivity {
         rows[0] = new ItemDiscountRows(this, rowsBox, refresh);
 
         java.util.List<CreateBookingRequest.Line> lines = new java.util.ArrayList<>();
-        for (BookingRecord.Item it : record.items) lines.add(new CreateBookingRequest.Line(it.productId, it.quantity));
+        for (BookingRecord.Item it : record.items) lines.add(new CreateBookingRequest.Line(it.productId, it.quantity, it.half));
         TrimaxApi.get(this).discountQuote(lines, new TrimaxApi.Callback<DiscountQuote>() {
             @Override
             public void onSuccess(DiscountQuote result) {

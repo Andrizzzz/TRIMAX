@@ -121,6 +121,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         // Estimated from the prices shown on the previous step; the server prices the booking when it is saved.
         double total = intent.getDoubleExtra("ESTIMATED_TOTAL", selectedPrice * quantity);
         tvTotalAmount.setText(String.format(Locale.US, "₱ %,.2f", total));
+        // Line keys: the product id, or minus it for a half case line (see ItemDiscounts.key).
         final int[] productIds = intent.getIntArrayExtra("PRODUCT_IDS");
         final int[] productQuantities = intent.getIntArrayExtra("PRODUCT_QUANTITIES");
 
@@ -133,7 +134,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 ? BigDecimal.valueOf(total).setScale(2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
         if (productIds != null && productQuantities != null && productIds.length == productQuantities.length) {
             for (int i = 0; i < productIds.length; i++) {
-                quoteLines.add(new CreateBookingRequest.Line(productIds[i], productQuantities[i]));
+                quoteLines.add(CreateBookingRequest.Line.ofKey(productIds[i], productQuantities[i]));
             }
         }
         setUpDiscount();
@@ -177,7 +178,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             request.schedule = scheduledTimeStr;
             request.instructions = notes;
             for (int i = 0; i < productIds.length; i++) {
-                request.lines.add(new CreateBookingRequest.Line(productIds[i], productQuantities[i]));
+                request.lines.add(CreateBookingRequest.Line.ofKey(productIds[i], productQuantities[i]));
             }
             String discountProblem = itemRows != null ? itemRows.firstProblem() : null;
             if (discountProblem != null) {
@@ -186,7 +187,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             }
             java.util.Map<Integer, BigDecimal> perUnit = itemRows != null
                     ? ItemDiscounts.nonZero(itemRows.values()) : new java.util.HashMap<>();
-            for (CreateBookingRequest.Line l : request.lines) l.discountPerUnit = perUnit.get(l.productId);
+            for (CreateBookingRequest.Line l : request.lines) l.discountPerUnit = perUnit.get(l.key());
             String problem = request.validate();
             if (problem != null) {
                 Toast.makeText(this, problem, Toast.LENGTH_LONG).show();
