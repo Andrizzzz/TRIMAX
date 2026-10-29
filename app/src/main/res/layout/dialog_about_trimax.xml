@@ -72,13 +72,14 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvAboutVersion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:background="@drawable/bg_pill_selected"
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
-            android:text="Version 2.5.0 Enterprise (Redesign v2)"
+            android:text="Version"
             android:textColor="@color/primary_blue"
             android:textSize="11sp"
             android:textStyle="bold" />

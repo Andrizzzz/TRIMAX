@@ -17,6 +17,12 @@ public final class ReportText {
         return "Completion rate: " + Math.round(completed * 100f / total) + "% (" + completed + " of " + total + ")";
     }
 
+    /** "40% of all bookings" (whole percent); "No bookings yet" when there are none in the period. */
+    public static String shareOfTotal(int part, int total) {
+        if (total <= 0) return "No bookings in this period";
+        return Math.round(part * 100f / total) + "% of all bookings";
+    }
+
     /**
      * One CSV cell, always quoted. A value that a spreadsheet would run as a formula (starting with = + - @,
      * tab or carriage return) gets a leading apostrophe, so a customer name cannot run anything when the

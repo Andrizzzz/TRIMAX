@@ -214,9 +214,7 @@ public class DashboardActivity extends AppCompatActivity {
         String agentName = session.getFullName();
         String agentEmail = session.getEmail();
 
-        if (tvWelcomeAgent != null) {
-            tvWelcomeAgent.setText(String.format("Hi, Agent %s! 👋", agentName));
-        }
+        showGreeting(tvWelcomeAgent, agentName);
 
         // 1. HAMBURGER MENU / NAVIGATION DRAWER
         if (btnMenu != null && drawerLayout != null) {
@@ -506,9 +504,7 @@ public class DashboardActivity extends AppCompatActivity {
         String agentEmail = session.getEmail();
 
         TextView tvWelcomeAgent = findViewById(R.id.tvWelcomeAgent);
-        if (tvWelcomeAgent != null) {
-            tvWelcomeAgent.setText(String.format("Hi, Agent %s! 👋", agentName));
-        }
+        showGreeting(tvWelcomeAgent, agentName);
 
         NavigationView navigationView = findViewById(R.id.navigationView);
         if (navigationView != null) {
@@ -846,5 +842,12 @@ public class DashboardActivity extends AppCompatActivity {
                 });
             }
         }
+    }
+
+    /** One greeting: "Good evening," above the agent's name (it used to say "Hello," above "Hi, Agent ..."). */
+    private void showGreeting(TextView nameView, String agentName) {
+        TextView label = findViewById(R.id.tvAgentGreetingLabel);
+        if (label != null) label.setText(Greeting.now() + ",");
+        if (nameView != null) nameView.setText(Greeting.nameLine(agentName));
     }
 }

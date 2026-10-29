@@ -36,8 +36,10 @@ public class BookingConfirmedActivity extends AppCompatActivity {
         }
 
         btnViewBooking.setOnClickListener(v -> {
-            Intent intent = new Intent(BookingConfirmedActivity.this, BookingDetailActivity.class);
-            intent.putExtra("BOOKING_ID", bookingId != null ? bookingId : "BK-2026-00123");
+            // Without the new booking's number, open the bookings list (it used to open a sample "BK-2026-00123")
+            Intent intent = bookingId != null && !bookingId.isEmpty()
+                    ? new Intent(BookingConfirmedActivity.this, BookingDetailActivity.class).putExtra("BOOKING_ID", bookingId)
+                    : new Intent(BookingConfirmedActivity.this, BookingsActivity.class);
             startActivity(intent);
             finish();
         });

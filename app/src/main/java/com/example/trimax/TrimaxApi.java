@@ -235,6 +235,11 @@ public final class TrimaxApi {
 
     // ------------------------------------------------------------------ driver
 
+    /** Delivered today / this month, still to deliver, and this month's pay (sql/20261029_03). */
+    public void driverSummary(Callback<DriverSummary> cb) {
+        run(() -> DriverSummary.parse(client.rpc("trimax_driver_summary", new JSONObject())), cb);
+    }
+
     /** @param scope "active" (to do, in working order) or "history" (delivered, failed, completed, cancelled) */
     public void listDriverDeliveries(String scope, Callback<List<BookingRecord>> cb) {
         run(() -> {

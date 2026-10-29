@@ -24,4 +24,11 @@ public class ReportTextTest {
         assertEquals("\"'+639171234567\"", ReportText.csvCell("+639171234567"));
         assertEquals("\"'@SUM(A1)\"", ReportText.csvCell("@SUM(A1)"));
     }
+
+    @Test
+    public void sharesOfAllBookingsAreComputed() {
+        assertEquals("40% of all bookings", ReportText.shareOfTotal(2, 5));
+        assertEquals("0% of all bookings", ReportText.shareOfTotal(0, 5));
+        assertEquals("No bookings in this period", ReportText.shareOfTotal(0, 0));
+    }
 }
