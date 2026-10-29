@@ -108,8 +108,9 @@
                         </RelativeLayout>
                     </LinearLayout>
 
-                    <!-- Welcome Greeting -->
+                    <!-- Welcome Greeting: one time-based greeting (set by the screen), the name below -->
                     <TextView
+                        android:id="@+id/tvAgentGreetingLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/btnMenu"

@@ -178,7 +178,6 @@ public class DriverDashboardActivity extends AppCompatActivity {
         ImageView btnMenu = findViewById(R.id.btnMenu);
         NavigationView navigationView = findViewById(R.id.navigationView);
 
-        TextView tvDriverGreeting = findViewById(R.id.tvDriverGreeting);
         ImageView btnDriverNotifications = findViewById(R.id.btnDriverNotifications);
 
         tvDutyStatusPill = findViewById(R.id.tvDutyStatusPill);
@@ -230,9 +229,10 @@ public class DriverDashboardActivity extends AppCompatActivity {
         tvDelivBadge = findViewById(R.id.tvDelivBadge);
 
         String driverName = session.getFullName();
-        if (tvDriverGreeting != null) {
-            tvDriverGreeting.setText(String.format("%s, %s 👋", getTimeBasedGreeting(), driverName));
-        }
+        showGreeting();
+
+        View statEarnings = findViewById(R.id.statEarnings);
+        if (statEarnings != null) statEarnings.setOnClickListener(v -> showEarnings());
 
         // Navigation Drawer
         if (btnMenu != null && drawerLayout != null) {
@@ -433,20 +433,73 @@ public class DriverDashboardActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private String getTimeBasedGreeting() {
-        int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-        if (hour < 12) return "Good morning";
-        if (hour < 17) return "Good afternoon";
-        return "Good evening";
+    /** One greeting: "Good evening," above the driver's name (the two lines used to disagree). */
+    private void showGreeting() {
+        TextView label = findViewById(R.id.tvDriverGreetingLabel);
+        TextView name = findViewById(R.id.tvDriverGreeting);
+        if (label != null) label.setText(Greeting.now() + ",");
+        if (name != null && session != null) name.setText(Greeting.nameLine(session.getFullName()));
     }
 
     private void refreshDriverDashboard() {
         updateDutyUI();
         loadAssignedHeroDelivery();
-        TextView tvDriverGreeting = findViewById(R.id.tvDriverGreeting);
-        if (tvDriverGreeting != null && session != null) {
-            tvDriverGreeting.setText(String.format("%s, %s 👋", getTimeBasedGreeting(), session.getFullName()));
+        showGreeting();
+        loadSummary();
+    }
+
+    /** The last numbers from the server (null until the first answer). */
+    private DriverSummary summary;
+
+    /** Delivered today, earnings this month (Payroll) and still to deliver, from the server. */
+    private void loadSummary() {
+        TrimaxApi.get(this).driverSummary(new TrimaxApi.Callback<DriverSummary>() {
+            @Override
+            public void onSuccess(DriverSummary s) {
+                if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                summary = s;
+                setStat(R.id.tvStatDeliveries, String.valueOf(s.deliveredToday));
+                setStat(R.id.tvStatEarnings, DriverSummary.pesoShort(s.payMonth));
+                setStat(R.id.tvStatToDeliver, String.valueOf(s.toDeliver));
+            }
+
+            @Override
+            public void onError(ApiException error) {
+                if (SessionGuard.isGone(DriverDashboardActivity.this)) return;
+                if (SessionGuard.handle(DriverDashboardActivity.this, error)) return;
+                // keep the last numbers (or "–"); the dashboard itself still works
+            }
+        });
+    }
+
+    private void setStat(int id, String text) {
+        TextView tv = findViewById(id);
+        if (tv != null) tv.setText(text);
+    }
+
+    /** Earnings: this month's pay and the latest payroll records the admin entered. */
+    private void showEarnings() {
+        DriverSummary s = summary;
+        StringBuilder msg = new StringBuilder();
+        if (s == null) {
+            msg.append("Your earnings could not be loaded yet. Check the connection and pull down to refresh.");
+        } else {
+            msg.append("This month: ").append(DriverSummary.peso(s.payMonth)).append("\n");
+            msg.append("Delivered this month: ").append(s.deliveredMonth).append(s.deliveredMonth == 1 ? " booking" : " bookings")
+               .append(" (").append(DriverSummary.peso(s.deliveredMonthAmount)).append(")\n");
+            msg.append("Delivered today: ").append(s.deliveredToday).append(" (").append(DriverSummary.peso(s.deliveredTodayAmount)).append(")\n\n");
+            if (s.payRecords.isEmpty()) {
+                msg.append("No pay recorded yet. Your pay shows here once the admin records it in Payroll.");
+            } else {
+                msg.append("Latest pay:\n");
+                for (DriverSummary.Pay p : s.payRecords) msg.append("• ").append(p.line()).append("\n");
+            }
         }
+        new AlertDialog.Builder(this)
+                .setTitle("My earnings")
+                .setMessage(msg.toString().trim())
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     /** The server's view of this driver's unfinished deliveries (null until the first answer). */

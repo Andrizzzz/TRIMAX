@@ -176,10 +176,11 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvReportTotalSub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="↑ 12% vs. previous period"
+                            android:text="In the selected period"
                             android:textColor="@color/status_confirmed"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -229,10 +230,11 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvReportConfirmedSub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="86.3% completion rate"
+                            android:text="–"
                             android:textColor="@color/status_confirmed"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -291,10 +293,11 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvReportPendingSub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="5.6% of total bookings"
+                            android:text="–"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -343,10 +346,11 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvReportCancelledSub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="4.8% of total bookings"
+                            android:text="–"
                             android:textColor="@color/status_cancelled"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -402,9 +406,10 @@
                     </LinearLayout>
 
                     <TextView
+                            android:id="@+id/tvReportFailedSub"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="3.2% of total bookings"
+                        android:text="–"
                         android:textColor="@color/accent_blue"
                         android:textSize="12sp"
                         android:textStyle="bold" />

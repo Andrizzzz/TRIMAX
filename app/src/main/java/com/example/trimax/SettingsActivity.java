@@ -168,6 +168,17 @@ public class SettingsActivity extends AppCompatActivity {
         View btnClose = view.findViewById(R.id.btnCloseAbout);
         if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
 
+        // The installed app's real version (it showed a made-up "2.5.0 Enterprise" before)
+        TextView version = view.findViewById(R.id.tvAboutVersion);
+        if (version != null) {
+            try {
+                android.content.pm.PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+                version.setText("Version " + info.versionName);
+            } catch (Exception e) {
+                version.setText("Version");
+            }
+        }
+
         MaterialButton btnOk = view.findViewById(R.id.btnAboutOk);
         if (btnOk != null) btnOk.setOnClickListener(v -> dialog.dismiss());
 

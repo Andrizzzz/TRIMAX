@@ -111,13 +111,14 @@
                             app:tint="@android:color/white" />
                     </LinearLayout>
 
-                    <!-- Driver Greeting -->
+                    <!-- Driver Greeting: one time-based greeting (set by the screen), the name below -->
                     <TextView
+                        android:id="@+id/tvDriverGreetingLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/btnMenu"
                         android:layout_marginTop="16dp"
-                        android:text="Good Morning,"
+                        android:text="Hello,"
                         android:textColor="#D1E2FF"
                         android:textSize="15sp" />
 
@@ -127,7 +128,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/btnMenu"
                         android:layout_marginTop="34dp"
-                        android:text="Juan Santos 👋"
+                        android:text="👋"
                         android:textColor="@android:color/white"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -151,9 +152,10 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tvStatDeliveries"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="12"
+                                android:text="–"
                                 android:textColor="@android:color/white"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
@@ -161,7 +163,41 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Deliveries"
+                                android:text="Delivered today"
+                                android:textColor="#D1E2FF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="#33FFFFFF" />
+
+                        <LinearLayout
+                            android:id="@+id/statEarnings"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:contentDescription="Earnings this month. Tap to see your pay."
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvStatEarnings"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="–"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Earnings (month)"
                                 android:textColor="#D1E2FF"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -179,9 +215,10 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tvStatToDeliver"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="₱1,200"
+                                android:text="–"
                                 android:textColor="@android:color/white"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
@@ -189,35 +226,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Earnings"
-                                android:textColor="#D1E2FF"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="#33FFFFFF" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="98%"
-                                android:textColor="@android:color/white"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="On Time"
+                                android:text="To deliver"
                                 android:textColor="#D1E2FF"
                                 android:textSize="11sp" />
                         </LinearLayout>

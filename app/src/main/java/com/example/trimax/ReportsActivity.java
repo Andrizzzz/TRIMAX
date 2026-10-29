@@ -149,6 +149,12 @@ public class ReportsActivity extends AppCompatActivity {
         if (tvReportFailedCount != null) {
             tvReportFailedCount.setText(String.valueOf(failedCount));
         }
+        // The lines under the numbers are computed (they were sample percentages before)
+        setSub(R.id.tvReportTotalSub, total == 0 ? "No bookings in this period" : "In the selected period");
+        setSub(R.id.tvReportConfirmedSub, ReportText.shareOfTotal(confirmed, total));
+        setSub(R.id.tvReportPendingSub, ReportText.shareOfTotal(pending, total));
+        setSub(R.id.tvReportCancelledSub, ReportText.shareOfTotal(cancelled, total));
+        setSub(R.id.tvReportFailedSub, ReportText.shareOfTotal(failedCount, total));
 
         TextView tvInsights = findViewById(R.id.tvOperationalInsights);
         if (tvInsights != null) {
@@ -524,5 +530,10 @@ public class ReportsActivity extends AppCompatActivity {
             startActivity(intent);
         }
         finish();
+    }
+
+    private void setSub(int id, String text) {
+        TextView tv = findViewById(id);
+        if (tv != null) tv.setText(text);
     }
 }
