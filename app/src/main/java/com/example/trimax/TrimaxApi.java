@@ -107,11 +107,31 @@ public final class TrimaxApi {
         run(() -> Product.parseList(client.rpc("trimax_list_products", new JSONObject())), cb);
     }
 
+    /**
+     * Saves the booking on the server. With the Visit / Text-Call choice (20261029_02) a visit's photo is
+     * uploaded first into this agent's own folder of the private customer-photos bucket (same name on every
+     * retry, so it is never stored twice), then trimax_agent_create_booking_v2 saves the booking and the
+     * choice together; the server checks the photo really is there.
+     */
     public void createBooking(CreateBookingRequest request, Callback<BookingRecord> cb) {
         run(() -> {
             String problem = request.validate();
             if (problem != null) throw new ApiException(ApiException.Kind.INVALID, problem);
-            return BookingRecord.parse(client.rpc("trimax_agent_create_booking", request.toRpcArgs()));
+            if (!request.usesOrderVia()) {
+                return BookingRecord.parse(client.rpc("trimax_agent_create_booking", request.toRpcArgs()));
+            }
+            String photoPath = null;
+            if (CreateBookingRequest.VIA_VISIT.equals(request.orderVia)) {
+                byte[] jpeg = DutySync.readJpeg(request.visitPhoto, null);   // read here, off the main thread
+                if (jpeg == null) {
+                    throw new ApiException(ApiException.Kind.INVALID, "The visit photo is no longer on this phone. Take it again.");
+                }
+                String uid = client.currentUserId();
+                if (uid == null) throw ApiException.sessionExpired();
+                photoPath = uid + "/" + request.visitPhotoName;
+                client.uploadJpeg("customer-photos", photoPath, jpeg);
+            }
+            return BookingRecord.parse(client.rpc("trimax_agent_create_booking_v2", request.toRpcArgsV2(photoPath)));
         }, cb);
     }
 
