@@ -60,7 +60,9 @@ public class ImageTimestampHelper {
         String timestampStr = sdf.format(new Date());
 
         String line1 = (prefix != null ? prefix + " • " : "") + timestampStr;
-        String line2 = String.format(Locale.US, "GPS: %.4f, %.4f | TRI-MAX Mobile", lat, lng);
+        boolean noFix = (lat == 0 && lng == 0) || !Double.isFinite(lat) || !Double.isFinite(lng);
+        String line2 = noFix ? "GPS: not available | TRI-MAX Mobile"
+                : String.format(Locale.US, "GPS: %.4f, %.4f | TRI-MAX Mobile", lat, lng);
 
         int paddingLeft = Math.max(12, width / 40);
         int line1Y = height - bannerHeight + (fontSize + fontSize / 2);

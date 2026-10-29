@@ -1,7 +1,13 @@
 package com.example.trimax;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -9,11 +15,15 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+
+import java.io.File;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,6 +33,13 @@ import java.util.Locale;
 public class NewBookingSummaryActivity extends AppCompatActivity {
 
     private static final String STATE_REQUEST_ID = "trimax_request_id";
+    private static final String STATE_ORDER_VIA = "trimax_order_via";
+    private static final String STATE_VISIT_PHOTO = "trimax_visit_photo";
+    private static final String STATE_VISIT_NAME = "trimax_visit_name";
+    private static final String STATE_VISIT_LAT = "trimax_visit_lat";
+    private static final String STATE_VISIT_LNG = "trimax_visit_lng";
+    private static final String STATE_VISIT_AT = "trimax_visit_at";
+    private static final String STATE_PENDING_CAPTURE = "trimax_visit_pending";
 
     /**
      * One id per booking attempt, reused on every retry (and kept across screen rotation), so a retry after
@@ -45,10 +62,37 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
     private View rowSubtotal, rowDiscount;
     private androidx.activity.result.ActivityResultLauncher<Intent> addCustomerLauncher;
 
+    // How the agent took the order (20261029_02): VISIT (a photo taken there is required) or TEXT_CALL.
+    private String orderVia;
+    private File visitPhoto;            // the stamped JPEG on this phone
+    private String visitPhotoName;      // its name on the server; one per photo, kept for retries
+    private Double visitLat, visitLng;  // where it was taken (null without a location)
+    private String visitTakenAt;        // ISO time it was taken
+    private File pendingCapture;        // the file the camera app is writing into
+    private boolean visitPhotoWorking;
+    private LocationHelper locationHelper;
+    private final java.util.concurrent.ExecutorService photoWorker = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private androidx.activity.result.ActivityResultLauncher<Intent> visitCameraLauncher;
+    private androidx.activity.result.ActivityResultLauncher<String> cameraPermissionLauncher;
+    private MaterialButtonToggleGroup toggleOrderVia;
+    private View llVisitPhoto, cardOrderVia;
+    private ImageView ivVisitPhoto;
+    private TextView tvVisitPhotoStatus, tvOrderViaHint;
+    private MaterialButton btnVisitPhoto;
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(STATE_REQUEST_ID, requestId);
+        outState.putString(STATE_ORDER_VIA, orderVia);
+        if (visitPhoto != null) outState.putString(STATE_VISIT_PHOTO, visitPhoto.getAbsolutePath());
+        outState.putString(STATE_VISIT_NAME, visitPhotoName);
+        if (visitLat != null && visitLng != null) {
+            outState.putDouble(STATE_VISIT_LAT, visitLat);
+            outState.putDouble(STATE_VISIT_LNG, visitLng);
+        }
+        outState.putString(STATE_VISIT_AT, visitTakenAt);
+        if (pendingCapture != null) outState.putString(STATE_PENDING_CAPTURE, pendingCapture.getAbsolutePath());
     }
 
     @Override
@@ -56,6 +100,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         requestId = savedInstanceState != null ? savedInstanceState.getString(STATE_REQUEST_ID) : null;
         if (requestId == null) requestId = java.util.UUID.randomUUID().toString();
+        if (savedInstanceState != null) restoreOrderVia(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_new_booking_summary);
 
@@ -138,6 +183,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             }
         }
         setUpDiscount();
+        setUpOrderVia();
 
         // A booking needs a customer saved on the server with a photo; offered when the server says so.
         addCustomerLauncher = registerForActivityResult(
@@ -161,6 +207,18 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 return;
             }
             if (submitting) return;   // ignore rapid repeat taps while the first submission is running
+            if (orderVia == null) {
+                showOrderViaProblem("Choose how you took this order: Visit or Text / Call.");
+                return;
+            }
+            if (visitPhotoWorking) {
+                Toast.makeText(this, "The visit photo is still being prepared. Try again in a moment.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (CreateBookingRequest.VIA_VISIT.equals(orderVia) && !hasVisitPhoto()) {
+                showOrderViaProblem("Take a photo of the visit before confirming the booking.");
+                return;
+            }
 
             String notes = intent.getStringExtra("NOTES");
             String scheduledTimeStr = resolvedTime.isEmpty()
@@ -177,6 +235,14 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             request.longitude = destLng;
             request.schedule = scheduledTimeStr;
             request.instructions = notes;
+            request.orderVia = orderVia;
+            if (CreateBookingRequest.VIA_VISIT.equals(orderVia)) {
+                request.visitPhoto = visitPhoto;
+                request.visitPhotoName = visitPhotoName;
+                request.visitLatitude = visitLat;
+                request.visitLongitude = visitLng;
+                request.visitTakenAtIso = visitTakenAt;
+            }
             for (int i = 0; i < productIds.length; i++) {
                 request.lines.add(CreateBookingRequest.Line.ofKey(productIds[i], productQuantities[i]));
             }
@@ -199,6 +265,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
             btnConfirmBooking.setEnabled(false);
             btnConfirmBooking.setText("Submitting...");
             btnEdit.setEnabled(false);
+            setOrderViaEnabled(false);
             TrimaxApi.get(this).createBooking(request, new TrimaxApi.Callback<BookingRecord>() {
                 @Override
                 public void onSuccess(BookingRecord saved) {
@@ -209,6 +276,8 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                     dbHelper.saveCustomer(customerName, customerPhone, customerEmail, address, destLat, destLng);
                     dbHelper.addNotification(session.getUsername(), "Booking Request Submitted",
                             "Booking #" + saved.idText() + " is pending admin confirmation.");
+
+                    deleteQuietly(visitPhoto);   // the server has it now
 
                     Intent confirmedIntent = new Intent(NewBookingSummaryActivity.this, BookingConfirmedActivity.class);
                     confirmedIntent.putExtra("BOOKING_ID", saved.idText());
@@ -223,6 +292,7 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                     btnConfirmBooking.setEnabled(true);
                     btnConfirmBooking.setText(confirmLabel);
                     btnEdit.setEnabled(true);
+                    setOrderViaEnabled(true);
                     if (SessionGuard.handle(NewBookingSummaryActivity.this, error)) return;
                     String detail = error.getDetail();
                     if ("customer_photo_required".equals(detail)) {
@@ -244,6 +314,10 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                                 })
                                 .setNegativeButton("Cancel", null)
                                 .show();
+                        return;
+                    }
+                    if ("order_via_required".equals(detail) || "visit_photo_required".equals(detail)) {
+                        showOrderViaProblem(error.getMessage());
                         return;
                     }
                     if ("discount_too_big".equals(detail) || "discount_not_configured".equals(detail)
@@ -269,6 +343,239 @@ public class NewBookingSummaryActivity extends AppCompatActivity {
                 }
             });
         });
+    }
+
+    // ------------------------------------------------------------------ Visit or Text / Call
+
+    private void restoreOrderVia(Bundle state) {
+        orderVia = state.getString(STATE_ORDER_VIA);
+        String photo = state.getString(STATE_VISIT_PHOTO);
+        visitPhoto = photo != null ? new File(photo) : null;
+        visitPhotoName = state.getString(STATE_VISIT_NAME);
+        if (state.containsKey(STATE_VISIT_LAT) && state.containsKey(STATE_VISIT_LNG)) {
+            visitLat = state.getDouble(STATE_VISIT_LAT);
+            visitLng = state.getDouble(STATE_VISIT_LNG);
+        }
+        visitTakenAt = state.getString(STATE_VISIT_AT);
+        String pending = state.getString(STATE_PENDING_CAPTURE);
+        pendingCapture = pending != null ? new File(pending) : null;
+    }
+
+    private void setUpOrderVia() {
+        locationHelper = new LocationHelper(this);
+        cardOrderVia = findViewById(R.id.cardOrderVia);
+        toggleOrderVia = findViewById(R.id.toggleOrderVia);
+        llVisitPhoto = findViewById(R.id.llVisitPhoto);
+        ivVisitPhoto = findViewById(R.id.ivVisitPhoto);
+        tvVisitPhotoStatus = findViewById(R.id.tvVisitPhotoStatus);
+        tvOrderViaHint = findViewById(R.id.tvOrderViaHint);
+        btnVisitPhoto = findViewById(R.id.btnVisitPhoto);
+        if (toggleOrderVia == null) return;
+
+        if (CreateBookingRequest.VIA_VISIT.equals(orderVia)) toggleOrderVia.check(R.id.btnViaVisit);
+        else if (CreateBookingRequest.VIA_TEXT_CALL.equals(orderVia)) toggleOrderVia.check(R.id.btnViaTextCall);
+        toggleOrderVia.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            int checked = group.getCheckedButtonId();
+            orderVia = checked == R.id.btnViaVisit ? CreateBookingRequest.VIA_VISIT
+                    : checked == R.id.btnViaTextCall ? CreateBookingRequest.VIA_TEXT_CALL : null;
+            showOrderVia();
+            updateLocationTracking();
+        });
+        if (btnVisitPhoto != null) btnVisitPhoto.setOnClickListener(v -> takeVisitPhoto());
+
+        cameraPermissionLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), granted -> {
+                    if (granted) {
+                        launchVisitCamera();
+                    } else {
+                        new androidx.appcompat.app.AlertDialog.Builder(this)
+                                .setTitle("Camera permission needed")
+                                .setMessage("A visit needs a photo taken with the camera. Allow the Camera permission "
+                                        + "in the app settings, or choose Text / Call if you did not visit.")
+                                .setPositiveButton("Open Settings", (d, w) -> startActivity(new Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))))
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    }
+                });
+
+        visitCameraLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), result -> {
+                    File raw = pendingCapture;
+                    pendingCapture = null;
+                    if (result.getResultCode() != RESULT_OK) {
+                        deleteQuietly(raw);
+                        return;
+                    }
+                    Bitmap preview = null;
+                    if (result.getData() != null && result.getData().getExtras() != null) {
+                        Object data = result.getData().getExtras().get("data");
+                        if (data instanceof Bitmap) preview = (Bitmap) data;
+                    }
+                    final Bitmap small = preview;
+                    boolean located = locationHelper != null && locationHelper.hasValidLocationFix();
+                    final Double lat = located ? locationHelper.getLatitude() : null;
+                    final Double lng = located ? locationHelper.getLongitude() : null;
+                    final long takenAt = System.currentTimeMillis();
+                    setVisitPhotoWorking(true);
+                    photoWorker.execute(() -> {
+                        File stamped = null;
+                        try {
+                            // Full-size photo from the file the camera wrote; the camera's small preview otherwise.
+                            Bitmap photo = CameraCapture.readUpright(raw);
+                            if (photo == null) photo = small;
+                            if (photo != null) {
+                                stamped = ImageTimestampHelper.saveBitmapWithTimestamp(this, photo, "VISIT",
+                                        lat != null ? lat : 0, lng != null ? lng : 0);
+                            }
+                        } catch (OutOfMemoryError | RuntimeException e) {
+                            stamped = null;
+                        } finally {
+                            deleteQuietly(raw);
+                        }
+                        final File saved = stamped;
+                        runOnUiThread(() -> {
+                            if (SessionGuard.isGone(this)) {
+                                deleteQuietly(saved);
+                                return;
+                            }
+                            setVisitPhotoWorking(false);
+                            if (saved == null || !saved.isFile() || saved.length() == 0) {
+                                Toast.makeText(this, "The photo could not be saved. Take it again.", Toast.LENGTH_LONG).show();
+                                return;
+                            }
+                            if (visitPhoto != null && !visitPhoto.equals(saved)) deleteQuietly(visitPhoto);   // keep the latest
+                            visitPhoto = saved;
+                            visitPhotoName = CreateBookingRequest.newVisitPhotoName();
+                            visitLat = lat;
+                            visitLng = lng;
+                            visitTakenAt = CreateBookingRequest.isoUtc(takenAt);
+                            showOrderVia();
+                        });
+                    });
+                });
+        showOrderVia();
+    }
+
+    private boolean hasVisitPhoto() {
+        return visitPhoto != null && visitPhoto.isFile() && visitPhoto.length() > 0 && visitPhotoName != null;
+    }
+
+    private void takeVisitPhoto() {
+        if (submitting || visitPhotoWorking) return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchVisitCamera();
+        } else if (cameraPermissionLauncher != null) {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void launchVisitCamera() {
+        pendingCapture = CameraCapture.newTargetFile(this, "VISIT");
+        try {
+            visitCameraLauncher.launch(CameraCapture.intent(this, pendingCapture));
+        } catch (Exception e) {
+            deleteQuietly(pendingCapture);
+            pendingCapture = null;
+            Toast.makeText(this, "No camera app is available on this phone.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Shows the photo part for Visit only, and the photo or what to do. */
+    private void showOrderVia() {
+        boolean visit = CreateBookingRequest.VIA_VISIT.equals(orderVia);
+        if (llVisitPhoto != null) llVisitPhoto.setVisibility(visit ? View.VISIBLE : View.GONE);
+        if (tvOrderViaHint != null) {
+            tvOrderViaHint.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            tvOrderViaHint.setText(orderVia == null
+                    ? "Required. A visit needs a photo taken at the customer's place."
+                    : visit ? "You went to the customer. Take a photo there; the admin sees it with the booking."
+                    : "You got this order by text or call. No photo needed.");
+        }
+        if (!visit) return;
+        Bitmap b = null;
+        if (hasVisitPhoto()) {
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inSampleSize = 4;   // a small preview; the upload sends the full photo
+            try {
+                b = BitmapFactory.decodeFile(visitPhoto.getAbsolutePath(), o);
+            } catch (OutOfMemoryError ignored) {
+                b = null;
+            }
+        }
+        if (ivVisitPhoto != null) {
+            ivVisitPhoto.setVisibility(b != null ? View.VISIBLE : View.GONE);
+            if (b != null) ivVisitPhoto.setImageBitmap(b);
+        }
+        if (tvVisitPhotoStatus != null && !visitPhotoWorking) {
+            tvVisitPhotoStatus.setText(b != null
+                    ? "Photo ready" + (visitLat == null ? " (no location: GPS was off or not ready)" : "")
+                      + ". Retake it if the store or the customer is not clear."
+                    : "Take a photo of the customer's store or the customer. It is sent to the admin with the booking.");
+        }
+        if (btnVisitPhoto != null) btnVisitPhoto.setText(b != null ? "Retake visit photo" : "Take visit photo");
+    }
+
+    private void setVisitPhotoWorking(boolean working) {
+        visitPhotoWorking = working;
+        if (btnVisitPhoto != null) btnVisitPhoto.setEnabled(!working && !submitting);
+        if (working && tvVisitPhotoStatus != null) tvVisitPhotoStatus.setText("Preparing the photo...");
+        if (!working) showOrderVia();
+    }
+
+    private void setOrderViaEnabled(boolean enabled) {
+        if (toggleOrderVia != null) {
+            for (int i = 0; i < toggleOrderVia.getChildCount(); i++) toggleOrderVia.getChildAt(i).setEnabled(enabled);
+        }
+        if (btnVisitPhoto != null) btnVisitPhoto.setEnabled(enabled && !visitPhotoWorking);
+    }
+
+    private void showOrderViaProblem(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        if (tvOrderViaHint != null) {
+            tvOrderViaHint.setText(message);
+            tvOrderViaHint.setTextColor(ContextCompat.getColor(this, R.color.status_cancelled));
+        }
+        if (cardOrderVia != null) {
+            View scroll = findViewById(R.id.summaryScroll);
+            if (scroll instanceof android.widget.ScrollView) {
+                ((android.widget.ScrollView) scroll).smoothScrollTo(0, Math.max(0, cardOrderVia.getTop() - 24));
+            } else {
+                cardOrderVia.requestFocus();
+            }
+        }
+    }
+
+    /** GPS only while Visit is chosen and this screen is showing (where the visit photo is taken). */
+    private void updateLocationTracking() {
+        if (locationHelper == null) return;
+        boolean want = CreateBookingRequest.VIA_VISIT.equals(orderVia) && !isFinishing();
+        if (want && !locationHelper.isTrackingActive()) locationHelper.startLocationUpdates(null);
+        else if (!want && locationHelper.isTrackingActive()) locationHelper.stopLocationUpdates();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateLocationTracking();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (locationHelper != null) locationHelper.stopLocationUpdates();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        photoWorker.shutdown();
+        // Leaving the booking without confirming: the visit photo is not needed any more.
+        if (isFinishing() && !submitting) deleteQuietly(visitPhoto);
+    }
+
+    private static void deleteQuietly(File f) {
+        if (f != null && f.exists() && !f.delete()) f.deleteOnExit();
     }
 
     // ------------------------------------------------------------------ discount

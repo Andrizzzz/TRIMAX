@@ -44,7 +44,22 @@ public final class CreateBookingRequest {
         }
     }
 
+    /** How the agent took the order (20261029_02): went to the customer (a photo is required) or by text / call. */
+    public static final String VIA_VISIT = "VISIT";
+    public static final String VIA_TEXT_CALL = "TEXT_CALL";
+    /** The server's rule for the photo's name in the agent's folder: visit_[A-Za-z0-9_-]{1,80}.jpg */
+    static final java.util.regex.Pattern VISIT_PHOTO_NAME = java.util.regex.Pattern.compile("visit_[A-Za-z0-9_-]{1,80}\\.jpg");
+
     public final String requestId;
+    /** VISIT or TEXT_CALL; null only for an older flow (then the booking is sent without it). */
+    public String orderVia;
+    /** VISIT: the photo taken at the customer's place (a JPEG on this phone). */
+    public java.io.File visitPhoto;
+    /** VISIT: the photo's name on the server; chosen once per photo, so a retry uploads to the same place. */
+    public String visitPhotoName;
+    /** VISIT: where and when the photo was taken (no location when the phone had none). */
+    public Double visitLatitude, visitLongitude;
+    public String visitTakenAtIso;
     public String customerName;
     public String customerContact;
     public String deliveryAddress;
@@ -77,6 +92,8 @@ public final class CreateBookingRequest {
         if (schedule != null && schedule.trim().length() > 100) return "The requested date/time is too long.";
         if (instructions != null && instructions.trim().length() > 1000) return "The instructions are too long (1000 characters at most).";
         if (lines.isEmpty() || lines.size() > 50) return "Please select at least 1 product before continuing.";
+        String via = orderViaProblem();
+        if (via != null) return via;
         for (Line l : lines) {
             if (l.productId <= 0) return "Refresh the product list and try again.";
             if (l.quantity < 1 || l.quantity > 1000) return "Each quantity must be between 1 and 1000.";
@@ -114,6 +131,67 @@ public final class CreateBookingRequest {
         a.put("p_requested_schedule", isBlank(schedule) ? JSONObject.NULL : schedule.trim());
         a.put("p_special_instructions", isBlank(instructions) ? JSONObject.NULL : instructions.trim());
         return a;
+    }
+
+    /** First problem with Visit / Text-Call, or null. Only checked when the choice is used (orderVia set by the screen). */
+    String orderViaProblem() {
+        if (orderVia == null) return null;
+        if (!VIA_VISIT.equals(orderVia) && !VIA_TEXT_CALL.equals(orderVia)) {
+            return "Choose how you took this order: Visit or Text / Call.";
+        }
+        if (VIA_VISIT.equals(orderVia)) {
+            if (visitPhoto == null || !visitPhoto.isFile() || visitPhoto.length() == 0) {
+                return "Take a photo of the visit before confirming the booking.";
+            }
+            if (visitPhotoName == null || !VISIT_PHOTO_NAME.matcher(visitPhotoName).matches()) {
+                return "Take the visit photo again.";
+            }
+            if ((visitLatitude == null) != (visitLongitude == null)) return "Take the visit photo again.";
+        }
+        return null;
+    }
+
+    /** True when the booking is sent with the Visit / Text-Call choice (public.trimax_agent_create_booking_v2). */
+    public boolean usesOrderVia() {
+        return orderVia != null;
+    }
+
+    /**
+     * Named arguments of public.trimax_agent_create_booking_v2: the same booking plus the choice and, for a
+     * visit, the uploaded photo's path in this agent's folder ("&lt;auth uid&gt;/visit_....jpg").
+     */
+    public JSONObject toRpcArgsV2(String visitPhotoPath) throws JSONException {
+        JSONObject a = toRpcArgs();
+        a.put("p_order_via", orderVia);
+        boolean visit = VIA_VISIT.equals(orderVia);
+        boolean located = visit && visitLatitude != null && visitLongitude != null
+                && Double.isFinite(visitLatitude) && Double.isFinite(visitLongitude)
+                && !(visitLatitude == 0 && visitLongitude == 0);
+        a.put("p_visit_photo_path", visit && visitPhotoPath != null ? visitPhotoPath : JSONObject.NULL);
+        a.put("p_visit_latitude", located ? visitLatitude : JSONObject.NULL);
+        a.put("p_visit_longitude", located ? visitLongitude : JSONObject.NULL);
+        a.put("p_visit_taken_at", visit && visitTakenAtIso != null ? visitTakenAtIso : JSONObject.NULL);
+        return a;
+    }
+
+    /** visit_1729850000000_ab12cd34.jpg: matches the server's rule visit_[A-Za-z0-9_-]{1,80}.jpg */
+    static String visitPhotoName(long millis, String uuid) {
+        String tail = uuid == null ? "x" : uuid.replaceAll("[^A-Za-z0-9]", "");
+        if (tail.length() > 8) tail = tail.substring(0, 8);
+        if (tail.isEmpty()) tail = "x";
+        return String.format(java.util.Locale.US, "visit_%d_%s.jpg", millis, tail);
+    }
+
+    /** 2026-10-29T03:15:00Z: the photo time as the server reads it (UTC). */
+    static String isoUtc(long millis) {
+        java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US);
+        f.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+        return f.format(new java.util.Date(millis));
+    }
+
+    /** A new server name for a newly taken visit photo. */
+    static String newVisitPhotoName() {
+        return visitPhotoName(System.currentTimeMillis(), UUID.randomUUID().toString());
     }
 
     public boolean hasDiscount() {
